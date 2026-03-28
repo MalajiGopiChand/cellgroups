@@ -26,7 +26,7 @@ function AdminLogin({ onLogin }) {
 
   return (
     <div className="auth-container">
-      <div className="auth-card">
+      <div className="auth-card glass-card">
         <h1>Admin Login</h1>
         <p className="auth-subtitle">Sign in to access the admin dashboard</p>
         

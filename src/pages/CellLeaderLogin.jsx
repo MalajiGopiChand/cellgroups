@@ -61,7 +61,7 @@ function CellLeaderLogin({ onLogin }) {
 
   return (
     <div className="auth-container">
-      <div className="auth-card">
+      <div className="auth-card glass-card">
         <h1>Cell Leader Login</h1>
         <p className="auth-subtitle">Sign in with your email</p>
         

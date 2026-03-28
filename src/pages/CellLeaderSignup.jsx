@@ -82,7 +82,7 @@ function CellLeaderSignup() {
   if (success) {
     return (
       <div className="auth-container">
-        <div className="auth-card">
+        <div className="auth-card glass-card">
           <div className="success-message">
             <h2>Registration Successful!</h2>
             <p>Your account is pending admin approval. You will be redirected to login...</p>
@@ -94,7 +94,7 @@ function CellLeaderSignup() {
 
   return (
     <div className="auth-container">
-      <div className="auth-card">
+      <div className="auth-card glass-card">
         <h1>Cell Leader Signup</h1>
         <p className="auth-subtitle">Create your account to get started</p>
         

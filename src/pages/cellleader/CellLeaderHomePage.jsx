@@ -23,14 +23,33 @@ function CellLeaderHomePage({ user }) {
   return (
     <Fade in timeout={350}>
       <Box>
-        <Typography variant="h6" sx={{ mb: 2 }}>Announcements</Typography>
+        <Typography variant="h6" sx={{ fontWeight: 800, color: 'var(--text-primary)', mb: 2 }}>
+          Announcements
+        </Typography>
         {announcements.length > 0 ? (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             {announcements.map(a => (
-              <Paper key={a.id} sx={{ p: 2, bgcolor: '#ffffff', backdropFilter: 'blur(12px)' }}>
-                <Typography variant="subtitle1" fontWeight={600}>{a.title}</Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>{a.message}</Typography>
-                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+              <Paper 
+                key={a.id} 
+                elevation={0}
+                sx={{ 
+                  p: 3, 
+                  bgcolor: 'var(--bg-glass-strong)', 
+                  backdropFilter: 'blur(12px)',
+                  borderRadius: 4,
+                  border: '1px solid var(--border-light)',
+                  boxShadow: 'var(--shadow-sm)',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  transition: 'all 0.2s ease',
+                  '&:hover': { transform: 'translateY(-2px)', boxShadow: 'var(--shadow-md)', borderColor: 'rgba(99,102,241,0.3)' }
+                }}
+              >
+                {/* Decorative side accent */}
+                <Box sx={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, bgcolor: a.recipientType === 'all' ? 'var(--color-success)' : 'var(--color-primary)' }} />
+                <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 800, color: 'var(--text-primary)', mb: 1, lineHeight: 1.3 }}>{a.title}</Typography>
+                <Typography variant="body2" sx={{ color: 'var(--text-secondary)', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{a.message}</Typography>
+                <Typography variant="caption" sx={{ fontWeight: 600, color: 'var(--text-tertiary)', px: 1.5, py: 0.5, bgcolor: 'rgba(148, 163, 184, 0.1)', borderRadius: 999, mt: 2, display: 'inline-block' }}>
                   {a.createdAt?.toDate ? new Date(a.createdAt.toDate()).toLocaleDateString() : 'N/A'}
                 </Typography>
               </Paper>
