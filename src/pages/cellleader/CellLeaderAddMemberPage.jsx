@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Box, Typography, Paper, Fade, TextField, Button, IconButton, Avatar, InputAdornment, Chip } from '@mui/material';
 import { collection, getDocs, addDoc, query, where } from 'firebase/firestore';
 import { db } from '../../firebase/config';
-import { ArrowBack as ArrowBackIcon, Person as PersonIcon, LocationOn as LocationIcon, Group as GroupIcon } from '@mui/icons-material';
+import { ArrowBack as ArrowBackIcon, Person as PersonIcon, LocationOn as LocationIcon, Group as GroupIcon, CalendarToday as CalendarTodayIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 
 function CellLeaderAddMemberPage({ user, onBack }) {
@@ -25,16 +25,33 @@ function CellLeaderAddMemberPage({ user, onBack }) {
     e.preventDefault();
     setLoading(true);
     const fd = new FormData(e.target);
+    
+    // Validate DOB is not future date
+    const dobValue = fd.get('dob');
+    if (dobValue) {
+      const selectedDate = new Date(dobValue);
+      const today = new Date();
+      if (selectedDate > today) {
+        alert('Date of Birth cannot be a future date.');
+        setLoading(false);
+        return;
+      }
+    }
+
     await addDoc(collection(db, 'students'), {
       name: fd.get('name'),
       place: user.place,
       cellLeaderName: user.name,
-      cellLeaderId: user.id
+      cellLeaderId: user.id,
+      dob: dobValue || null
     });
     await fetchMembers();
     setLoading(false);
     e.target.reset();
   };
+
+  // Calculate today's date in YYYY-MM-DD format for the max attribute
+  const todayStr = new Date().toISOString().split('T')[0];
 
   return (
     <Fade in timeout={350}>
@@ -71,6 +88,13 @@ function CellLeaderAddMemberPage({ user, onBack }) {
             <TextField 
               name="name" label="Name of Member" fullWidth required 
               InputProps={{ startAdornment: <InputAdornment position="start"><PersonIcon sx={{ color: 'var(--color-primary)' }} /></InputAdornment> }}
+              sx={{ mb: 2.5, '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: 'var(--bg-surface)' } }} 
+            />
+            <TextField 
+              name="dob" label="Date of Birth" type="date" fullWidth required 
+              InputLabelProps={{ shrink: true }}
+              inputProps={{ max: todayStr }}
+              InputProps={{ startAdornment: <InputAdornment position="start"><CalendarTodayIcon sx={{ color: 'var(--color-primary)' }} /></InputAdornment> }}
               sx={{ mb: 2.5, '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: 'var(--bg-surface)' } }} 
             />
             <TextField 

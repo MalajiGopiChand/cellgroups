@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, Paper, Button, IconButton, Fade, Chip, CircularProgress } from '@mui/material';
 import { DeleteOutline as DeleteIcon, ThumbUpOutlined as ApproveIcon, PersonOutline as PersonIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
-import { collection, getDocs, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, deleteDoc, query, where } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 
 function AdminApprovePage({ onBack }) {
@@ -32,12 +32,32 @@ function AdminApprovePage({ onBack }) {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Remove this Cell Leader? This cannot be undone.')) return;
+    if (!window.confirm('Remove this Cell Leader and ALL their associated data (members, attendance, alerts)? This cannot be undone.')) return;
     try {
+      // 1. Delete Cell Leader profile
       await deleteDoc(doc(db, 'cellleaders', id));
+      
+      // 2. Cascade Delete: Students
+      const qStudents = query(collection(db, 'students'), where('cellLeaderId', '==', id));
+      const snapStudents = await getDocs(qStudents);
+      const deleteStudents = snapStudents.docs.map(d => deleteDoc(d.ref));
+      
+      // 3. Cascade Delete: Attendance logs
+      const qAttendance = query(collection(db, 'attendance'), where('cellLeaderId', '==', id));
+      const snapAttendance = await getDocs(qAttendance);
+      const deleteAttendance = snapAttendance.docs.map(d => deleteDoc(d.ref));
+      
+      // 4. Cascade Delete: Announcements specifically for them
+      const qAnnouncements = query(collection(db, 'announcements'), where('cellLeaderId', '==', id));
+      const snapAnnouncements = await getDocs(qAnnouncements);
+      const deleteAnnouncements = snapAnnouncements.docs.map(d => deleteDoc(d.ref));
+      
+      // Execute all cleans concurrently
+      await Promise.all([...deleteStudents, ...deleteAttendance, ...deleteAnnouncements]);
+
       setLeaders(prev => prev.filter(l => l.id !== id));
     } catch (error) {
-      console.error('Error deleting leader:', error);
+      console.error('Error deleting leader and nested data:', error);
     }
   };
 

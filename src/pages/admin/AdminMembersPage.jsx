@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, Paper, IconButton, Select, MenuItem, FormControl, InputLabel, Fade, Chip, CircularProgress } from '@mui/material';
 import { DeleteOutline as DeleteIcon, FilterList as FilterIcon, PersonOutline as PersonIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
-import { collection, getDocs, doc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, deleteDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 
 function AdminMembersPage({ onBack }) {
@@ -29,11 +29,42 @@ function AdminMembersPage({ onBack }) {
     fetch();
   }, []);
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Delete this member?')) return;
+  const handleDelete = async (id, name) => {
+    if (!window.confirm(`Delete member ${name}? This will also remove their attendance history.`)) return;
     try {
+      // 1. Delete the member doc from students collection
       await deleteDoc(doc(db, 'students', id));
       setMembers(prev => prev.filter(m => m.id !== id));
+
+      // 2. Clean up attendance records
+      const attSnap = await getDocs(collection(db, 'attendance'));
+      const updates = [];
+      
+      // Since attendance is stored in arrays inside date-based documents, we must iterate
+      attSnap.forEach(docSnap => {
+        const data = docSnap.data();
+        if (data.attendance && Array.isArray(data.attendance)) {
+          // filter out the deleted member, strictly by ID if present, otherwise fallback to name
+          const filtered = data.attendance.filter(a => {
+            if (a.studentId && a.studentId.length > 15) {
+              return a.studentId !== id;
+            }
+            return a.name !== name;
+          });
+          
+          if (filtered.length !== data.attendance.length) {
+            // Push an update promise for documents that contained this member
+            updates.push(setDoc(docSnap.ref, {
+              ...data,
+              attendance: filtered,
+              updatedAt: new Date()
+            }));
+          }
+        }
+      });
+      // Wait for all cleans to complete
+      await Promise.all(updates);
+      
     } catch (error) {
       console.error('Error deleting member:', error);
     }
@@ -164,7 +195,7 @@ function AdminMembersPage({ onBack }) {
                   <IconButton 
                     color="error" 
                     size="small" 
-                    onClick={() => handleDelete(m.id)} 
+                    onClick={() => handleDelete(m.id, m.name)} 
                     title="Delete Member"
                     sx={{ opacity: 0.6, '&:hover': { opacity: 1, bgcolor: 'rgba(239, 68, 68, 0.1)' } }}
                   >

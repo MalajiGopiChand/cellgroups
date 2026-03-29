@@ -14,11 +14,31 @@ function AdminAttendancePage({ onBack }) {
   useEffect(() => {
     const fetch = async () => {
       try {
-        const [attSnap, leadersSnap] = await Promise.all([
+        const [attSnap, leadersSnap, studentsSnap] = await Promise.all([
           getDocs(collection(db, 'attendance')),
-          getDocs(collection(db, 'cellleaders'))
+          getDocs(collection(db, 'cellleaders')),
+          getDocs(collection(db, 'students'))
         ]);
-        setAttendance(attSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+        
+        // Dynamically track all valid members to filter out any "orphaned" attendance records
+        const validStudentIds = new Set(studentsSnap.docs.map(d => d.id));
+        const validStudentNames = new Set(studentsSnap.docs.map(d => d.data().name));
+        const validLeaderIds = new Set(leadersSnap.docs.map(d => d.id));
+        
+        const cleanedAttendance = attSnap.docs
+          .map(d => {
+            const data = d.data();
+            // Strictly check ID if available to prevent name collision bugs
+            const filteredArr = (data.attendance || []).filter(a => {
+              if (a.studentId && a.studentId.length > 15) return validStudentIds.has(a.studentId);
+              return validStudentNames.has(a.name);
+            });
+            return { id: d.id, ...data, attendance: filteredArr };
+          })
+          // Completely hide attendance logs if the Cell Leader is deleted OR the roster is entirely empty
+          .filter(rec => validLeaderIds.has(rec.cellLeaderId) && rec.attendance.length > 0);
+        
+        setAttendance(cleanedAttendance);
         setLeaders(leadersSnap.docs.map(d => ({ id: d.id, ...d.data() })));
       } catch (error) {
         console.error('Error fetching attendance logs:', error);

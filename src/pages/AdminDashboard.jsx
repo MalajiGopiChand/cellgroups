@@ -39,6 +39,7 @@ import {
   ArrowForward as ArrowForwardIcon,
   CheckCircle as CheckCircleIcon,
   Pending as PendingIcon,
+  Cake as CakeIcon,
 } from '@mui/icons-material';
 
 import { collection, onSnapshot } from 'firebase/firestore';
@@ -51,6 +52,7 @@ import AdminMembersPage from './admin/AdminMembersPage';
 import AdminAttendancePage from './admin/AdminAttendancePage';
 import AdminAnnouncementsPage from './admin/AdminAnnouncementsPage';
 import MobileBottomNav from '../components/MobileBottomNav';
+import BirthdaysView from '../components/BirthdaysView';
 
 function AdminDashboard({ user, onLogout }) {
   const navigate = useNavigate();
@@ -160,6 +162,13 @@ function AdminDashboard({ user, onLogout }) {
       description: 'Send alerts',
       badge: stats.activeAnnouncements
     },
+    { 
+      id: 5, 
+      label: 'Birthdays', 
+      icon: <CakeIcon />, 
+      color: '#ec489a',
+      description: 'Member birthdays'
+    },
   ];
 
   const renderTabContent = () => {
@@ -170,6 +179,7 @@ function AdminDashboard({ user, onLogout }) {
         case 2: return <AdminMembersPage onBack={() => setCurrentTab(0)} />;
         case 3: return <AdminAttendancePage onBack={() => setCurrentTab(0)} />;
         case 4: return <AdminAnnouncementsPage onBack={() => setCurrentTab(0)} />;
+        case 5: return <BirthdaysView isAdmin={true} onBack={() => setCurrentTab(0)} />;
         default: return <AdminHomePage />;
       }
     })();

@@ -30,6 +30,7 @@ import {
   People as PeopleIcon,
   TrendingUp as TrendingUpIcon,
   CheckCircle as CheckCircleIcon,
+  Cake as CakeIcon,
 } from '@mui/icons-material';
 
 import { collection, onSnapshot, query, where, doc } from 'firebase/firestore';
@@ -39,6 +40,7 @@ import CellLeaderHomePage from './cellleader/CellLeaderHomePage';
 import CellLeaderAddMemberPage from './cellleader/CellLeaderAddMemberPage';
 import CellLeaderAttendancePage from './cellleader/CellLeaderAttendancePage';
 import MobileBottomNav from '../components/MobileBottomNav';
+import BirthdaysView from '../components/BirthdaysView';
 
 function CellLeaderDashboard({ user, onLogout }) {
   const muiTheme = useTheme();
@@ -119,6 +121,14 @@ function CellLeaderDashboard({ user, onLogout }) {
       color: '#10b981',
       bgColor: 'rgba(16, 185, 129, 0.1)',
       description: 'Mark daily'
+    },
+    { 
+      id: 3, 
+      label: 'Birthdays', 
+      icon: <CakeIcon />, 
+      color: '#ec489a',
+      bgColor: 'rgba(236, 72, 153, 0.1)',
+      description: 'Member birthdays'
     }
   ];
 
@@ -128,6 +138,7 @@ function CellLeaderDashboard({ user, onLogout }) {
         case 0: return <CellLeaderHomePage user={user} />;
         case 1: return <CellLeaderAddMemberPage user={user} onBack={() => setCurrentTab(0)} />;
         case 2: return <CellLeaderAttendancePage user={user} onBack={() => setCurrentTab(0)} />;
+        case 3: return <BirthdaysView user={user} onBack={() => setCurrentTab(0)} />;
         default: return <CellLeaderHomePage user={user} />;
       }
     })();
@@ -241,7 +252,7 @@ function CellLeaderDashboard({ user, onLogout }) {
                 </Typography>
                 <Grid container spacing={isMobile ? 1.5 : 2}>
                   {navButtons.map((button) => (
-                    <Grid item xs={4} sm={4} md={4} key={button.id}>
+                    <Grid item xs={6} sm={6} md={3} key={button.id}>
                       <Card
                         sx={{
                           cursor: 'pointer',
