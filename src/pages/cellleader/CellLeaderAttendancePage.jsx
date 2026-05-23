@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Box, Typography, Paper, Fade, Button, IconButton } from '@mui/material';
+import { Box, Typography, Paper, Fade, Button, IconButton, Chip } from '@mui/material';
 import { collection, getDocs, query, where, doc, setDoc, getDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
-import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
+import { ArrowBack as ArrowBackIcon, FamilyRestroom as FamilyIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 
 function CellLeaderAttendancePage({ user, onBack }) {
@@ -31,13 +31,11 @@ function CellLeaderAttendancePage({ user, onBack }) {
     fetch();
   }, [user?.id, user?.place, selectedDate]);
 
-  const handleMark = async (member, status) => {
-    const memberId = member.id || member.name;
-    const memberName = member.name;
-    const current = attendance.find(a => a.studentId === memberId || a.name === memberName);
+  const handleMark = async (memberId, memberName, status) => {
+    const current = attendance.find(a => a.studentId === memberId);
     let newAttendance;
     if (current) {
-      newAttendance = attendance.map(a => (a.studentId === memberId || a.name === memberName) ? { ...a, studentId: memberId, name: memberName, status } : a);
+      newAttendance = attendance.map(a => a.studentId === memberId ? { ...a, studentId: memberId, name: memberName, status } : a);
     } else {
       newAttendance = [...attendance, { studentId: memberId, name: memberName, status }];
     }
@@ -50,6 +48,54 @@ function CellLeaderAttendancePage({ user, onBack }) {
       updatedAt: new Date()
     }, { merge: true });
   };
+
+  const getButtonStyles = (isSelected, type, isSubRow = false) => {
+    const colorSuccess = 'var(--color-success)';
+    const colorError = 'var(--color-error)';
+    const baseColor = type === 'present' ? colorSuccess : colorError;
+    const hoverBg = type === 'present' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)';
+    const activeBg = type === 'present' ? 'var(--color-success)' : 'var(--color-error)';
+    
+    return {
+      fontWeight: 600,
+      textTransform: 'none',
+      borderRadius: 2,
+      padding: isSubRow ? '2px 10px' : '4px 12px',
+      minWidth: isSubRow ? '60px' : '75px',
+      fontSize: isSubRow ? '0.75rem' : '0.875rem',
+      bgcolor: isSelected ? activeBg : 'transparent',
+      color: isSelected ? '#fff' : 'var(--text-secondary)',
+      border: isSelected ? '1px solid transparent' : '1px solid var(--border-light)',
+      boxShadow: isSelected ? `0 4px 12px ${type === 'present' ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}` : 'none',
+      '&:hover': { 
+        bgcolor: isSelected ? (type === 'present' ? '#059669' : '#dc2626') : hoverBg, 
+        color: isSelected ? '#fff' : baseColor 
+      }
+    };
+  };
+
+  // Group members by familyId
+  const familyGroups = {};
+  members.forEach(m => {
+    const fid = m.familyId || `single_${m.id}`;
+    if (!familyGroups[fid]) {
+      familyGroups[fid] = [];
+    }
+    familyGroups[fid].push(m);
+  });
+
+  const relationOrder = { 'Head': 1, 'Spouse': 2, 'Father': 3, 'Mother': 4, 'Child': 5 };
+  const getRelationOrder = (rel) => relationOrder[rel] || 99;
+
+  const families = Object.values(familyGroups).map(group => {
+    const sortedGroup = group.sort((a, b) => getRelationOrder(a.relation) - getRelationOrder(b.relation));
+    const head = sortedGroup.find(m => m.relation === 'Head') || sortedGroup[0];
+    return {
+      familyId: head.familyId || `single_${head.id}`,
+      head,
+      members: sortedGroup
+    };
+  });
 
   return (
     <Fade in timeout={350}>
@@ -75,67 +121,88 @@ function CellLeaderAttendancePage({ user, onBack }) {
           <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid var(--border-light)', background: 'var(--bg-glass-strong)', color: 'var(--text-primary)', fontFamily: 'inherit', fontWeight: 600 }} />
         </Box>
         {members.length > 0 ? (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            {members.map(member => {
-              const rec = attendance.find(a => a.studentId === (member.id || member.name) || a.name === member.name);
-              const status = rec?.status || null;
-              return (
-                <Paper 
-                  key={member.id} 
-                  elevation={0}
-                  sx={{ 
-                    p: 2, 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center', 
-                    bgcolor: 'var(--bg-glass-strong)',
-                    backdropFilter: 'blur(12px)',
-                    boxShadow: 'var(--shadow-sm)', 
-                    border: '1px solid var(--border-light)',
-                    borderRadius: 3,
-                    mb: 1,
-                    transition: 'all 0.2s ease',
-                    '&:hover': { transform: 'translateY(-2px)', boxShadow: 'var(--shadow-md)', borderColor: 'rgba(99,102,241,0.2)' }
-                  }}
-                >
-                  <Typography fontWeight={700} sx={{ color: 'var(--text-primary)' }}>{member.name}</Typography>
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    <Button 
-                      size="small" 
-                      onClick={() => handleMark(member, 'present')}
-                      sx={{
-                        fontWeight: 600,
-                        textTransform: 'none',
-                        borderRadius: 2,
-                        bgcolor: status === 'present' ? 'var(--color-success)' : 'transparent',
-                        color: status === 'present' ? '#fff' : 'var(--text-secondary)',
-                        border: status === 'present' ? '1px solid transparent' : '1px solid var(--border-light)',
-                        boxShadow: status === 'present' ? '0 4px 12px rgba(16,185,129,0.3)' : 'none',
-                        '&:hover': { bgcolor: status === 'present' ? '#059669' : 'rgba(16,185,129,0.1)', color: status === 'present' ? '#fff' : 'var(--color-success)' }
-                      }}
-                    >
-                      Present
-                    </Button>
-                    <Button 
-                      size="small" 
-                      onClick={() => handleMark(member, 'absent')}
-                      sx={{
-                        fontWeight: 600,
-                        textTransform: 'none',
-                        borderRadius: 2,
-                        bgcolor: status === 'absent' ? 'var(--color-error)' : 'transparent',
-                        color: status === 'absent' ? '#fff' : 'var(--text-secondary)',
-                        border: status === 'absent' ? '1px solid transparent' : '1px solid var(--border-light)',
-                        boxShadow: status === 'absent' ? '0 4px 12px rgba(239,68,68,0.3)' : 'none',
-                        '&:hover': { bgcolor: status === 'absent' ? '#dc2626' : 'rgba(239,68,68,0.1)', color: status === 'absent' ? '#fff' : 'var(--color-error)' }
-                      }}
-                    >
-                      Absent
-                    </Button>
-                  </Box>
-                </Paper>
-              );
-            })}
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {families.map(family => (
+              <Paper 
+                key={family.familyId} 
+                elevation={0}
+                sx={{ 
+                  p: 2, 
+                  bgcolor: 'var(--bg-glass-strong)',
+                  backdropFilter: 'blur(12px)',
+                  boxShadow: 'var(--shadow-sm)', 
+                  border: '1px solid var(--border-light)',
+                  borderRadius: 4,
+                  mb: 1
+                }}
+              >
+                {/* Family Header */}
+                <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'var(--color-primary)', mb: 2, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <FamilyIcon sx={{ fontSize: 16 }} />
+                  {family.head.name}'s Family
+                </Typography>
+
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                  {family.members.map(member => {
+                    const mId = member.id || member.name;
+                    const mRec = attendance.find(a => a.studentId === mId);
+                    const mStatus = mRec?.status || null;
+                    const displayName = member.relation && member.relation !== 'Head' 
+                      ? `${member.name} (${member.relation} of ${family.head.name})`
+                      : member.name;
+
+                    return (
+                      <Box 
+                        key={member.id} 
+                        sx={{ 
+                          display: 'flex', 
+                          justifyContent: 'space-between', 
+                          alignItems: 'center',
+                          pl: member.relation && member.relation !== 'Head' ? 2 : 0,
+                          borderLeft: member.relation && member.relation !== 'Head' ? '2px solid var(--border-light)' : 'none',
+                          py: 0.5
+                        }}
+                      >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Typography fontWeight={700} sx={{ color: 'var(--text-primary)', fontSize: member.relation && member.relation !== 'Head' ? '0.9rem' : '1rem' }}>
+                            {member.name}
+                          </Typography>
+                          {member.relation && (
+                            <Chip 
+                              size="small" 
+                              label={member.relation} 
+                              sx={{ 
+                                height: 16, 
+                                fontSize: '0.6rem', 
+                                fontWeight: 700,
+                                bgcolor: member.relation === 'Spouse' ? 'rgba(236,72,153,0.08)' : member.relation === 'Head' ? 'rgba(99,102,241,0.08)' : 'rgba(0,0,0,0.05)',
+                                color: member.relation === 'Spouse' ? '#ec489a' : member.relation === 'Head' ? 'var(--color-primary)' : 'var(--text-secondary)'
+                              }} 
+                            />
+                          )}
+                        </Box>
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                          <Button 
+                            size="small" 
+                            onClick={() => handleMark(mId, displayName, 'present')}
+                            sx={getButtonStyles(mStatus === 'present', 'present', member.relation && member.relation !== 'Head')}
+                          >
+                            Present
+                          </Button>
+                          <Button 
+                            size="small" 
+                            onClick={() => handleMark(mId, displayName, 'absent')}
+                            sx={getButtonStyles(mStatus === 'absent', 'absent', member.relation && member.relation !== 'Head')}
+                          >
+                            Absent
+                          </Button>
+                        </Box>
+                      </Box>
+                    );
+                  })}
+                </Box>
+              </Paper>
+            ))}
           </Box>
         ) : (
           <Typography color="text.secondary">Add members first</Typography>

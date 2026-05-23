@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, Paper, IconButton, Select, MenuItem, FormControl, InputLabel, Fade, Chip, CircularProgress } from '@mui/material';
-import { DeleteOutline as DeleteIcon, FilterList as FilterIcon, PersonOutline as PersonIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
+import { DeleteOutline as DeleteIcon, FilterList as FilterIcon, PersonOutline as PersonIcon, ArrowBack as ArrowBackIcon, FamilyRestroom as FamilyIcon } from '@mui/icons-material';
 import { collection, getDocs, doc, deleteDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
+import MemberDetailsDialog from '../../components/MemberDetailsDialog';
 
 function AdminMembersPage({ onBack }) {
   const [members, setMembers] = useState([]);
@@ -10,6 +11,10 @@ function AdminMembersPage({ onBack }) {
   const [filterLeader, setFilterLeader] = useState('');
   const [filterPlace, setFilterPlace] = useState('');
   const [loading, setLoading] = useState(true);
+  
+  // Profile dialog state
+  const [selectedMember, setSelectedMember] = useState(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
     const fetch = async () => {
@@ -47,7 +52,8 @@ function AdminMembersPage({ onBack }) {
           // filter out the deleted member, strictly by ID if present, otherwise fallback to name
           const filtered = data.attendance.filter(a => {
             if (a.studentId && a.studentId.length > 15) {
-              return a.studentId !== id;
+              const baseId = a.studentId.split('_')[0];
+              return baseId !== id;
             }
             return a.name !== name;
           });
@@ -75,6 +81,29 @@ function AdminMembersPage({ onBack }) {
     if (filterLeader && m.cellLeaderId !== filterLeader) return false;
     if (filterPlace && m.place !== filterPlace) return false;
     return true;
+  });
+
+  // Group filtered members by familyId
+  const familyGroups = {};
+  filtered.forEach(m => {
+    const fid = m.familyId || `single_${m.id}`;
+    if (!familyGroups[fid]) {
+      familyGroups[fid] = [];
+    }
+    familyGroups[fid].push(m);
+  });
+
+  const relationOrder = { 'Head': 1, 'Spouse': 2, 'Father': 3, 'Mother': 4, 'Child': 5 };
+  const getRelationOrder = (rel) => relationOrder[rel] || 99;
+
+  const families = Object.values(familyGroups).map(group => {
+    const sortedGroup = group.sort((a, b) => getRelationOrder(a.relation) - getRelationOrder(b.relation));
+    const head = sortedGroup.find(m => m.relation === 'Head') || sortedGroup[0];
+    return {
+      familyId: head.familyId || `single_${head.id}`,
+      head,
+      members: sortedGroup
+    };
   });
 
   if (loading) {
@@ -159,48 +188,97 @@ function AdminMembersPage({ onBack }) {
           </FormControl>
         </Paper>
 
-        {/* Members List */}
+        {/* Members List Grouped by Family */}
         {filtered.length > 0 ? (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-            {filtered.map((m, idx) => (
-              <Fade in timeout={300 + (idx * 50)} key={m.id}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+            {families.map((family, fIdx) => (
+              <Fade in timeout={300 + (fIdx * 50)} key={family.familyId || fIdx}>
                 <Paper 
                   elevation={0}
                   sx={{ 
-                    p: 2, 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center', 
+                    p: 2.5, 
                     bgcolor: 'var(--bg-glass-strong)', 
                     backdropFilter: 'blur(12px)',
                     borderRadius: 4,
                     border: '1px solid var(--border-light)',
                     boxShadow: 'var(--shadow-sm)',
-                    transition: 'all 0.2s ease',
-                    '&:hover': { transform: 'translateY(-2px)', boxShadow: 'var(--shadow-md)', borderColor: 'rgba(99,102,241,0.4)' }
+                    overflow: 'hidden'
                   }}
                 >
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Box sx={{ width: 44, height: 44, borderRadius: '50%', background: 'linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.1))', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-primary)' }}>
-                      <PersonIcon />
-                    </Box>
-                    <Box>
-                      <Typography fontWeight={700} sx={{ color: 'var(--text-primary)', lineHeight: 1.2 }}>{m.name}</Typography>
-                      <Box sx={{ display: 'flex', gap: 1, mt: 0.5, flexWrap: 'wrap' }}>
-                        <Chip size="small" label={`By: ${m.cellLeaderName}`} sx={{ height: 20, fontSize: '0.7rem', bgcolor: 'rgba(99,102,241,0.08)', color: 'var(--color-primary)', fontWeight: 600 }} />
-                        <Chip size="small" label={m.place} sx={{ height: 20, fontSize: '0.7rem', bgcolor: 'var(--bg-main)' }} />
-                      </Box>
+                  {/* Family Card Header */}
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <FamilyIcon sx={{ fontSize: 18 }} />
+                      {family.head.name}'s Family ({family.members.length})
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <Chip size="small" label={`Leader: ${family.head.cellLeaderName}`} sx={{ height: 20, fontSize: '0.65rem', bgcolor: 'rgba(99,102,241,0.08)', color: 'var(--color-primary)', fontWeight: 600 }} />
+                      <Chip size="small" label={family.head.place} sx={{ height: 20, fontSize: '0.65rem', bgcolor: 'var(--bg-main)' }} />
                     </Box>
                   </Box>
-                  <IconButton 
-                    color="error" 
-                    size="small" 
-                    onClick={() => handleDelete(m.id, m.name)} 
-                    title="Delete Member"
-                    sx={{ opacity: 0.6, '&:hover': { opacity: 1, bgcolor: 'rgba(239, 68, 68, 0.1)' } }}
-                  >
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
+
+                  {/* Family Members list */}
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    {family.members.map((m) => (
+                      <Box 
+                        key={m.id} 
+                        onClick={() => {
+                          setSelectedMember(m);
+                          setDialogOpen(true);
+                        }}
+                        sx={{ 
+                          p: 1.5, 
+                          display: 'flex', 
+                          justifyContent: 'space-between', 
+                          alignItems: 'center', 
+                          bgcolor: 'rgba(255, 255, 255, 0.6)', 
+                          borderRadius: 2.5,
+                          border: '1px solid rgba(0, 0, 0, 0.03)',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          '&:hover': { 
+                            transform: 'translateX(2px)', 
+                            borderColor: 'rgba(99,102,241,0.2)', 
+                            bgcolor: 'rgba(99, 102, 241, 0.02)' 
+                          }
+                        }}
+                      >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                          <Box sx={{ width: 36, height: 36, borderRadius: '50%', background: m.relation === 'Head' ? 'linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.1))' : 'rgba(0,0,0,0.03)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: m.relation === 'Head' ? 'var(--color-primary)' : 'var(--text-secondary)' }}>
+                            <PersonIcon sx={{ fontSize: 18 }} />
+                          </Box>
+                          <Box>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Typography fontWeight={700} sx={{ color: 'var(--text-primary)', fontSize: '0.9rem', lineHeight: 1.2 }}>{m.name}</Typography>
+                              <Chip 
+                                size="small" 
+                                label={m.relation || 'Head'} 
+                                sx={{ 
+                                  height: 16, 
+                                  fontSize: '0.6rem', 
+                                  fontWeight: 700, 
+                                  bgcolor: m.relation === 'Spouse' ? 'rgba(236,72,153,0.08)' : m.relation === 'Head' ? 'rgba(99,102,241,0.08)' : 'rgba(0,0,0,0.05)',
+                                  color: m.relation === 'Spouse' ? '#ec489a' : m.relation === 'Head' ? 'var(--color-primary)' : 'var(--text-secondary)'
+                                }} 
+                              />
+                            </Box>
+                          </Box>
+                        </Box>
+                        <IconButton 
+                          color="error" 
+                          size="small" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(m.id, m.name);
+                          }} 
+                          title="Delete Member"
+                          sx={{ opacity: 0.6, '&:hover': { opacity: 1, bgcolor: 'rgba(239, 68, 68, 0.1)' } }}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
+                    ))}
+                  </Box>
                 </Paper>
               </Fade>
             ))}
@@ -211,6 +289,13 @@ function AdminMembersPage({ onBack }) {
           </Paper>
         )}
 
+        {/* Member Profile Dialog */}
+        <MemberDetailsDialog 
+          open={dialogOpen} 
+          onClose={() => setDialogOpen(false)} 
+          member={selectedMember} 
+          familyMembers={selectedMember ? members.filter(m => m.familyId && m.familyId === selectedMember.familyId) : []}
+        />
       </Box>
     </Fade>
   );

@@ -30,7 +30,10 @@ function AdminAttendancePage({ onBack }) {
             const data = d.data();
             // Strictly check ID if available to prevent name collision bugs
             const filteredArr = (data.attendance || []).filter(a => {
-              if (a.studentId && a.studentId.length > 15) return validStudentIds.has(a.studentId);
+              if (a.studentId && a.studentId.length > 15) {
+                const baseId = a.studentId.split('_')[0];
+                return validStudentIds.has(baseId);
+              }
               return validStudentNames.has(a.name);
             });
             return { id: d.id, ...data, attendance: filteredArr };

@@ -175,13 +175,38 @@ app.get('/api/admin/students', async (req, res) => {
 // Add student (Cell Leader)
 app.post('/api/student/add', async (req, res) => {
   try {
-    const { name, place, area, cellLeaderName, cellLeaderId } = req.body;
+    const { 
+      name, 
+      place, 
+      area, 
+      cellLeaderName, 
+      cellLeaderId,
+      phone,
+      dob,
+      fatherName,
+      fatherPhone,
+      motherName,
+      motherPhone,
+      spouseName,
+      spousePhone,
+      children
+    } = req.body;
+    
     const student = {
       name,
       place,
       area,
       cellLeaderName,
       cellLeaderId,
+      phone: phone || '',
+      dob: dob || null,
+      fatherName: fatherName || '',
+      fatherPhone: fatherPhone || '',
+      motherName: motherName || '',
+      motherPhone: motherPhone || '',
+      spouseName: spouseName || '',
+      spousePhone: spousePhone || '',
+      children: children || [],
       createdAt: new Date()
     };
     
