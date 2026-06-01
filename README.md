@@ -5,7 +5,7 @@ A modern React web application for managing cell groups with role-based access c
 ## Features
 
 ### Admin Features
-- Login with fixed credentials (bethel@gmail.com / 123456)
+- Login with fixed credentials 
 - Dashboard with overview statistics
 - View all Cell Leaders and their students
 - Approve/verify Cell Leaders
