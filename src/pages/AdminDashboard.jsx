@@ -40,6 +40,7 @@ import {
   CheckCircle as CheckCircleIcon,
   Pending as PendingIcon,
   Cake as CakeIcon,
+  HowToReg as HowToRegIcon,
 } from '@mui/icons-material';
 
 import { collection, onSnapshot } from 'firebase/firestore';
@@ -51,6 +52,7 @@ import AdminApprovePage from './admin/AdminApprovePage';
 import AdminMembersPage from './admin/AdminMembersPage';
 import AdminAttendancePage from './admin/AdminAttendancePage';
 import AdminAnnouncementsPage from './admin/AdminAnnouncementsPage';
+import AdminLeaderAttendancePage from './admin/AdminLeaderAttendancePage';
 import MobileBottomNav from '../components/MobileBottomNav';
 import BirthdaysView from '../components/BirthdaysView';
 
@@ -169,6 +171,13 @@ function AdminDashboard({ user, onLogout }) {
       color: '#ec489a',
       description: 'Member birthdays'
     },
+    {
+      id: 6,
+      label: 'Leader Attendance',
+      icon: <HowToRegIcon />,
+      color: '#0ea5e9',
+      description: 'Leader attendance'
+    }
   ];
 
   const renderTabContent = () => {
@@ -180,6 +189,7 @@ function AdminDashboard({ user, onLogout }) {
         case 3: return <AdminAttendancePage onBack={() => setCurrentTab(0)} />;
         case 4: return <AdminAnnouncementsPage onBack={() => setCurrentTab(0)} />;
         case 5: return <BirthdaysView isAdmin={true} onBack={() => setCurrentTab(0)} />;
+        case 6: return <AdminLeaderAttendancePage onBack={() => setCurrentTab(0)} />;
         default: return <AdminHomePage />;
       }
     })();

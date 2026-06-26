@@ -7,7 +7,6 @@ import './Auth.css';
 function CellLeaderSignup() {
   const [formData, setFormData] = useState({
     name: '',
-    email: '',
     place: '',
     phone: ''
   });
@@ -27,19 +26,26 @@ function CellLeaderSignup() {
 
     try {
       // Validate inputs
-      if (!formData.name.trim() || !formData.email.trim() || !formData.place.trim() || !formData.phone.trim()) {
-        setError('Please fill in all fields');
+      if (!formData.name.trim() || !formData.place.trim() || !formData.phone.trim()) {
+        setError('Please fill in all fields.');
         setLoading(false);
         return;
       }
 
-      // Check if email already exists
-      const emailToCheck = formData.email.trim().toLowerCase();
-      const q = query(collection(db, 'cellleaders'), where('email', '==', emailToCheck));
+      const phoneRegex = /^\d{10}$/;
+      if (!phoneRegex.test(formData.phone.trim())) {
+        setError('Please enter a valid 10-digit mobile number.');
+        setLoading(false);
+        return;
+      }
+
+      // Check if phone already exists
+      const phoneToCheck = formData.phone.trim();
+      const q = query(collection(db, 'cellleaders'), where('phone', '==', phoneToCheck));
       const querySnapshot = await getDocs(q);
       
       if (!querySnapshot.empty) {
-        setError('Email already exists. Please use a different email.');
+        setError('Mobile number already exists. Please use a different number.');
         setLoading(false);
         return;
       }
@@ -47,9 +53,8 @@ function CellLeaderSignup() {
       // Add new cell leader
       const docRef = await addDoc(collection(db, 'cellleaders'), {
         name: formData.name.trim(),
-        email: emailToCheck,
         place: formData.place.trim(),
-        phone: formData.phone.trim(),
+        phone: phoneToCheck,
         approved: false,
         createdAt: serverTimestamp()
       });
@@ -96,7 +101,7 @@ function CellLeaderSignup() {
     <div className="auth-container">
       <div className="auth-card glass-card">
         <h1>Cell Leader Signup</h1>
-        <p className="auth-subtitle">Create your account to get started</p>
+        <p className="auth-subtitle">Create your account to get started.</p>
         
         {error && <div className="error-message">{error}</div>}
         
@@ -114,18 +119,6 @@ function CellLeaderSignup() {
           </div>
           
           <div className="form-group">
-            <label>Email</label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-              placeholder="Enter your email"
-            />
-          </div>
-          
-          <div className="form-group">
             <label>Place</label>
             <input
               type="text"
@@ -138,14 +131,16 @@ function CellLeaderSignup() {
           </div>
           
           <div className="form-group">
-            <label>Phone Number</label>
+            <label>Mobile Number</label>
             <input
               type="tel"
               name="phone"
               value={formData.phone}
               onChange={handleChange}
               required
-              placeholder="Enter your phone number"
+              pattern="\d{10}"
+              maxLength="10"
+              placeholder="Enter your 10-digit mobile number"
             />
           </div>
           

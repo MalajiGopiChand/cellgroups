@@ -100,6 +100,23 @@ function CellLeaderAddMemberPage({ user, onBack }) {
       }
     }
 
+    const phoneRegex = /^\d{10}$/;
+    
+    const primaryPhone = fd.get('phone');
+    if (primaryPhone && !phoneRegex.test(primaryPhone.trim())) {
+      alert('Please enter a valid 10-digit mobile number for the primary member.');
+      setLoading(false);
+      return;
+    }
+
+    for (let i = 0; i < familyMembers.length; i++) {
+      if (familyMembers[i].phone && !phoneRegex.test(familyMembers[i].phone.trim())) {
+        alert(`Please enter a valid 10-digit mobile number for family member: ${familyMembers[i].name}`);
+        setLoading(false);
+        return;
+      }
+    }
+
     // Generate a unique familyId for grouping
     const familyId = `family_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const addPromises = [];
@@ -233,7 +250,8 @@ function CellLeaderAddMemberPage({ user, onBack }) {
               sx={{ mb: 2.5, '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: 'var(--bg-surface)' } }} 
             />
             <TextField 
-              name="phone" label="Phone Number (Optional)" fullWidth type="tel"
+              name="phone" label="Mobile Number (Optional)" fullWidth type="tel"
+              inputProps={{ pattern: "\\d{10}", maxLength: 10 }}
               InputProps={{ startAdornment: <InputAdornment position="start"><PhoneIcon sx={{ color: 'var(--color-primary)' }} /></InputAdornment> }}
               sx={{ mb: 2.5, '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: 'var(--bg-surface)' } }} 
             />
@@ -362,11 +380,12 @@ function CellLeaderAddMemberPage({ user, onBack }) {
                         </Grid>
                         <Grid item xs={12} sm={6}>
                           <TextField 
-                            label="Phone Number" 
+                            label="Mobile Number" 
                             size="small"
                             type="tel"
                             fullWidth
                             value={member.phone}
+                            inputProps={{ pattern: "\\d{10}", maxLength: 10 }}
                             onChange={(e) => handleFamilyMemberChange(index, 'phone', e.target.value)}
                             InputProps={{ startAdornment: <InputAdornment position="start"><PhoneIcon sx={{ fontSize: 16, color: 'var(--color-primary)' }} /></InputAdornment> }}
                             sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2, bgcolor: 'var(--bg-surface)' } }}

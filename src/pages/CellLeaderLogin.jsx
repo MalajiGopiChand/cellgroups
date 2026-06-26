@@ -5,7 +5,7 @@ import { db } from '../firebase/config';
 import './Auth.css';
 
 function CellLeaderLogin({ onLogin }) {
-  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -16,11 +16,18 @@ function CellLeaderLogin({ onLogin }) {
     setLoading(true);
 
     try {
-      const q = query(collection(db, 'cellleaders'), where('email', '==', email));
+      const phoneRegex = /^\d{10}$/;
+      if (!phoneRegex.test(phone.trim())) {
+        setError('Please enter a valid 10-digit mobile number.');
+        setLoading(false);
+        return;
+      }
+
+      const q = query(collection(db, 'cellleaders'), where('phone', '==', phone.trim()));
       const querySnapshot = await getDocs(q);
       
       if (querySnapshot.empty) {
-        setError('Email not found');
+        setError('Mobile number not found.');
         setLoading(false);
         return;
       }
@@ -31,10 +38,9 @@ function CellLeaderLogin({ onLogin }) {
       if (!leaderData.approved) {
         onLogin({ 
           role: 'cellleader', 
-          email: leaderData.email,
+          phone: leaderData.phone,
           name: leaderData.name,
           place: leaderData.place,
-          phone: leaderData.phone,
           id: leaderId,
           approved: false
         });
@@ -42,10 +48,9 @@ function CellLeaderLogin({ onLogin }) {
       } else {
         onLogin({ 
           role: 'cellleader', 
-          email: leaderData.email,
+          phone: leaderData.phone,
           name: leaderData.name,
           place: leaderData.place,
-          phone: leaderData.phone,
           id: leaderId,
           approved: true
         });
@@ -63,19 +68,21 @@ function CellLeaderLogin({ onLogin }) {
     <div className="auth-container">
       <div className="auth-card glass-card">
         <h1>Cell Leader Login</h1>
-        <p className="auth-subtitle">Sign in with your email</p>
+        <p className="auth-subtitle">Sign in with your mobile number.</p>
         
         {error && <div className="error-message">{error}</div>}
         
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label>Email</label>
+            <label>Mobile Number</label>
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
               required
-              placeholder="Enter your email"
+              pattern="\d{10}"
+              maxLength="10"
+              placeholder="Enter your 10-digit mobile number"
             />
           </div>
           
