@@ -13,7 +13,6 @@ function BirthdaysView({ user, isAdmin, onBack }) {
 
   const [todayList, setTodayList] = useState([]);
   const [upcomingList, setUpcomingList] = useState([]);
-  const [thisWeekList, setThisWeekList] = useState([]);
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -49,16 +48,9 @@ function BirthdaysView({ user, isAdmin, onBack }) {
 
     const todayListTemp = [];
     const upcomingListTemp = [];
-    const thisWeekListTemp = [];
 
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-    const currentDayOfWeek = today.getDay() === 0 ? 7 : today.getDay();
-    const monday = new Date(today);
-    monday.setDate(today.getDate() - currentDayOfWeek + 1);
-    const sunday = new Date(today);
-    sunday.setDate(today.getDate() + (7 - currentDayOfWeek));
 
     members.forEach(member => {
       if (!member.dob) return;
@@ -78,27 +70,20 @@ function BirthdaysView({ user, isAdmin, onBack }) {
       }
       
       const diffDays = Math.ceil((nextBday - today) / (1000 * 60 * 60 * 24));
-      const inThisWeek = bdayThisYear >= monday && bdayThisYear <= sunday;
       
       const bdayItem = { ...member, diffDays, nextBday, bMonth, bDay };
       
       if (diffDays === 0) {
         todayListTemp.push(bdayItem);
-      } else if (diffDays > 0 && diffDays <= 3) {
+      } else if (diffDays > 0 && diffDays <= 10) {
         upcomingListTemp.push(bdayItem);
-      }
-      
-      if (inThisWeek && diffDays !== 0) {
-        thisWeekListTemp.push(bdayItem);
       }
     });
 
     upcomingListTemp.sort((a, b) => a.diffDays - b.diffDays);
-    thisWeekListTemp.sort((a, b) => (new Date(now.getFullYear(), a.bMonth - 1, a.bDay)) - (new Date(now.getFullYear(), b.bMonth - 1, b.bDay)));
 
     setTodayList(todayListTemp);
     setUpcomingList(upcomingListTemp);
-    setThisWeekList(thisWeekListTemp);
   }, [members]);
 
   if (loading) return null;
@@ -165,9 +150,9 @@ function BirthdaysView({ user, isAdmin, onBack }) {
             {isToday ? (
               <Chip icon={<StarIcon fontSize="small"/>} label="Today 🎉" size="small" sx={{ bgcolor: 'rgba(236,72,153,0.1)', color: '#ec489a', fontWeight: 700, px: 0.5 }} />
             ) : isUpcoming ? (
-              <Chip label={`In ${member.diffDays} days`} size="small" sx={{ bgcolor: 'rgba(245,158,11,0.1)', color: '#f59e0b', fontWeight: 700 }} />
+              <Chip label={`In ${member.diffDays} day${member.diffDays > 1 ? 's' : ''}`} size="small" sx={{ bgcolor: 'rgba(245,158,11,0.1)', color: '#f59e0b', fontWeight: 700 }} />
             ) : (
-              <Chip label="This Week" size="small" sx={{ bgcolor: 'rgba(99,102,241,0.1)', color: 'var(--color-primary)', fontWeight: 700 }} />
+              <Chip label={`In ${member.diffDays} days`} size="small" sx={{ bgcolor: 'rgba(99,102,241,0.1)', color: 'var(--color-primary)', fontWeight: 700 }} />
             )}
           </Box>
         </Box>
@@ -200,7 +185,7 @@ function BirthdaysView({ user, isAdmin, onBack }) {
           </Typography>
         </Box>
 
-        {todayList.length === 0 && upcomingList.length === 0 && thisWeekList.length === 0 && (
+        {todayList.length === 0 && upcomingList.length === 0 && (
           <Paper elevation={0} sx={{ p: 4, textAlign: 'center', bgcolor: 'var(--bg-glass-strong)', borderRadius: 4, border: '1px dashed var(--border-light)' }}>
             <Typography color="var(--text-tertiary)" fontWeight={500}>No birthdays around this time.</Typography>
           </Paper>
@@ -224,27 +209,12 @@ function BirthdaysView({ user, isAdmin, onBack }) {
         {upcomingList.length > 0 && (
           <Box sx={{ mb: 4 }}>
             <Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#f59e0b', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-              <EventIcon fontSize="small" /> Upcoming (Next 3 Days)
+              <EventIcon fontSize="small" /> Upcoming (Next 10 Days)
             </Typography>
             <Grid container spacing={2}>
               {upcomingList.map(m => (
                 <Grid item xs={12} sm={6} md={4} key={m.id}>
                   <BirthdayCard member={m} type="upcoming" />
-                </Grid>
-              ))}
-            </Grid>
-          </Box>
-        )}
-
-        {thisWeekList.length > 0 && (
-          <Box sx={{ mb: 4 }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 800, color: 'var(--color-primary)', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-              <EventIcon fontSize="small" /> This Week
-            </Typography>
-            <Grid container spacing={2}>
-              {thisWeekList.map(m => (
-                <Grid item xs={12} sm={6} md={4} key={m.id}>
-                  <BirthdayCard member={m} type="thisWeek" />
                 </Grid>
               ))}
             </Grid>

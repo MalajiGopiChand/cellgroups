@@ -9,8 +9,8 @@
   /* Backgrounds & Surfaces */
   --bg-main: #F9FAFB;
   --bg-surface: #FFFFFF;
-  --bg-glass: rgba(255,255,255,0.95);
-  --bg-glass-strong: rgba(255,255,255,0.95);
+  --bg-glass: rgba(255,255,255,0.7);
+  --bg-glass-strong: rgba(255,255,255,0.85);
   --bg-glass-dark: rgba(15,23,42,0.9);
 
   /* Text Colors */

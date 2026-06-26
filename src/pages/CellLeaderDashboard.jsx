@@ -39,6 +39,7 @@ import { db } from '../firebase/config';
 import CellLeaderHomePage from './cellleader/CellLeaderHomePage';
 import CellLeaderAddMemberPage from './cellleader/CellLeaderAddMemberPage';
 import CellLeaderAttendancePage from './cellleader/CellLeaderAttendancePage';
+import CellLeaderAttendanceLogsPage from './cellleader/CellLeaderAttendanceLogsPage';
 import MobileBottomNav from '../components/MobileBottomNav';
 import BirthdaysView from '../components/BirthdaysView';
 
@@ -55,6 +56,8 @@ function CellLeaderDashboard({ user, onLogout }) {
   const [stats, setStats] = useState({
     totalMembers: 0,
     todayAttendance: 0,
+    presentCount: 0,
+    totalAttCount: 0,
     attendanceTaken: false
   });
 
@@ -73,7 +76,11 @@ function CellLeaderDashboard({ user, onLogout }) {
       setStats(prev => ({ ...prev, totalMembers: cellMems.length }));
     });
 
-    const todayStr = new Date().toISOString().split('T')[0];
+    const getLocalDate = () => {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    };
+    const todayStr = getLocalDate();
     const docRefId = `${user.id}_${user.place}_${todayStr}`;
     
     const unsubAttendance = onSnapshot(doc(db, 'attendance', docRefId), (docSnap) => {
@@ -82,12 +89,12 @@ function CellLeaderDashboard({ user, onLogout }) {
         if (attArray.length > 0) {
           const presentCount = attArray.filter(a => a.status === 'present').length;
           const rate = Math.round((presentCount / attArray.length) * 100);
-          setStats(prev => ({ ...prev, todayAttendance: rate, attendanceTaken: true }));
+          setStats(prev => ({ ...prev, todayAttendance: rate, presentCount, totalAttCount: attArray.length, attendanceTaken: true }));
         } else {
-          setStats(prev => ({ ...prev, todayAttendance: 0, attendanceTaken: false }));
+          setStats(prev => ({ ...prev, todayAttendance: 0, presentCount: 0, totalAttCount: 0, attendanceTaken: false }));
         }
       } else {
-        setStats(prev => ({ ...prev, todayAttendance: 0, attendanceTaken: false }));
+        setStats(prev => ({ ...prev, todayAttendance: 0, presentCount: 0, totalAttCount: 0, attendanceTaken: false }));
       }
     });
 
@@ -129,6 +136,14 @@ function CellLeaderDashboard({ user, onLogout }) {
       color: '#ec489a',
       bgColor: 'rgba(236, 72, 153, 0.1)',
       description: 'Member birthdays'
+    },
+    {
+      id: 4,
+      label: 'Logs',
+      icon: <CheckCircleIcon />,
+      color: '#8b5cf6',
+      bgColor: 'rgba(139, 92, 246, 0.1)',
+      description: 'Past attendance'
     }
   ];
 
@@ -139,6 +154,7 @@ function CellLeaderDashboard({ user, onLogout }) {
         case 1: return <CellLeaderAddMemberPage user={user} onBack={() => setCurrentTab(0)} />;
         case 2: return <CellLeaderAttendancePage user={user} onBack={() => setCurrentTab(0)} />;
         case 3: return <BirthdaysView user={user} onBack={() => setCurrentTab(0)} />;
+        case 4: return <CellLeaderAttendanceLogsPage user={user} onBack={() => setCurrentTab(0)} />;
         default: return <CellLeaderHomePage user={user} />;
       }
     })();
@@ -167,14 +183,14 @@ function CellLeaderDashboard({ user, onLogout }) {
       icon: <TrendingUpIcon sx={{ fontSize: 28 }} />,
       color: '#10b981',
       bgColor: 'rgba(16, 185, 129, 0.1)',
-      trend: stats.attendanceTaken ? 'Marked' : 'Not marked'
+      trend: stats.attendanceTaken ? `${stats.presentCount} / ${stats.totalAttCount} Present` : 'Not marked'
     }
   ];
 
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: 'var(--bg-main)' }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: 'transparent' }}>
         
         {/* Top App Bar with glassmorphism */}
         <AppBar position="sticky" elevation={0} sx={{ bgcolor: 'var(--bg-glass-strong)', backgroundImage: 'none', borderBottom: '1px solid var(--border-light)', backdropFilter: 'blur(22px)' }}>
@@ -244,14 +260,14 @@ function CellLeaderDashboard({ user, onLogout }) {
               </Fade>
             )}
 
-            {/* Navigation Buttons Grid - Hidden on Mobile */}
-            {currentTab === 0 && !isMobile && (
+            {/* Navigation Buttons Grid */}
+            {currentTab === 0 && (
               <Box sx={{ mb: 4 }}>
                 <Typography variant="h6" sx={{ fontWeight: 800, color: 'var(--text-primary)', mb: 2 }}>
                   Quick Actions
                 </Typography>
                 <Grid container spacing={isMobile ? 1.5 : 2}>
-                  {navButtons.map((button) => (
+                  {navButtons.filter(b => b.id !== 0).map((button) => (
                     <Grid item xs={6} sm={6} md={3} key={button.id}>
                       <Card
                         sx={{
@@ -299,7 +315,7 @@ function CellLeaderDashboard({ user, onLogout }) {
           </Container>
         </Box>
         
-        <MobileBottomNav tabs={navButtons} currentTab={currentTab} onChange={setCurrentTab} />
+        <MobileBottomNav tabs={navButtons.slice(0, 3)} currentTab={currentTab} onChange={setCurrentTab} />
       </Box>
     </ThemeProvider>
   );

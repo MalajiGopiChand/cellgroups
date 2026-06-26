@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Paper, FormControl, InputLabel, Select, MenuItem, Fade, Chip, CircularProgress, Divider, IconButton, TextField } from '@mui/material';
-import { EventAvailable as EventIcon, FilterList as FilterIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
-import { collection, getDocs } from 'firebase/firestore';
+import { Box, Typography, Paper, Fade, Chip, CircularProgress, Divider, IconButton, TextField } from '@mui/material';
+import { EventAvailable as EventIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../../firebase/config';
+import { useNavigate } from 'react-router-dom';
 
-function AdminAttendancePage({ onBack }) {
-  const [attendance, setAttendance] = useState([]);
-  const [leaders, setLeaders] = useState([]);
-  const [filterLeader, setFilterLeader] = useState('');
-  const [filterPlace, setFilterPlace] = useState('');
+function CellLeaderAttendanceLogsPage({ user, onBack }) {
+  const navigate = useNavigate();
+  const [attendanceLogs, setAttendanceLogs] = useState([]);
   const getLocalDate = () => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -17,50 +16,29 @@ function AdminAttendancePage({ onBack }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetch = async () => {
+    const fetchLogs = async () => {
+      if (!user?.id) return;
       try {
-        const [attSnap, leadersSnap, studentsSnap] = await Promise.all([
-          getDocs(collection(db, 'attendance')),
-          getDocs(collection(db, 'cellleaders')),
-          getDocs(collection(db, 'students'))
-        ]);
+        const q = query(collection(db, 'attendance'), where('cellLeaderId', '==', user.id));
+        const snap = await getDocs(q);
         
-        // Dynamically track all valid members to filter out any "orphaned" attendance records
-        const validStudentIds = new Set(studentsSnap.docs.map(d => d.id));
-        const validStudentNames = new Set(studentsSnap.docs.map(d => d.data().name));
-        const validLeaderIds = new Set(leadersSnap.docs.map(d => d.id));
-        
-        const cleanedAttendance = attSnap.docs
-          .map(d => {
-            const data = d.data();
-            // Strictly check ID if available to prevent name collision bugs
-            const filteredArr = (data.attendance || []).filter(a => {
-              if (a.studentId && a.studentId.length > 15) {
-                const baseId = a.studentId.split('_')[0];
-                return validStudentIds.has(baseId);
-              }
-              return validStudentNames.has(a.name);
-            });
-            return { id: d.id, ...data, attendance: filteredArr };
-          })
-          // Completely hide attendance logs if the Cell Leader is deleted OR the roster is entirely empty
-          .filter(rec => validLeaderIds.has(rec.cellLeaderId) && rec.attendance.length > 0);
-        
-        setAttendance(cleanedAttendance);
-        setLeaders(leadersSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+        const logs = snap.docs
+          .map(d => ({ id: d.id, ...d.data() }))
+          .filter(rec => rec.attendance && rec.attendance.length > 0);
+          
+        // Sort by date descending
+        logs.sort((a, b) => new Date(b.date) - new Date(a.date));
+        setAttendanceLogs(logs);
       } catch (error) {
         console.error('Error fetching attendance logs:', error);
       } finally {
         setLoading(false);
       }
     };
-    fetch();
-  }, []);
+    fetchLogs();
+  }, [user?.id]);
 
-  const places = [...new Set(attendance.map(a => a.place))].filter(Boolean).sort();
-  const filtered = attendance.filter(a => {
-    if (filterLeader && a.cellLeaderId !== filterLeader) return false;
-    if (filterPlace && a.place !== filterPlace) return false;
+  const filtered = attendanceLogs.filter(a => {
     if (a.date !== filterDate) return false;
     return true;
   });
@@ -80,18 +58,16 @@ function AdminAttendancePage({ onBack }) {
         {/* Header */}
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            {onBack && (
-              <IconButton 
-                onClick={onBack} 
-                sx={{ 
-                  bgcolor: 'var(--bg-glass-strong)', 
-                  border: '1px solid var(--border-light)', 
-                  boxShadow: 'var(--shadow-sm)' 
-                }}
-              >
-                <ArrowBackIcon fontSize="small" />
-              </IconButton>
-            )}
+            <IconButton 
+              onClick={onBack ? onBack : () => navigate('/cellleader/dashboard')} 
+              sx={{ 
+                bgcolor: 'var(--bg-glass-strong)', 
+                border: '1px solid var(--border-light)', 
+                boxShadow: 'var(--shadow-sm)' 
+              }}
+            >
+              <ArrowBackIcon fontSize="small" />
+            </IconButton>
             <Typography variant="h6" sx={{ fontWeight: 800, color: 'var(--text-primary)' }}>
               Attendance Logs
             </Typography>
@@ -110,49 +86,20 @@ function AdminAttendancePage({ onBack }) {
             p: 2, 
             display: 'flex', 
             gap: 2, 
-            flexWrap: 'wrap', 
             bgcolor: 'var(--bg-glass-strong)', 
             backdropFilter: 'blur(12px)',
             borderRadius: 3,
             border: '1px solid var(--border-light)'
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', color: 'var(--text-secondary)', mr: 1 }}>
-            <FilterIcon fontSize="small" sx={{ mr: 1 }} />
-            <Typography variant="body2" fontWeight={600}>Filters</Typography>
-          </Box>
-          <FormControl size="small" sx={{ flexGrow: 1, minWidth: 160 }}>
-            <InputLabel>Cell Leader</InputLabel>
-            <Select 
-              value={filterLeader} 
-              label="Cell Leader" 
-              onChange={(e) => setFilterLeader(e.target.value)}
-              sx={{ borderRadius: 2 }}
-            >
-              <MenuItem value=""><em>All Leaders</em></MenuItem>
-              {leaders.map(l => <MenuItem key={l.id} value={l.id}>{l.name}</MenuItem>)}
-            </Select>
-          </FormControl>
-          <FormControl size="small" sx={{ flexGrow: 1, minWidth: 160 }}>
-            <InputLabel>Place</InputLabel>
-            <Select 
-              value={filterPlace} 
-              label="Place" 
-              onChange={(e) => setFilterPlace(e.target.value)}
-              sx={{ borderRadius: 2 }}
-            >
-              <MenuItem value=""><em>All Places</em></MenuItem>
-              {places.map(p => <MenuItem key={p} value={p}>{p}</MenuItem>)}
-            </Select>
-          </FormControl>
           <TextField
             size="small"
             type="date"
-            label="Date"
+            label="Filter by Date"
             value={filterDate}
             onChange={(e) => setFilterDate(e.target.value)}
             InputLabelProps={{ shrink: true }}
-            sx={{ flexGrow: 1, minWidth: 160 }}
+            sx={{ flexGrow: 1 }}
           />
         </Paper>
 
@@ -174,8 +121,6 @@ function AdminAttendancePage({ onBack }) {
                       borderRadius: 4,
                       border: '1px solid var(--border-light)',
                       boxShadow: 'var(--shadow-sm)',
-                      transition: 'all 0.2s ease',
-                      '&:hover': { transform: 'translateY(-2px)', boxShadow: 'var(--shadow-md)', borderColor: 'rgba(99,102,241,0.2)' },
                       overflow: 'hidden'
                     }}
                   >
@@ -187,9 +132,6 @@ function AdminAttendancePage({ onBack }) {
                         </Box>
                         <Box>
                           <Typography fontWeight={700} sx={{ color: 'var(--text-primary)' }}>{rec.date}</Typography>
-                          <Typography variant="caption" sx={{ color: 'var(--text-secondary)' }}>
-                            {rec.place} • By Leader
-                          </Typography>
                         </Box>
                       </Box>
                       <Chip 
@@ -236,7 +178,7 @@ function AdminAttendancePage({ onBack }) {
           </Box>
         ) : (
           <Paper elevation={0} sx={{ p: 4, textAlign: 'center', bgcolor: 'var(--bg-glass-strong)', borderRadius: 4, border: '1px dashed var(--border-light)' }}>
-            <Typography sx={{ color: 'var(--text-tertiary)' }}>No attendance logs found matching filters.</Typography>
+            <Typography sx={{ color: 'var(--text-tertiary)' }}>No attendance logs found for this date.</Typography>
           </Paper>
         )}
 
@@ -245,4 +187,4 @@ function AdminAttendancePage({ onBack }) {
   );
 }
 
-export default AdminAttendancePage;
+export default CellLeaderAttendanceLogsPage;

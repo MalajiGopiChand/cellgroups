@@ -72,6 +72,8 @@ function AdminDashboard({ user, onLogout }) {
     pendingApprovals: 0,
     totalMembers: 0,
     todayAttendance: 0,
+    presentCount: 0,
+    todayCount: 0,
     activeAnnouncements: 0
   });
 
@@ -99,7 +101,11 @@ function AdminDashboard({ user, onLogout }) {
     });
 
     const unsubAttendance = onSnapshot(collection(db, 'attendance'), (snap) => {
-      const todayStr = new Date().toISOString().split('T')[0];
+      const getLocalDate = () => {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    };
+    const todayStr = getLocalDate();
       let todayCount = 0;
       let presentCount = 0;
       snap.forEach(doc => {
@@ -114,7 +120,7 @@ function AdminDashboard({ user, onLogout }) {
         }
       });
       const attendanceRate = todayCount > 0 ? Math.round((presentCount / todayCount) * 100) : 0;
-      setStats(prev => ({ ...prev, todayAttendance: attendanceRate }));
+      setStats(prev => ({ ...prev, todayAttendance: attendanceRate, presentCount, todayCount }));
     });
 
     return () => {
@@ -219,7 +225,7 @@ function AdminDashboard({ user, onLogout }) {
       icon: <TrendingUpIcon sx={{ fontSize: 28 }} />,
       color: '#10b981',
       bgColor: 'rgba(16, 185, 129, 0.1)',
-      trend: 'Above average'
+      trend: stats.todayCount > 0 ? `${stats.presentCount} / ${stats.todayCount} Present` : 'No data today'
     }
   ];
 
@@ -231,7 +237,7 @@ function AdminDashboard({ user, onLogout }) {
           display: 'flex',
           flexDirection: 'column',
           minHeight: '100vh',
-          bgcolor: 'var(--bg-main)',
+          bgcolor: 'transparent',
         }}
       >
         {/* Top App Bar with glassmorphism */}
@@ -385,14 +391,14 @@ function AdminDashboard({ user, onLogout }) {
               </Fade>
             )}
 
-            {/* Navigation Buttons Grid - Hidden on Mobile */}
-            {currentTab === 0 && !isMobile && (
+            {/* Navigation Buttons Grid */}
+            {currentTab === 0 && (
               <Box sx={{ mb: 4 }}>
                 <Typography variant="h6" sx={{ fontWeight: 800, color: 'var(--text-primary)', mb: 2 }}>
                   Quick Actions
                 </Typography>
                 <Grid container spacing={isMobile ? 1.5 : 2}>
-                  {navButtons.map((button) => (
+                  {navButtons.filter(b => b.id !== 0 && b.id !== 1).map((button) => (
                     <Grid item xs={6} sm={4} md={2.4} key={button.id}>
                       <Card
                         sx={{
@@ -498,7 +504,7 @@ function AdminDashboard({ user, onLogout }) {
           </Container>
         </Box>
         
-        <MobileBottomNav tabs={navButtons} currentTab={currentTab} onChange={setCurrentTab} />
+        <MobileBottomNav tabs={navButtons.slice(0, 4)} currentTab={currentTab} onChange={setCurrentTab} />
       </Box>
     </ThemeProvider>
   );

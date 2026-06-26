@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Typography, Paper, Fade, Button, IconButton, Chip, CircularProgress } from '@mui/material';
+import React, { useState, useEffect, useRef } from 'react';
+import html2canvas from 'html2canvas';
+import { Box, Typography, Paper, Fade, Button, IconButton, Chip, CircularProgress, Snackbar, Alert } from '@mui/material';
 import { ArrowBack as ArrowBackIcon, PersonOutline as PersonIcon } from '@mui/icons-material';
 import { collection, getDocs, doc, setDoc, getDoc, query, where } from 'firebase/firestore';
 import { db } from '../../firebase/config';
@@ -7,8 +8,28 @@ import { db } from '../../firebase/config';
 function AdminLeaderAttendancePage({ onBack }) {
   const [leaders, setLeaders] = useState([]);
   const [attendance, setAttendance] = useState([]);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const getLocalDate = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+  const [selectedDate, setSelectedDate] = useState(getLocalDate());
   const [loading, setLoading] = useState(true);
+  const [showSnackbar, setShowSnackbar] = useState(false);
+  const printRef = useRef(null);
+
+  const handleDownload = async () => {
+    if (!printRef.current) return;
+    try {
+      const canvas = await html2canvas(printRef.current, { backgroundColor: '#ffffff', scale: 2 });
+      const data = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.href = data;
+      link.download = `Leader_Attendance_${selectedDate}.png`;
+      link.click();
+    } catch (e) {
+      console.error('Failed to generate image:', e);
+    }
+  };
 
   useEffect(() => {
     const fetchLeaders = async () => {
@@ -27,6 +48,7 @@ function AdminLeaderAttendancePage({ onBack }) {
 
   useEffect(() => {
     const fetchAttendance = async () => {
+      setAttendance([]); // Clear data instantly when date changes
       try {
         const ref = doc(db, 'leader_attendance', `admin_leaders_${selectedDate}`);
         const snap = await getDoc(ref);
@@ -47,11 +69,23 @@ function AdminLeaderAttendancePage({ onBack }) {
       newAttendance = [...attendance, { leaderId, name: leaderName, place: leaderPlace, status }];
     }
     setAttendance(newAttendance);
+    // Auto-save instantly so data is not lost if date changes
     await setDoc(doc(db, 'leader_attendance', `admin_leaders_${selectedDate}`), {
       date: selectedDate,
       attendance: newAttendance,
       updatedAt: new Date()
     }, { merge: true });
+  };
+
+  const handleSave = async () => {
+    if (attendance.length > 0) {
+      await setDoc(doc(db, 'leader_attendance', `admin_leaders_${selectedDate}`), {
+        date: selectedDate,
+        attendance: attendance,
+        updatedAt: new Date()
+      }, { merge: true });
+      setShowSnackbar(true);
+    }
   };
 
   const getButtonStyles = (isSelected, type) => {
@@ -115,6 +149,14 @@ function AdminLeaderAttendancePage({ onBack }) {
             onChange={(e) => setSelectedDate(e.target.value)} 
             style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid var(--border-light)', background: 'var(--bg-glass-strong)', color: 'var(--text-primary)', fontFamily: 'inherit', fontWeight: 600 }} 
           />
+          <Button 
+            variant="contained" 
+            size="small" 
+            onClick={handleDownload}
+            sx={{ ml: 2, bgcolor: 'var(--color-primary)', borderRadius: 2, fontWeight: 700 }}
+          >
+            Download IMG
+          </Button>
         </Box>
 
         {leaders.length > 0 ? (
@@ -189,10 +231,67 @@ function AdminLeaderAttendancePage({ onBack }) {
                 })}
               </Box>
             </Paper>
+
+            {/* Submit Button */}
+            {attendance.length > 0 && (
+              <Button 
+                variant="contained"
+                fullWidth
+                onClick={handleSave}
+                sx={{ mt: 1, py: 1.5, borderRadius: 3, fontWeight: 800, fontSize: '1rem', bgcolor: 'var(--color-success)', '&:hover': { bgcolor: '#059669' } }}
+              >
+                Save Attendance
+              </Button>
+            )}
           </Box>
         ) : (
           <Typography color="text.secondary">No active cell leaders found.</Typography>
         )}
+
+        {/* Hidden Printable Area */}
+        <div style={{ position: 'absolute', top: -9999, left: -9999 }}>
+          <div ref={printRef} style={{ width: 800, padding: '30px', background: '#fff', color: '#000', fontFamily: 'sans-serif' }}>
+            <h2 style={{ color: '#6366f1', marginBottom: '20px' }}>Bethel Leader Attendance - {selectedDate}</h2>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '15px' }}>
+              <thead>
+                <tr style={{ backgroundColor: '#f3f4f6', borderBottom: '2px solid #e5e7eb' }}>
+                  <th style={{ padding: '12px 16px' }}>Name</th>
+                  <th style={{ padding: '12px 16px' }}>Place</th>
+                  <th style={{ padding: '12px 16px' }}>Phone Number</th>
+                  <th style={{ padding: '12px 16px' }}>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {leaders.map(leader => {
+                  const lRec = attendance.find(a => a.leaderId === leader.id);
+                  const lStatus = lRec?.status || 'Not Marked';
+                  const statusColor = lStatus === 'present' ? '#10b981' : (lStatus === 'absent' ? '#ef4444' : '#6b7280');
+                  
+                  return (
+                    <tr key={leader.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                      <td style={{ padding: '12px 16px', fontWeight: 'bold' }}>{leader.name}</td>
+                      <td style={{ padding: '12px 16px' }}>{leader.place}</td>
+                      <td style={{ padding: '12px 16px' }}>{leader.phone || 'N/A'}</td>
+                      <td style={{ padding: '12px 16px', color: statusColor, fontWeight: 'bold', textTransform: 'capitalize' }}>{lStatus}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <Snackbar 
+          open={showSnackbar} 
+          autoHideDuration={3000} 
+          onClose={() => setShowSnackbar(false)}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+          <Alert onClose={() => setShowSnackbar(false)} severity="success" sx={{ width: '100%', fontWeight: 700, borderRadius: 2 }}>
+            Attendance saved successfully for {selectedDate}!
+          </Alert>
+        </Snackbar>
+
       </Box>
     </Fade>
   );
