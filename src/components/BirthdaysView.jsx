@@ -5,8 +5,10 @@ import { db } from '../firebase/config';
 import { Cake as CakeIcon, Event as EventIcon, Today as TodayIcon, StarBorder as StarIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 import Confetti from 'react-confetti';
 import { useWindowSize } from 'react-use';
+import { useLanguage } from '../contexts/LanguageContext';
 
 function BirthdaysView({ user, isAdmin, onBack }) {
+  const { t } = useLanguage();
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const { width, height } = useWindowSize();
@@ -148,11 +150,12 @@ function BirthdaysView({ user, isAdmin, onBack }) {
           
           <Box sx={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
             {isToday ? (
-              <Chip icon={<StarIcon fontSize="small"/>} label="Today 🎉" size="small" sx={{ bgcolor: 'rgba(236,72,153,0.1)', color: '#ec489a', fontWeight: 700, px: 0.5 }} />
-            ) : isUpcoming ? (
-              <Chip label={`In ${member.diffDays} day${member.diffDays > 1 ? 's' : ''}`} size="small" sx={{ bgcolor: 'rgba(245,158,11,0.1)', color: '#f59e0b', fontWeight: 700 }} />
+              <Chip icon={<StarIcon fontSize="small"/>} label={t('bday.todayLabel')} size="small" sx={{ bgcolor: 'rgba(236,72,153,0.1)', color: '#ec489a', fontWeight: 700, px: 0.5 }} />
             ) : (
-              <Chip label={`In ${member.diffDays} days`} size="small" sx={{ bgcolor: 'rgba(99,102,241,0.1)', color: 'var(--color-primary)', fontWeight: 700 }} />
+              <Typography variant="caption" sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 0.5, color: '#f59e0b', bgcolor: 'rgba(245, 158, 11, 0.1)', px: 1, py: 0.2, borderRadius: 1 }}>
+                <EventIcon sx={{ fontSize: 14 }} />
+                {t('bday.in')} {member.diffDays} {member.diffDays === 1 ? t('bday.day') : t('bday.days')}
+              </Typography>
             )}
           </Box>
         </Box>
@@ -180,21 +183,21 @@ function BirthdaysView({ user, isAdmin, onBack }) {
             </IconButton>
           )}
           <CakeIcon sx={{ color: '#ec489a', fontSize: 32 }} />
-          <Typography variant="h5" sx={{ fontWeight: 800, color: 'var(--text-primary)' }}>
-            Birthdays
+          <Typography variant="h6" sx={{ fontWeight: 800, color: 'var(--text-primary)' }}>
+            {t('bday.title')}
           </Typography>
         </Box>
 
         {todayList.length === 0 && upcomingList.length === 0 && (
           <Paper elevation={0} sx={{ p: 4, textAlign: 'center', bgcolor: 'var(--bg-glass-strong)', borderRadius: 4, border: '1px dashed var(--border-light)' }}>
-            <Typography color="var(--text-tertiary)" fontWeight={500}>No birthdays around this time.</Typography>
+            <Typography color="var(--text-tertiary)" fontWeight={500}>{t('bday.noBirthdays')}</Typography>
           </Paper>
         )}
 
         {todayList.length > 0 && (
           <Box sx={{ mb: 4 }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#ec489a', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-              <TodayIcon fontSize="small" /> Today's Birthdays
+            <Typography variant="subtitle1" sx={{ fontWeight: 800, color: 'var(--color-success)', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+              <CakeIcon fontSize="small" /> {t('bday.today')}
             </Typography>
             <Grid container spacing={2}>
               {todayList.map(m => (
@@ -209,7 +212,7 @@ function BirthdaysView({ user, isAdmin, onBack }) {
         {upcomingList.length > 0 && (
           <Box sx={{ mb: 4 }}>
             <Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#f59e0b', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-              <EventIcon fontSize="small" /> Upcoming (Next 10 Days)
+              <EventIcon fontSize="small" /> {t('bday.upcoming')}
             </Typography>
             <Grid container spacing={2}>
               {upcomingList.map(m => (

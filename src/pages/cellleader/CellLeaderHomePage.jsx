@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { Box, Typography, Paper, Fade } from '@mui/material';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../../firebase/config';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 function CellLeaderHomePage({ user }) {
+  const { language } = useLanguage();
   const [announcements, setAnnouncements] = useState([]);
 
   useEffect(() => {
@@ -24,7 +26,7 @@ function CellLeaderHomePage({ user }) {
     <Fade in timeout={350}>
       <Box>
         <Typography variant="h6" sx={{ fontWeight: 800, color: 'var(--text-primary)', mb: 2 }}>
-          Announcements
+          {language === 'te' ? 'ప్రకటనలు' : 'Announcements'}
         </Typography>
         {announcements.length > 0 ? (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -56,7 +58,7 @@ function CellLeaderHomePage({ user }) {
             ))}
           </Box>
         ) : (
-          <Typography color="text.secondary">No announcements</Typography>
+          <Typography color="text.secondary">{language === 'te' ? 'ప్రకటనలు లేవు' : 'No announcements'}</Typography>
         )}
       </Box>
     </Fade>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { LanguageProvider, useLanguage } from '../contexts/LanguageContext';
 import {
   Box,
   Container,
@@ -31,6 +32,7 @@ import {
   TrendingUp as TrendingUpIcon,
   CheckCircle as CheckCircleIcon,
   Cake as CakeIcon,
+  Translate as TranslateIcon,
 } from '@mui/icons-material';
 
 import { collection, onSnapshot, query, where, doc } from 'firebase/firestore';
@@ -43,9 +45,10 @@ import CellLeaderAttendanceLogsPage from './cellleader/CellLeaderAttendanceLogsP
 import MobileBottomNav from '../components/MobileBottomNav';
 import BirthdaysView from '../components/BirthdaysView';
 
-function CellLeaderDashboard({ user, onLogout }) {
+function CellLeaderDashboardInner({ user, onLogout }) {
   const muiTheme = useTheme();
   const isMobile = useMediaQuery(muiTheme.breakpoints.down('sm'));
+  const { language, toggleLanguage, t } = useLanguage();
 
   // Tab State
   const [currentTab, setCurrentTab] = useState(() => {
@@ -107,43 +110,43 @@ function CellLeaderDashboard({ user, onLogout }) {
   const navButtons = [
     { 
       id: 0, 
-      label: 'Home', 
+      label: t('nav.home'), 
       icon: <DashboardIcon />, 
       color: '#6366f1',
       bgColor: 'rgba(99, 102, 241, 0.1)',
-      description: 'Overview & Alerts'
+      description: t('desc.overview')
     },
     { 
       id: 1, 
-      label: 'Members', 
+      label: t('nav.members'), 
       icon: <PersonAddIcon />, 
       color: '#f59e0b',
       bgColor: 'rgba(245, 158, 11, 0.1)',
-      description: 'Manage group'
+      description: t('desc.manage')
     },
     { 
       id: 2, 
-      label: 'Attendance', 
+      label: t('nav.attendance'), 
       icon: <AttendanceIcon />, 
       color: '#10b981',
       bgColor: 'rgba(16, 185, 129, 0.1)',
-      description: 'Mark daily'
+      description: t('desc.mark')
     },
     { 
       id: 3, 
-      label: 'Birthdays', 
+      label: t('nav.birthdays'), 
       icon: <CakeIcon />, 
       color: '#ec489a',
       bgColor: 'rgba(236, 72, 153, 0.1)',
-      description: 'Member birthdays'
+      description: t('desc.birthdays')
     },
     {
       id: 4,
-      label: 'Logs',
+      label: t('nav.logs'),
       icon: <CheckCircleIcon />,
       color: '#8b5cf6',
       bgColor: 'rgba(139, 92, 246, 0.1)',
-      description: 'Past attendance'
+      description: t('desc.past')
     }
   ];
 
@@ -170,20 +173,20 @@ function CellLeaderDashboard({ user, onLogout }) {
 
   const statsCards = [
     {
-      title: 'Group Members',
+      title: t('dash.groupMembers'),
       value: stats.totalMembers,
       icon: <PeopleIcon sx={{ fontSize: 28 }} />,
       color: '#6366f1',
       bgColor: 'rgba(99, 102, 241, 0.1)',
-      trend: 'Active'
+      trend: t('dash.active')
     },
     {
-      title: "Today's Attendance",
+      title: t('dash.todayAtt'),
       value: stats.attendanceTaken ? `${stats.todayAttendance}%` : '--',
       icon: <TrendingUpIcon sx={{ fontSize: 28 }} />,
       color: '#10b981',
       bgColor: 'rgba(16, 185, 129, 0.1)',
-      trend: stats.attendanceTaken ? `${stats.presentCount} / ${stats.totalAttCount} Present` : 'Not marked'
+      trend: stats.attendanceTaken ? `${stats.presentCount} / ${stats.totalAttCount} ${t('dash.present')}` : t('dash.notMarked')
     }
   ];
 
@@ -214,17 +217,29 @@ function CellLeaderDashboard({ user, onLogout }) {
 
             {!isMobile && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <Button 
+                  onClick={toggleLanguage}
+                  startIcon={<TranslateIcon />} 
+                  sx={{ borderRadius: 2, px: 2, color: 'var(--text-primary)', fontWeight: 'bold', '&:hover': { bgcolor: 'rgba(99, 102, 241, 0.1)' } }}
+                >
+                  {language === 'en' ? 'తెలుగు' : 'English'}
+                </Button>
                 <Chip size="small" color="primary" variant="outlined" label="Cell Leader" sx={{ borderRadius: 2 }} />
-                <Tooltip title="Logout">
-                  <Button onClick={onLogout} startIcon={<LogoutIcon />} sx={{ borderRadius: 2, px: 2.5, color: 'var(--text-primary)', fontWeight: 'bold', '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' } }}>Logout</Button>
+                <Tooltip title={t('nav.logout')}>
+                  <Button onClick={onLogout} startIcon={<LogoutIcon />} sx={{ borderRadius: 2, px: 2.5, color: 'var(--text-primary)', fontWeight: 'bold', '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' } }}>{t('nav.logout')}</Button>
                 </Tooltip>
               </Box>
             )}
 
             {isMobile && (
-              <IconButton onClick={onLogout} sx={{ color: '#ef4444', bgcolor: 'rgba(239,68,68,0.1)', '&:hover': { bgcolor: 'rgba(239,68,68,0.2)' } }}>
-                <LogoutIcon />
-              </IconButton>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <IconButton onClick={toggleLanguage} sx={{ color: 'var(--color-primary)', bgcolor: 'rgba(99,102,241,0.1)', '&:hover': { bgcolor: 'rgba(99,102,241,0.2)' } }}>
+                  <TranslateIcon />
+                </IconButton>
+                <IconButton onClick={onLogout} sx={{ color: '#ef4444', bgcolor: 'rgba(239,68,68,0.1)', '&:hover': { bgcolor: 'rgba(239,68,68,0.2)' } }}>
+                  <LogoutIcon />
+                </IconButton>
+              </Box>
             )}
           </Toolbar>
         </AppBar>
@@ -238,7 +253,7 @@ function CellLeaderDashboard({ user, onLogout }) {
               <Fade in timeout={400}>
                 <Box sx={{ mb: 4 }}>
                   <Typography variant="h6" sx={{ fontWeight: 800, color: 'var(--text-primary)', mb: 2 }}>
-                    Quick Overview
+                    {t('dash.overview')}
                   </Typography>
                   <Grid container spacing={isMobile ? 1.5 : 2}>
                     {statsCards.map((stat, index) => (
@@ -264,7 +279,7 @@ function CellLeaderDashboard({ user, onLogout }) {
             {currentTab === 0 && (
               <Box sx={{ mb: 4 }}>
                 <Typography variant="h6" sx={{ fontWeight: 800, color: 'var(--text-primary)', mb: 2 }}>
-                  Quick Actions
+                  {t('dash.quickActions')}
                 </Typography>
                 <Grid container spacing={isMobile ? 1.5 : 2}>
                   {navButtons.filter(b => b.id !== 0).map((button) => (
@@ -318,6 +333,14 @@ function CellLeaderDashboard({ user, onLogout }) {
         <MobileBottomNav tabs={navButtons.slice(0, 3)} currentTab={currentTab} onChange={setCurrentTab} />
       </Box>
     </ThemeProvider>
+  );
+}
+
+function CellLeaderDashboard({ user, onLogout }) {
+  return (
+    <LanguageProvider>
+      <CellLeaderDashboardInner user={user} onLogout={onLogout} />
+    </LanguageProvider>
   );
 }
 

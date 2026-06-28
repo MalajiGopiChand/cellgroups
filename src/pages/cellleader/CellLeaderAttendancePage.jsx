@@ -2,11 +2,13 @@ import { useState, useEffect, useRef } from 'react';
 import { Box, Typography, Paper, Fade, Button, IconButton, Chip, Snackbar, Alert } from '@mui/material';
 import { collection, getDocs, query, where, doc, setDoc, getDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
-import { ArrowBack as ArrowBackIcon, FamilyRestroom as FamilyIcon } from '@mui/icons-material';
+import { ArrowBack as ArrowBackIcon, FamilyRestroom as FamilyIcon, Download as DownloadIcon, CheckCircle as CheckCircleIcon, Cancel as CancelIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import html2canvas from 'html2canvas';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 function CellLeaderAttendancePage({ user, onBack }) {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [members, setMembers] = useState([]);
   const [attendance, setAttendance] = useState([]);
@@ -15,7 +17,7 @@ function CellLeaderAttendancePage({ user, onBack }) {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   };
   const [selectedDate, setSelectedDate] = useState(getLocalDate());
-  const [showSnackbar, setShowSnackbar] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
   const printRef = useRef(null);
 
   const handleDownload = async () => {
@@ -32,6 +34,8 @@ function CellLeaderAttendancePage({ user, onBack }) {
     }
   };
 
+  const handleCloseSnackbar = () => setSnackbarOpen(false);
+
   useEffect(() => {
     const fetch = async () => {
       if (!user?.id) return;
@@ -44,7 +48,7 @@ function CellLeaderAttendancePage({ user, onBack }) {
 
   useEffect(() => {
     const fetch = async () => {
-      setAttendance([]); // Clear instantly when date changes
+      setAttendance([]); 
       if (!user?.id) return;
       const ref = doc(db, 'attendance', `${user.id}_${user.place}_${selectedDate}`);
       const snap = await getDoc(ref);
@@ -65,7 +69,6 @@ function CellLeaderAttendancePage({ user, onBack }) {
     }
     setAttendance(newAttendance);
     
-    // Auto-save instantly so data is not lost if date changes
     await setDoc(doc(db, 'attendance', `${user.id}_${user.place}_${selectedDate}`), {
       cellLeaderId: user.id,
       place: user.place,
@@ -75,46 +78,6 @@ function CellLeaderAttendancePage({ user, onBack }) {
     }, { merge: true });
   };
 
-  const handleSave = async () => {
-    if (attendance.length > 0) {
-      await setDoc(doc(db, 'attendance', `${user.id}_${user.place}_${selectedDate}`), {
-        cellLeaderId: user.id,
-        place: user.place,
-        date: selectedDate,
-        attendance: attendance,
-        updatedAt: new Date()
-      }, { merge: true });
-      
-      setShowSnackbar(true);
-    }
-  };
-
-  const getButtonStyles = (isSelected, type, isSubRow = false) => {
-    const colorSuccess = 'var(--color-success)';
-    const colorError = 'var(--color-error)';
-    const baseColor = type === 'present' ? colorSuccess : colorError;
-    const hoverBg = type === 'present' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)';
-    const activeBg = type === 'present' ? 'var(--color-success)' : 'var(--color-error)';
-    
-    return {
-      fontWeight: 600,
-      textTransform: 'none',
-      borderRadius: 2,
-      padding: isSubRow ? '2px 10px' : '4px 12px',
-      minWidth: isSubRow ? '60px' : '75px',
-      fontSize: isSubRow ? '0.75rem' : '0.875rem',
-      bgcolor: isSelected ? activeBg : 'transparent',
-      color: isSelected ? '#fff' : 'var(--text-secondary)',
-      border: isSelected ? '1px solid transparent' : '1px solid var(--border-light)',
-      boxShadow: isSelected ? `0 4px 12px ${type === 'present' ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}` : 'none',
-      '&:hover': { 
-        bgcolor: isSelected ? (type === 'present' ? '#059669' : '#dc2626') : hoverBg, 
-        color: isSelected ? '#fff' : baseColor 
-      }
-    };
-  };
-
-  // Group members by familyId
   const familyGroups = {};
   members.forEach(m => {
     const fid = m.familyId || `single_${m.id}`;
@@ -152,7 +115,9 @@ function CellLeaderAttendancePage({ user, onBack }) {
           >
             <ArrowBackIcon fontSize="small" />
           </IconButton>
-          <Typography variant="h6" sx={{ fontWeight: 800, color: 'var(--text-primary)' }}>Take Attendance</Typography>
+          <Typography variant="h6" sx={{ fontWeight: 800, color: 'var(--text-primary)' }}>
+            {t('att.title')}
+          </Typography>
         </Box>
         <Typography variant="body2" color="var(--text-secondary)" sx={{ mb: 3, fontWeight: 600 }}>{user?.name} • {user?.place}</Typography>
         
@@ -160,15 +125,28 @@ function CellLeaderAttendancePage({ user, onBack }) {
           <Typography variant="caption" sx={{ mr: 1.5, fontWeight: 700, color: 'var(--text-secondary)' }}>Date:</Typography>
           <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid var(--border-light)', background: 'var(--bg-glass-strong)', color: 'var(--text-primary)', fontFamily: 'inherit', fontWeight: 600 }} />
           <Button 
-            variant="contained" 
-            size="small" 
-            onClick={handleDownload}
-            sx={{ ml: 2, bgcolor: 'var(--color-primary)', borderRadius: 2, fontWeight: 700 }}
+            onClick={handleDownload} 
+            startIcon={<DownloadIcon />} 
+            variant="outlined" 
+            size="small"
+            sx={{ 
+              ml: 2,
+              borderRadius: 2, 
+              color: 'var(--color-primary)', 
+              borderColor: 'rgba(99, 102, 241, 0.5)',
+              fontWeight: 700,
+              '&:hover': { bgcolor: 'rgba(99, 102, 241, 0.05)', borderColor: 'var(--color-primary)' } 
+            }}
           >
-            Download IMG
+            {t('att.download')}
           </Button>
         </Box>
-        {members.length > 0 ? (
+
+        {members.length === 0 ? (
+          <Paper elevation={0} sx={{ p: 4, textAlign: 'center', bgcolor: 'var(--bg-glass-strong)', borderRadius: 3, border: '1px dashed var(--border-light)' }}>
+            <Typography color="var(--text-tertiary)">{t('att.addFirst')}</Typography>
+          </Paper>
+        ) : (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             {families.map(family => (
               <Paper 
@@ -184,91 +162,58 @@ function CellLeaderAttendancePage({ user, onBack }) {
                   mb: 1
                 }}
               >
-                {/* Family Header */}
                 <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'var(--color-primary)', mb: 2, display: 'flex', alignItems: 'center', gap: 0.5 }}>
                   <FamilyIcon sx={{ fontSize: 16 }} />
                   {family.head.name}'s Family
                 </Typography>
 
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                  {family.members.map(member => {
-                    const mId = member.id || member.name;
-                    const mRec = attendance.find(a => a.studentId === mId);
-                    const mStatus = mRec?.status || null;
-                    const displayName = member.relation && member.relation !== 'Head' 
-                      ? `${member.name} (${member.relation} of ${family.head.name})`
-                      : member.name;
-
+                  {family.members.map(m => {
+                    const mRec = attendance.find(a => a.studentId === m.id);
+                    const isPresent = mRec?.status === 'present';
+                    const isAbsent = mRec?.status === 'absent';
                     return (
-                      <Box 
-                        key={member.id} 
-                        sx={{ 
-                          display: 'flex', 
-                          justifyContent: 'space-between', 
-                          alignItems: 'center',
-                          pl: member.relation && member.relation !== 'Head' ? 2 : 0,
-                          borderLeft: member.relation && member.relation !== 'Head' ? '2px solid var(--border-light)' : 'none',
-                          py: 0.5
-                        }}
-                      >
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Typography fontWeight={700} sx={{ color: 'var(--text-primary)', fontSize: member.relation && member.relation !== 'Head' ? '0.9rem' : '1rem' }}>
-                            {member.name}
-                          </Typography>
-                          {member.relation && (
+                      <Fade in key={m.id}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <Typography fontWeight={700}>{m.name}</Typography>
+                          <Box sx={{ display: 'flex', gap: 1 }}>
                             <Chip 
-                              size="small" 
-                              label={member.relation} 
+                              size="small"
+                              label={t('att.presentBtn')}
+                              icon={<CheckCircleIcon fontSize="small" />}
+                              onClick={() => handleMark(m.id, m.name, 'present')}
                               sx={{ 
-                                height: 16, 
-                                fontSize: '0.6rem', 
-                                fontWeight: 700,
-                                bgcolor: member.relation === 'Spouse' ? 'rgba(236,72,153,0.08)' : member.relation === 'Head' ? 'rgba(99,102,241,0.08)' : 'rgba(0,0,0,0.05)',
-                                color: member.relation === 'Spouse' ? '#ec489a' : member.relation === 'Head' ? 'var(--color-primary)' : 'var(--text-secondary)'
-                              }} 
+                                bgcolor: isPresent ? 'rgba(16, 185, 129, 0.15)' : 'rgba(0,0,0,0.04)',
+                                color: isPresent ? '#059669' : 'var(--text-secondary)',
+                                fontWeight: isPresent ? 800 : 600,
+                                border: isPresent ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid transparent',
+                                '&:hover': { bgcolor: 'rgba(16, 185, 129, 0.2)' }
+                              }}
                             />
-                          )}
+                            <Chip 
+                              size="small"
+                              label={t('att.absentBtn')}
+                              icon={<CancelIcon fontSize="small" />}
+                              onClick={() => handleMark(m.id, m.name, 'absent')}
+                              sx={{ 
+                                bgcolor: isAbsent ? 'rgba(239, 68, 68, 0.15)' : 'rgba(0,0,0,0.04)',
+                                color: isAbsent ? '#dc2626' : 'var(--text-secondary)',
+                                fontWeight: isAbsent ? 800 : 600,
+                                border: isAbsent ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid transparent',
+                                '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.2)' }
+                              }}
+                            />
+                          </Box>
                         </Box>
-                        <Box sx={{ display: 'flex', gap: 1 }}>
-                          <Button 
-                            size="small" 
-                            onClick={() => handleMark(mId, displayName, 'present')}
-                            sx={getButtonStyles(mStatus === 'present', 'present', member.relation && member.relation !== 'Head')}
-                          >
-                            Present
-                          </Button>
-                          <Button 
-                            size="small" 
-                            onClick={() => handleMark(mId, displayName, 'absent')}
-                            sx={getButtonStyles(mStatus === 'absent', 'absent', member.relation && member.relation !== 'Head')}
-                          >
-                            Absent
-                          </Button>
-                        </Box>
-                      </Box>
+                      </Fade>
                     );
                   })}
                 </Box>
               </Paper>
             ))}
-
-            {/* Submit Button */}
-            {attendance.length > 0 && (
-              <Button 
-                variant="contained"
-                fullWidth
-                onClick={handleSave}
-                sx={{ mt: 1, mb: 2, py: 1.5, borderRadius: 3, fontWeight: 800, fontSize: '1rem', bgcolor: 'var(--color-success)', '&:hover': { bgcolor: '#059669' } }}
-              >
-                Save Attendance
-              </Button>
-            )}
           </Box>
-        ) : (
-          <Typography color="text.secondary">Add members first</Typography>
         )}
 
-        {/* Hidden Printable Area */}
         <div style={{ position: 'absolute', top: -9999, left: -9999 }}>
           <div ref={printRef} style={{ width: 800, padding: '30px', background: '#fff', color: '#000', fontFamily: 'sans-serif' }}>
             <h2 style={{ color: '#6366f1', marginBottom: '20px' }}>Bethel Cell Attendance - {selectedDate}</h2>
@@ -287,7 +232,6 @@ function CellLeaderAttendancePage({ user, onBack }) {
                   const mStatus = mRec?.status || 'Not Marked';
                   const statusColor = mStatus === 'present' ? '#10b981' : (mStatus === 'absent' ? '#ef4444' : '#6b7280');
                   const displayName = (member.firstName || '') + ' ' + (member.lastName || '');
-                  
                   return (
                     <tr key={member.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
                       <td style={{ padding: '12px 16px', fontWeight: 'bold' }}>{displayName.trim() || 'Unknown'}</td>
@@ -303,16 +247,15 @@ function CellLeaderAttendancePage({ user, onBack }) {
         </div>
 
         <Snackbar 
-          open={showSnackbar} 
+          open={snackbarOpen} 
           autoHideDuration={3000} 
-          onClose={() => setShowSnackbar(false)}
+          onClose={handleCloseSnackbar}
           anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         >
-          <Alert onClose={() => setShowSnackbar(false)} severity="success" sx={{ width: '100%', fontWeight: 700, borderRadius: 2 }}>
-            Attendance saved successfully for {selectedDate}!
+          <Alert onClose={handleCloseSnackbar} severity="success" sx={{ width: '100%', borderRadius: 2, fontWeight: 600 }}>
+            {t('att.savedAlert')} {selectedDate}
           </Alert>
         </Snackbar>
-
       </Box>
     </Fade>
   );

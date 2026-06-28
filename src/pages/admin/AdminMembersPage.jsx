@@ -4,6 +4,8 @@ import { DeleteOutline as DeleteIcon, FilterList as FilterIcon, PersonOutline as
 import { collection, getDocs, doc, deleteDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import MemberDetailsDialog from '../../components/MemberDetailsDialog';
+import EditMemberDialog from '../../components/EditMemberDialog';
+import { Edit as EditIcon } from '@mui/icons-material';
 
 function AdminMembersPage({ onBack }) {
   const [members, setMembers] = useState([]);
@@ -15,6 +17,10 @@ function AdminMembersPage({ onBack }) {
   // Profile dialog state
   const [selectedMember, setSelectedMember] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  
+  // Edit dialog state
+  const [memberToEdit, setMemberToEdit] = useState(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   useEffect(() => {
     const fetch = async () => {
@@ -75,7 +81,12 @@ function AdminMembersPage({ onBack }) {
       console.error('Error deleting member:', error);
     }
   };
-
+  const handleMemberUpdated = (updatedMember, newMembers = []) => {
+    setMembers(prev => {
+      const updatedList = prev.map(m => m.id === updatedMember.id ? updatedMember : m);
+      return [...updatedList, ...newMembers];
+    });
+  };
   const places = [...new Set(members.map(m => m.place))].filter(Boolean).sort();
   const filtered = members.filter(m => {
     if (filterLeader && m.cellLeaderId !== filterLeader) return false;
@@ -264,18 +275,33 @@ function AdminMembersPage({ onBack }) {
                             </Box>
                           </Box>
                         </Box>
-                        <IconButton 
-                          color="error" 
-                          size="small" 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDelete(m.id, m.name);
-                          }} 
-                          title="Delete Member"
-                          sx={{ opacity: 0.6, '&:hover': { opacity: 1, bgcolor: 'rgba(239, 68, 68, 0.1)' } }}
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
+                        <Box sx={{ display: 'flex', gap: 0.5 }}>
+                          <IconButton 
+                            color="primary" 
+                            size="small" 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setMemberToEdit(m);
+                              setEditDialogOpen(true);
+                            }} 
+                            title="Edit Member"
+                            sx={{ opacity: 0.6, '&:hover': { opacity: 1, bgcolor: 'rgba(99, 102, 241, 0.1)' } }}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                          <IconButton 
+                            color="error" 
+                            size="small" 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(m.id, m.name);
+                            }} 
+                            title="Delete Member"
+                            sx={{ opacity: 0.6, '&:hover': { opacity: 1, bgcolor: 'rgba(239, 68, 68, 0.1)' } }}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Box>
                       </Box>
                     ))}
                   </Box>
@@ -295,6 +321,13 @@ function AdminMembersPage({ onBack }) {
           onClose={() => setDialogOpen(false)} 
           member={selectedMember} 
           familyMembers={selectedMember ? members.filter(m => m.familyId && m.familyId === selectedMember.familyId) : []}
+        />
+
+        <EditMemberDialog
+          open={editDialogOpen}
+          onClose={() => setEditDialogOpen(false)}
+          member={memberToEdit}
+          onMemberUpdated={handleMemberUpdated}
         />
       </Box>
     </Fade>

@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Paper, Fade, Chip, CircularProgress, Divider, IconButton, TextField } from '@mui/material';
+import { Box, Typography, Paper, Fade, Chip, CircularProgress, Divider, IconButton } from '@mui/material';
 import { EventAvailable as EventIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 function CellLeaderAttendanceLogsPage({ user, onBack }) {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [attendanceLogs, setAttendanceLogs] = useState([]);
   const getLocalDate = () => {
     const d = new Date();
@@ -69,7 +71,7 @@ function CellLeaderAttendanceLogsPage({ user, onBack }) {
               <ArrowBackIcon fontSize="small" />
             </IconButton>
             <Typography variant="h6" sx={{ fontWeight: 800, color: 'var(--text-primary)' }}>
-              Attendance Logs
+              {t('logs.title')}
             </Typography>
           </Box>
           <Chip 
@@ -80,28 +82,10 @@ function CellLeaderAttendanceLogsPage({ user, onBack }) {
         </Box>
 
         {/* Filters */}
-        <Paper 
-          elevation={0}
-          sx={{ 
-            p: 2, 
-            display: 'flex', 
-            gap: 2, 
-            bgcolor: 'var(--bg-glass-strong)', 
-            backdropFilter: 'blur(12px)',
-            borderRadius: 3,
-            border: '1px solid var(--border-light)'
-          }}
-        >
-          <TextField
-            size="small"
-            type="date"
-            label="Filter by Date"
-            value={filterDate}
-            onChange={(e) => setFilterDate(e.target.value)}
-            InputLabelProps={{ shrink: true }}
-            sx={{ flexGrow: 1 }}
-          />
-        </Paper>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+          <Typography variant="caption" sx={{ mr: 1.5, fontWeight: 700, color: 'var(--text-secondary)' }}>{t('logs.selectDate')}</Typography>
+          <input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid var(--border-light)', background: 'var(--bg-glass-strong)', color: 'var(--text-primary)', fontFamily: 'inherit', fontWeight: 600 }} />
+        </Box>
 
         {/* Attendance Records */}
         {filtered.length > 0 ? (
@@ -131,12 +115,15 @@ function CellLeaderAttendanceLogsPage({ user, onBack }) {
                           <EventIcon />
                         </Box>
                         <Box>
-                          <Typography fontWeight={700} sx={{ color: 'var(--text-primary)' }}>{rec.date}</Typography>
+                          <Typography variant="caption" sx={{ color: 'var(--text-secondary)' }}>
+                            {rec.place} • {user?.name}
+                          </Typography>
+                          <Typography fontWeight={700} sx={{ color: 'var(--text-primary)', display: 'block' }}>{rec.date}</Typography>
                         </Box>
                       </Box>
                       <Chip 
                         size="small" 
-                        label={`${presentCount}/${totalCount} Present`} 
+                        label={`${presentCount}/${totalCount} ${t('logs.presentCount')}`} 
                         sx={{ bgcolor: presentCount > 0 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', color: presentCount > 0 ? 'var(--color-success)' : 'var(--color-error)', fontWeight: 700 }} 
                       />
                     </Box>
@@ -153,7 +140,7 @@ function CellLeaderAttendanceLogsPage({ user, onBack }) {
                             </Typography>
                             <Chip 
                               size="small" 
-                              label={a.status} 
+                              label={a.status === 'present' ? t('att.presentBtn') : t('att.absentBtn')}
                               sx={{ 
                                 height: 22, 
                                 fontSize: '0.65rem', 
@@ -178,7 +165,7 @@ function CellLeaderAttendanceLogsPage({ user, onBack }) {
           </Box>
         ) : (
           <Paper elevation={0} sx={{ p: 4, textAlign: 'center', bgcolor: 'var(--bg-glass-strong)', borderRadius: 4, border: '1px dashed var(--border-light)' }}>
-            <Typography sx={{ color: 'var(--text-tertiary)' }}>No attendance logs found for this date.</Typography>
+            <Typography sx={{ color: 'var(--text-tertiary)' }}>{t('logs.noLogs')}</Typography>
           </Paper>
         )}
 

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, Paper, FormControl, InputLabel, Select, MenuItem, Fade, Chip, CircularProgress, Divider, IconButton, TextField } from '@mui/material';
 import { EventAvailable as EventIcon, FilterList as FilterIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
+import { DeleteOutline as DeleteIcon, Edit as EditIcon } from '@mui/icons-material';
 
 function AdminAttendancePage({ onBack }) {
   const [attendance, setAttendance] = useState([]);
@@ -56,6 +57,45 @@ function AdminAttendancePage({ onBack }) {
     };
     fetch();
   }, []);
+
+  const handleToggleStatus = async (recordId, currentArray, studentObj) => {
+    try {
+      const updatedArray = currentArray.map(a => {
+        const match = (a.studentId && studentObj.studentId) 
+          ? a.studentId === studentObj.studentId 
+          : a.name === studentObj.name;
+        
+        if (match) {
+          return { ...a, status: a.status === 'present' ? 'absent' : 'present' };
+        }
+        return a;
+      });
+
+      await updateDoc(doc(db, 'attendance', recordId), { attendance: updatedArray });
+      setAttendance(prev => prev.map(rec => rec.id === recordId ? { ...rec, attendance: updatedArray } : rec));
+    } catch (error) {
+      console.error('Error toggling status:', error);
+      alert('Failed to update status.');
+    }
+  };
+
+  const handleDeleteRecord = async (recordId, currentArray, studentObj) => {
+    if (!window.confirm(`Remove ${studentObj.name} from this attendance record?`)) return;
+    try {
+      const updatedArray = currentArray.filter(a => {
+        const match = (a.studentId && studentObj.studentId) 
+          ? a.studentId === studentObj.studentId 
+          : a.name === studentObj.name;
+        return !match;
+      });
+
+      await updateDoc(doc(db, 'attendance', recordId), { attendance: updatedArray });
+      setAttendance(prev => prev.map(rec => rec.id === recordId ? { ...rec, attendance: updatedArray } : rec));
+    } catch (error) {
+      console.error('Error deleting record:', error);
+      alert('Failed to delete record.');
+    }
+  };
 
   const places = [...new Set(attendance.map(a => a.place))].filter(Boolean).sort();
   const filtered = attendance.filter(a => {
@@ -209,18 +249,36 @@ function AdminAttendancePage({ onBack }) {
                             <Typography variant="body2" sx={{ fontWeight: 600, color: 'var(--text-secondary)' }}>
                               {a.name}
                             </Typography>
-                            <Chip 
-                              size="small" 
-                              label={a.status} 
-                              sx={{ 
-                                height: 22, 
-                                fontSize: '0.65rem', 
-                                fontWeight: 700, 
-                                textTransform: 'uppercase',
-                                bgcolor: a.status === 'present' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                                color: a.status === 'present' ? 'var(--color-success)' : 'var(--color-error)'
-                              }} 
-                            />
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Chip 
+                                size="small" 
+                                label={a.status} 
+                                sx={{ 
+                                  height: 22, 
+                                  fontSize: '0.65rem', 
+                                  fontWeight: 700, 
+                                  textTransform: 'uppercase',
+                                  bgcolor: a.status === 'present' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                                  color: a.status === 'present' ? 'var(--color-success)' : 'var(--color-error)'
+                                }} 
+                              />
+                              <IconButton
+                                size="small"
+                                onClick={() => handleToggleStatus(rec.id, rec.attendance, a)}
+                                sx={{ color: 'var(--color-primary)', bgcolor: 'rgba(99,102,241,0.05)', '&:hover': { bgcolor: 'rgba(99,102,241,0.1)' } }}
+                                title="Toggle Status"
+                              >
+                                <EditIcon sx={{ fontSize: 16 }} />
+                              </IconButton>
+                              <IconButton
+                                size="small"
+                                onClick={() => handleDeleteRecord(rec.id, rec.attendance, a)}
+                                sx={{ color: '#ef4444', bgcolor: 'rgba(239,68,68,0.05)', '&:hover': { bgcolor: 'rgba(239,68,68,0.1)' } }}
+                                title="Remove Record"
+                              >
+                                <DeleteIcon sx={{ fontSize: 16 }} />
+                              </IconButton>
+                            </Box>
                           </Box>
                         ))}
                       </Box>

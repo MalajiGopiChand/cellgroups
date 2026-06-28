@@ -39,9 +39,13 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import MemberDetailsDialog from '../../components/MemberDetailsDialog';
+import EditMemberDialog from '../../components/EditMemberDialog';
+import { Edit as EditIcon } from '@mui/icons-material';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 function CellLeaderAddMemberPage({ user, onBack }) {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(false);
   
@@ -52,6 +56,10 @@ function CellLeaderAddMemberPage({ user, onBack }) {
   // Profile dialog state
   const [selectedMember, setSelectedMember] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  
+  // Edit dialog state
+  const [memberToEdit, setMemberToEdit] = useState(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   const fetchMembers = async () => {
     if (!user?.id) return;
@@ -63,6 +71,13 @@ function CellLeaderAddMemberPage({ user, onBack }) {
   useEffect(() => {
     fetchMembers();
   }, [user?.id, user?.place]);
+
+  const handleMemberUpdated = (updatedMember, newMembers = []) => {
+    setMembers(prev => {
+      const updatedList = prev.map(m => m.id === updatedMember.id ? updatedMember : m);
+      return [...updatedList, ...newMembers];
+    });
+  };
 
   const handleAddFamilyMember = () => {
     setFamilyMembers([...familyMembers, { name: '', relation: 'Spouse', dob: '', phone: '' }]);
@@ -217,7 +232,7 @@ function CellLeaderAddMemberPage({ user, onBack }) {
             <ArrowBackIcon fontSize="small" />
           </IconButton>
           <Typography variant="h6" sx={{ fontWeight: 800, color: 'var(--text-primary)' }}>
-            Add Member / Family
+            {t('add.title')}
           </Typography>
         </Box>
         <Paper 
@@ -234,11 +249,11 @@ function CellLeaderAddMemberPage({ user, onBack }) {
         >
           <form onSubmit={handleSubmit}>
             <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'var(--text-secondary)', mb: 1.5 }}>
-              PRIMARY MEMBER DETAILS
+              {t('add.primaryDetails')}
             </Typography>
             
             <TextField 
-              name="name" label="Name of Member" fullWidth required 
+              name="name" label={t('add.name')} fullWidth required 
               InputProps={{ startAdornment: <InputAdornment position="start"><PersonIcon sx={{ color: 'var(--color-primary)' }} /></InputAdornment> }}
               sx={{ mb: 2.5, '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: 'var(--bg-surface)' } }} 
             />
@@ -432,12 +447,12 @@ function CellLeaderAddMemberPage({ user, onBack }) {
                 }
               }}
             >
-              {loading ? 'Adding Family...' : 'Add Family Group'}
+              {loading ? 'Adding...' : t('add.saveBtn')}
             </Button>
           </form>
         </Paper>
         <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: 1, mb: 1.5, px: 1 }}>
-          My Members ({members.length})
+          {t('add.myMembers')} ({members.length})
         </Typography>
 
         {families.map((family, fIdx) => (
@@ -518,7 +533,22 @@ function CellLeaderAddMemberPage({ user, onBack }) {
                       )}
                     </Box>
                   </Box>
-                  <Chip size="small" label="Active" sx={{ bgcolor: 'rgba(16,185,129,0.08)', color: 'var(--color-success)', fontWeight: 700, borderRadius: 2, height: 20, fontSize: '0.65rem' }} />
+                  <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
+                    <IconButton 
+                      color="primary" 
+                      size="small" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setMemberToEdit(m);
+                        setEditDialogOpen(true);
+                      }} 
+                      title="Edit Member"
+                      sx={{ opacity: 0.7, '&:hover': { opacity: 1, bgcolor: 'rgba(99, 102, 241, 0.1)' } }}
+                    >
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                    <Chip size="small" label="Active" sx={{ bgcolor: 'rgba(16,185,129,0.08)', color: 'var(--color-success)', fontWeight: 700, borderRadius: 2, height: 20, fontSize: '0.65rem' }} />
+                  </Box>
                 </Box>
               ))}
             </Box>
@@ -537,6 +567,13 @@ function CellLeaderAddMemberPage({ user, onBack }) {
           onClose={() => setDialogOpen(false)} 
           member={selectedMember} 
           familyMembers={selectedMember ? members.filter(m => m.familyId && m.familyId === selectedMember.familyId) : []}
+        />
+        
+        <EditMemberDialog
+          open={editDialogOpen}
+          onClose={() => setEditDialogOpen(false)}
+          member={memberToEdit}
+          onMemberUpdated={handleMemberUpdated}
         />
       </Box>
     </Fade>
