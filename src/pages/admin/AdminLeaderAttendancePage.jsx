@@ -250,11 +250,12 @@ function AdminLeaderAttendancePage({ onBack }) {
 
         {/* Hidden Printable Area */}
         <div style={{ position: 'absolute', top: -9999, left: -9999 }}>
-          <div ref={printRef} style={{ width: 800, padding: '30px', background: '#fff', color: '#000', fontFamily: 'sans-serif' }}>
+          <div ref={printRef} style={{ width: '794px', minHeight: '1123px', padding: '40px', background: '#fff', color: '#000', fontFamily: 'sans-serif', boxSizing: 'border-box' }}>
             <h2 style={{ color: '#6366f1', marginBottom: '20px' }}>Bethel Leader Attendance - {selectedDate}</h2>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '15px' }}>
               <thead>
                 <tr style={{ backgroundColor: '#f3f4f6', borderBottom: '2px solid #e5e7eb' }}>
+                  <th style={{ padding: '12px 16px' }}>S.No.</th>
                   <th style={{ padding: '12px 16px' }}>Name</th>
                   <th style={{ padding: '12px 16px' }}>Place</th>
                   <th style={{ padding: '12px 16px' }}>Phone Number</th>
@@ -262,13 +263,14 @@ function AdminLeaderAttendancePage({ onBack }) {
                 </tr>
               </thead>
               <tbody>
-                {leaders.map(leader => {
+                {leaders.map((leader, index) => {
                   const lRec = attendance.find(a => a.leaderId === leader.id);
                   const lStatus = lRec?.status || 'Not Marked';
                   const statusColor = lStatus === 'present' ? '#10b981' : (lStatus === 'absent' ? '#ef4444' : '#6b7280');
                   
                   return (
                     <tr key={leader.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                      <td style={{ padding: '12px 16px', color: '#4b5563' }}>{index + 1}</td>
                       <td style={{ padding: '12px 16px', fontWeight: 'bold' }}>{leader.name}</td>
                       <td style={{ padding: '12px 16px' }}>{leader.place}</td>
                       <td style={{ padding: '12px 16px' }}>{leader.phone || 'N/A'}</td>

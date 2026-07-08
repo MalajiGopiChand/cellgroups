@@ -1,92 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, Paper, Fade, Avatar, Grid, Chip, IconButton } from '@mui/material';
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from '../firebase/config';
-import { Cake as CakeIcon, Event as EventIcon, Today as TodayIcon, StarBorder as StarIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
+import { Cake as CakeIcon, Event as EventIcon, StarBorder as StarIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 import Confetti from 'react-confetti';
 import { useWindowSize } from 'react-use';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useBirthdays } from '../hooks/useBirthdays';
 
 function BirthdaysView({ user, isAdmin, onBack }) {
   const { t } = useLanguage();
-  const [members, setMembers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { loading, todayList, upcomingList } = useBirthdays(user, isAdmin);
   const { width, height } = useWindowSize();
-
-  const [todayList, setTodayList] = useState([]);
-  const [upcomingList, setUpcomingList] = useState([]);
-
-  useEffect(() => {
-    const fetchMembers = async () => {
-      try {
-        let q;
-        if (isAdmin) {
-          // Admins see all members
-          q = collection(db, 'students');
-        } else if (user?.id) {
-          // Cell Leaders see their own members
-          q = query(collection(db, 'students'), where('cellLeaderId', '==', user.id));
-        } else {
-          return;
-        }
-
-        const snap = await getDocs(q);
-        const mems = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        
-        // Filter by place for Cell Leaders (Admins don't filter by place unless implemented)
-        const filtered = isAdmin ? mems : mems.filter(m => m.place === user?.place);
-        setMembers(filtered);
-      } catch (error) {
-        console.error("Error fetching members for birthdays:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchMembers();
-  }, [user, isAdmin]);
-
-  useEffect(() => {
-    if (members.length === 0) return;
-
-    const todayListTemp = [];
-    const upcomingListTemp = [];
-
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-    members.forEach(member => {
-      if (!member.dob) return;
-      const parts = member.dob.split('-');
-      if (parts.length !== 3) return;
-      
-      const bMonth = parseInt(parts[1], 10);
-      const bDay = parseInt(parts[2], 10);
-      
-      // Calculate birthday this year
-      let bdayThisYear = new Date(now.getFullYear(), bMonth - 1, bDay);
-      
-      // Calculate next occurrence
-      let nextBday = new Date(bdayThisYear);
-      if (nextBday < today) {
-        nextBday.setFullYear(now.getFullYear() + 1);
-      }
-      
-      const diffDays = Math.ceil((nextBday - today) / (1000 * 60 * 60 * 24));
-      
-      const bdayItem = { ...member, diffDays, nextBday, bMonth, bDay };
-      
-      if (diffDays === 0) {
-        todayListTemp.push(bdayItem);
-      } else if (diffDays > 0 && diffDays <= 10) {
-        upcomingListTemp.push(bdayItem);
-      }
-    });
-
-    upcomingListTemp.sort((a, b) => a.diffDays - b.diffDays);
-
-    setTodayList(todayListTemp);
-    setUpcomingList(upcomingListTemp);
-  }, [members]);
 
   if (loading) return null;
 

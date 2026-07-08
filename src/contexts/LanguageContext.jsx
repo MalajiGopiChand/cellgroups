@@ -57,12 +57,17 @@ const translations = {
     // Birthdays
     'bday.title': 'Birthdays',
     'bday.today': "Today's Birthdays",
-    'bday.upcoming': 'Upcoming (Next 10 Days)',
-    'bday.noBirthdays': 'No birthdays around this time.',
+    'bday.upcoming': 'Upcoming Birthdays',
+    'bday.noBirthdays': 'No birthdays to show right now.',
+    'bday.todayLabel': 'Today 🎉',
     'bday.in': 'In',
     'bday.days': 'days',
     'bday.day': 'day',
-    'bday.todayLabel': 'Today 🎉',
+    'bday.thisWeek': 'This week (Sunday to Saturday)',
+    'bday.noBirthdaysThisWeek': 'No upcoming birthdays this week.',
+    'bday.viewAll': 'View All Birthdays',
+    'bday.ago': 'ago',
+    'common.loading': 'Loading...',
 
     // Logs
     'logs.title': 'Attendance Logs',
@@ -129,12 +134,17 @@ const translations = {
     // Birthdays
     'bday.title': 'పుట్టినరోజులు',
     'bday.today': "నేటి పుట్టినరోజులు",
-    'bday.upcoming': 'రాబోయే (తదుపరి 10 రోజులు)',
-    'bday.noBirthdays': 'ఈ సమయంలో పుట్టినరోజులు లేవు.',
+    'bday.upcoming': 'రాబోయే పుట్టినరోజులు',
+    'bday.noBirthdays': 'ప్రస్తుతం చూపించడానికి పుట్టినరోజులు లేవు.',
+    'bday.todayLabel': 'ఈరోజు 🎉',
     'bday.in': 'ఇంకా',
-    'bday.days': 'రోజులు',
-    'bday.day': 'రోజు',
-    'bday.todayLabel': 'ఈ రోజు 🎉',
+    'bday.days': 'రోజుల్లో',
+    'bday.day': 'రోజులో',
+    'bday.thisWeek': 'ఈ వారం (ఆదివారం నుండి శనివారం వరకు)',
+    'bday.noBirthdaysThisWeek': 'ఈ వారం పుట్టినరోజులు లేవు.',
+    'bday.viewAll': 'అన్ని పుట్టినరోజులు చూడండి',
+    'bday.ago': 'క్రితం',
+    'common.loading': 'లోడ్ అవుతోంది...',
 
     // Logs
     'logs.title': 'హాజరు లాగ్స్',
@@ -163,7 +173,7 @@ export const LanguageProvider = ({ children }) => {
   };
 
   const t = (key) => {
-    return translations[language][key] || translations['en'][key] || key;
+    return (translations[language] && translations[language][key]) || translations['en'][key] || key;
   };
 
   return (
@@ -173,4 +183,14 @@ export const LanguageProvider = ({ children }) => {
   );
 };
 
-export const useLanguage = () => useContext(LanguageContext);
+export const useLanguage = () => {
+  const context = useContext(LanguageContext);
+  if (!context) {
+    return { 
+      language: 'en', 
+      toggleLanguage: () => {}, 
+      t: (key) => translations['en'][key] || key 
+    };
+  }
+  return context;
+};

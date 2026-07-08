@@ -44,6 +44,7 @@ import CellLeaderAttendancePage from './cellleader/CellLeaderAttendancePage';
 import CellLeaderAttendanceLogsPage from './cellleader/CellLeaderAttendanceLogsPage';
 import MobileBottomNav from '../components/MobileBottomNav';
 import BirthdaysView from '../components/BirthdaysView';
+import BirthdayNotificationBar from '../components/BirthdayNotificationBar';
 
 function CellLeaderDashboardInner({ user, onLogout }) {
   const muiTheme = useTheme();
@@ -217,6 +218,7 @@ function CellLeaderDashboardInner({ user, onLogout }) {
 
             {!isMobile && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <BirthdayNotificationBar user={user} isAdmin={false} onNavigateToBirthdays={() => setCurrentTab(3)} />
                 <Button 
                   onClick={toggleLanguage}
                   startIcon={<TranslateIcon />} 
@@ -232,7 +234,8 @@ function CellLeaderDashboardInner({ user, onLogout }) {
             )}
 
             {isMobile && (
-              <Box sx={{ display: 'flex', gap: 1 }}>
+              <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                <BirthdayNotificationBar user={user} isAdmin={false} onNavigateToBirthdays={() => setCurrentTab(3)} />
                 <IconButton onClick={toggleLanguage} sx={{ color: 'var(--color-primary)', bgcolor: 'rgba(99,102,241,0.1)', '&:hover': { bgcolor: 'rgba(99,102,241,0.2)' } }}>
                   <TranslateIcon />
                 </IconButton>

@@ -55,6 +55,7 @@ import AdminAnnouncementsPage from './admin/AdminAnnouncementsPage';
 import AdminLeaderAttendancePage from './admin/AdminLeaderAttendancePage';
 import MobileBottomNav from '../components/MobileBottomNav';
 import BirthdaysView from '../components/BirthdaysView';
+import BirthdayNotificationBar from '../components/BirthdayNotificationBar';
 
 function AdminDashboard({ user, onLogout }) {
   const navigate = useNavigate();
@@ -275,6 +276,7 @@ function AdminDashboard({ user, onLogout }) {
 
             {!isMobile && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <BirthdayNotificationBar user={user} isAdmin={true} onNavigateToBirthdays={() => setCurrentTab(5)} />
                 <Chip
                   size="small"
                   color="primary"
@@ -304,18 +306,21 @@ function AdminDashboard({ user, onLogout }) {
             )}
 
             {isMobile && (
-              <IconButton
-                onClick={onLogout}
-                sx={{
-                  color: '#ef4444',
-                  bgcolor: 'rgba(239,68,68,0.1)',
-                  '&:hover': {
-                    bgcolor: 'rgba(239,68,68,0.2)',
-                  }
-                }}
-              >
-                <LogoutIcon />
-              </IconButton>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <BirthdayNotificationBar user={user} isAdmin={true} onNavigateToBirthdays={() => setCurrentTab(5)} />
+                <IconButton
+                  onClick={onLogout}
+                  sx={{
+                    color: '#ef4444',
+                    bgcolor: 'rgba(239,68,68,0.1)',
+                    '&:hover': {
+                      bgcolor: 'rgba(239,68,68,0.2)',
+                    }
+                  }}
+                >
+                  <LogoutIcon />
+                </IconButton>
+              </Box>
             )}
           </Toolbar>
         </AppBar>

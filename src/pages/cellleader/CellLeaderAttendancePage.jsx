@@ -215,32 +215,35 @@ function CellLeaderAttendancePage({ user, onBack }) {
         )}
 
         <div style={{ position: 'absolute', top: -9999, left: -9999 }}>
-          <div ref={printRef} style={{ width: 800, padding: '30px', background: '#fff', color: '#000', fontFamily: 'sans-serif' }}>
+          <div ref={printRef} style={{ width: '794px', minHeight: '1123px', padding: '40px', background: '#fff', color: '#000', fontFamily: 'sans-serif', boxSizing: 'border-box' }}>
             <h2 style={{ color: '#6366f1', marginBottom: '20px' }}>Bethel Cell Attendance - {selectedDate}</h2>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '15px' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>
               <thead>
-                <tr style={{ backgroundColor: '#f3f4f6', borderBottom: '2px solid #e5e7eb' }}>
-                  <th style={{ padding: '12px 16px' }}>Name</th>
-                  <th style={{ padding: '12px 16px' }}>Relation</th>
-                  <th style={{ padding: '12px 16px' }}>Phone Number</th>
-                  <th style={{ padding: '12px 16px' }}>Status</th>
+                <tr style={{ background: '#f3f4f6', textAlign: 'left' }}>
+                  <th style={{ padding: '12px 16px', borderBottom: '2px solid #d1d5db' }}>S.No.</th>
+                  <th style={{ padding: '12px 16px', borderBottom: '2px solid #d1d5db' }}>Name</th>
+                  <th style={{ padding: '12px 16px', borderBottom: '2px solid #d1d5db' }}>Status</th>
                 </tr>
               </thead>
               <tbody>
-                {members.map(member => {
-                  const mRec = attendance.find(a => a.studentId === member.id);
-                  const mStatus = mRec?.status || 'Not Marked';
-                  const statusColor = mStatus === 'present' ? '#10b981' : (mStatus === 'absent' ? '#ef4444' : '#6b7280');
-                  const displayName = (member.firstName || '') + ' ' + (member.lastName || '');
-                  return (
-                    <tr key={member.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                      <td style={{ padding: '12px 16px', fontWeight: 'bold' }}>{displayName.trim() || 'Unknown'}</td>
-                      <td style={{ padding: '12px 16px' }}>{member.relation || 'Head'}</td>
-                      <td style={{ padding: '12px 16px' }}>{member.mobile || 'N/A'}</td>
-                      <td style={{ padding: '12px 16px', color: statusColor, fontWeight: 'bold', textTransform: 'capitalize' }}>{mStatus}</td>
-                    </tr>
-                  );
-                })}
+                {families.map((family, fIndex) => (
+                  <React.Fragment key={family.head.id}>
+                    {family.members.map((member, mIndex) => {
+                      const mRec = attendance.find(a => a.studentId === member.id);
+                      const mStatus = mRec?.status || 'Not Marked';
+                      const statusColor = mStatus === 'present' ? '#10b981' : (mStatus === 'absent' ? '#ef4444' : '#6b7280');
+                      const displayName = (member.firstName || '') + ' ' + (member.lastName || '') || member.name;
+                      const globalIndex = families.slice(0, fIndex).reduce((acc, f) => acc + f.members.length, 0) + mIndex + 1;
+                      return (
+                        <tr key={member.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                          <td style={{ padding: '12px 16px', color: '#4b5563' }}>{globalIndex}</td>
+                          <td style={{ padding: '12px 16px', fontWeight: 'bold' }}>{displayName.trim() || 'Unknown'}</td>
+                          <td style={{ padding: '12px 16px', color: statusColor, fontWeight: 'bold', textTransform: 'capitalize' }}>{mStatus}</td>
+                        </tr>
+                      );
+                    })}
+                  </React.Fragment>
+                ))}
               </tbody>
             </table>
           </div>
