@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Box,
   Container,
@@ -64,10 +64,27 @@ function AdminDashboard({ user, onLogout }) {
   const isTablet = useMediaQuery(muiTheme.breakpoints.between('sm', 'md'));
 
   // Tab State
-  const [currentTab, setCurrentTab] = useState(() => {
-    const savedTab = sessionStorage.getItem('AdminDashboard_currentTab');
-    return savedTab ? parseInt(savedTab, 10) : 0;
-  });
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+
+  useEffect(() => {
+    if (!tabParam) {
+      const savedTab = sessionStorage.getItem('AdminDashboard_currentTab');
+      if (savedTab && savedTab !== '0') {
+        setSearchParams({ tab: savedTab }, { replace: true });
+      }
+    }
+  }, []);
+
+  const currentTab = parseInt(tabParam || '0', 10);
+
+  const setCurrentTab = (newTab) => {
+    if (newTab === 0) {
+      setSearchParams({});
+    } else {
+      setSearchParams({ tab: newTab });
+    }
+  };
   
   const [stats, setStats] = useState({
     pendingApprovals: 0,
@@ -80,8 +97,6 @@ function AdminDashboard({ user, onLogout }) {
 
   useEffect(() => {
     sessionStorage.setItem('AdminDashboard_currentTab', currentTab.toString());
-    // Also enforce the URL to stay clean at /admin/dashboard
-    window.history.replaceState(null, '', '/admin/dashboard');
   }, [currentTab]);
 
   useEffect(() => {

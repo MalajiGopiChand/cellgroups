@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { LanguageProvider, useLanguage } from '../contexts/LanguageContext';
 import {
   Box,
@@ -52,10 +52,27 @@ function CellLeaderDashboardInner({ user, onLogout }) {
   const { language, toggleLanguage, t } = useLanguage();
 
   // Tab State
-  const [currentTab, setCurrentTab] = useState(() => {
-    const savedTab = sessionStorage.getItem('CellLeaderDashboard_currentTab');
-    return savedTab ? parseInt(savedTab, 10) : 0;
-  });
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+
+  useEffect(() => {
+    if (!tabParam) {
+      const savedTab = sessionStorage.getItem('CellLeaderDashboard_currentTab');
+      if (savedTab && savedTab !== '0') {
+        setSearchParams({ tab: savedTab }, { replace: true });
+      }
+    }
+  }, []);
+
+  const currentTab = parseInt(tabParam || '0', 10);
+
+  const setCurrentTab = (newTab) => {
+    if (newTab === 0) {
+      setSearchParams({});
+    } else {
+      setSearchParams({ tab: newTab });
+    }
+  };
   
   const [stats, setStats] = useState({
     totalMembers: 0,
@@ -67,7 +84,6 @@ function CellLeaderDashboardInner({ user, onLogout }) {
 
   useEffect(() => {
     sessionStorage.setItem('CellLeaderDashboard_currentTab', currentTab.toString());
-    window.history.replaceState(null, '', '/cellleader/dashboard');
   }, [currentTab]);
 
   useEffect(() => {
