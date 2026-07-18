@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { Box, Typography, Paper, Fade, Button, IconButton, Chip, Snackbar, Alert } from '@mui/material';
+import { Box, Typography, Paper, Fade, Button, IconButton, Snackbar, Alert, Avatar, Collapse } from '@mui/material';
 import { collection, getDocs, query, where, doc, setDoc, getDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
-import { ArrowBack as ArrowBackIcon, FamilyRestroom as FamilyIcon, Download as DownloadIcon, CheckCircle as CheckCircleIcon, Cancel as CancelIcon } from '@mui/icons-material';
+import { ArrowBack as ArrowBackIcon, Download as DownloadIcon, CheckCircle as CheckCircleIcon, Cancel as CancelIcon, ChevronRight as ChevronRightIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import html2canvas from 'html2canvas';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -18,7 +18,15 @@ function CellLeaderAttendancePage({ user, onBack }) {
   };
   const [selectedDate, setSelectedDate] = useState(getLocalDate());
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [expandedFamilies, setExpandedFamilies] = useState({});
   const printRef = useRef(null);
+
+  const toggleFamily = (familyId) => {
+    setExpandedFamilies(prev => ({
+      ...prev,
+      [familyId]: !prev[familyId]
+    }));
+  };
 
   const handleDownload = async () => {
     if (!printRef.current) return;
@@ -107,35 +115,34 @@ function CellLeaderAttendancePage({ user, onBack }) {
           <IconButton 
             onClick={onBack ? onBack : () => navigate('/cellleader/dashboard')} 
             sx={{ 
-              bgcolor: 'var(--bg-glass-strong)', 
-              border: '1px solid var(--border-light)', 
-              boxShadow: 'var(--shadow-sm)',
-              '&:hover': { bgcolor: 'var(--bg-surface)' } 
+              bgcolor: 'transparent', 
+              color: 'var(--text-deep)',
+              '&:hover': { bgcolor: 'rgba(0,0,0,0.05)' } 
             }}
           >
-            <ArrowBackIcon fontSize="small" />
+            <ArrowBackIcon />
           </IconButton>
-          <Typography variant="h6" sx={{ fontWeight: 800, color: 'var(--text-primary)' }}>
+          <Typography variant="h5" className="font-playfair" sx={{ fontWeight: 700, color: 'var(--text-deep)' }}>
             {t('att.title')}
           </Typography>
         </Box>
         <Typography variant="body2" color="var(--text-secondary)" sx={{ mb: 3, fontWeight: 600 }}>{user?.name} • {user?.place}</Typography>
         
-        <Box sx={{ mb: 4, display: 'flex', alignItems: 'center' }}>
-          <Typography variant="caption" sx={{ mr: 1.5, fontWeight: 700, color: 'var(--text-secondary)' }}>Date:</Typography>
-          <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid var(--border-light)', background: 'var(--bg-glass-strong)', color: 'var(--text-primary)', fontFamily: 'inherit', fontWeight: 600 }} />
+        <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', bgcolor: 'var(--surface-sage)', p: 2, borderRadius: 4 }}>
+          <Typography variant="caption" sx={{ mr: 1.5, fontWeight: 700, color: 'var(--text-sage)' }}>Date:</Typography>
+          <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} style={{ padding: '8px 12px', borderRadius: '12px', border: 'none', background: 'var(--surface-white)', color: 'var(--text-deep)', fontFamily: 'inherit', fontWeight: 600, boxShadow: 'var(--shadow-sm)' }} />
+          <Box sx={{ flexGrow: 1 }} />
           <Button 
             onClick={handleDownload} 
             startIcon={<DownloadIcon />} 
-            variant="outlined" 
             size="small"
             sx={{ 
-              ml: 2,
-              borderRadius: 2, 
-              color: 'var(--color-primary)', 
-              borderColor: 'rgba(99, 102, 241, 0.5)',
+              borderRadius: 3, 
+              color: 'var(--surface-white)', 
+              bgcolor: 'var(--primary-forest)',
               fontWeight: 700,
-              '&:hover': { bgcolor: 'rgba(99, 102, 241, 0.05)', borderColor: 'var(--color-primary)' } 
+              boxShadow: 'var(--shadow-sm)',
+              '&:hover': { bgcolor: 'var(--primary-forest)', opacity: 0.9 } 
             }}
           >
             {t('att.download')}
@@ -152,63 +159,108 @@ function CellLeaderAttendancePage({ user, onBack }) {
               <Paper 
                 key={family.familyId} 
                 elevation={0}
+                onClick={() => toggleFamily(family.familyId)}
                 sx={{ 
                   p: 2, 
-                  bgcolor: 'var(--bg-glass-strong)',
+                  bgcolor: 'rgba(255,255,255,0.75)',
                   backdropFilter: 'blur(12px)',
                   boxShadow: 'var(--shadow-sm)', 
-                  border: '1px solid var(--border-light)',
-                  borderRadius: 4,
-                  mb: 1
+                  border: '1px solid var(--border-neutral)',
+                  borderRadius: '21px',
+                  mb: 1,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' }
                 }}
               >
-                <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'var(--color-primary)', mb: 2, display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <FamilyIcon sx={{ fontSize: 16 }} />
-                  {family.head.name}'s Family
-                </Typography>
-
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                  {family.members.map(m => {
-                    const mRec = attendance.find(a => a.studentId === m.id);
-                    const isPresent = mRec?.status === 'present';
-                    const isAbsent = mRec?.status === 'absent';
-                    return (
-                      <Fade in key={m.id}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <Typography fontWeight={700}>{m.name}</Typography>
-                          <Box sx={{ display: 'flex', gap: 1 }}>
-                            <Chip 
-                              size="small"
-                              label={t('att.presentBtn')}
-                              icon={<CheckCircleIcon fontSize="small" />}
-                              onClick={() => handleMark(m.id, m.name, 'present')}
-                              sx={{ 
-                                bgcolor: isPresent ? 'rgba(16, 185, 129, 0.15)' : 'rgba(0,0,0,0.04)',
-                                color: isPresent ? '#059669' : 'var(--text-secondary)',
-                                fontWeight: isPresent ? 800 : 600,
-                                border: isPresent ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid transparent',
-                                '&:hover': { bgcolor: 'rgba(16, 185, 129, 0.2)' }
-                              }}
-                            />
-                            <Chip 
-                              size="small"
-                              label={t('att.absentBtn')}
-                              icon={<CancelIcon fontSize="small" />}
-                              onClick={() => handleMark(m.id, m.name, 'absent')}
-                              sx={{ 
-                                bgcolor: isAbsent ? 'rgba(239, 68, 68, 0.15)' : 'rgba(0,0,0,0.04)',
-                                color: isAbsent ? '#dc2626' : 'var(--text-secondary)',
-                                fontWeight: isAbsent ? 800 : 600,
-                                border: isAbsent ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid transparent',
-                                '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.2)' }
-                              }}
-                            />
-                          </Box>
-                        </Box>
-                      </Fade>
-                    );
-                  })}
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <Box sx={{ display: 'flex', ml: 1 }}>
+                      {family.members.slice(0, 3).map((m) => {
+                        const mRec = attendance.find(a => a.studentId === m.id);
+                        const isPresent = mRec?.status === 'present';
+                        const isAbsent = mRec?.status === 'absent';
+                        let avatarColor = 'var(--border-neutral)';
+                        let textColor = 'var(--text-deep)';
+                        if (isPresent) { avatarColor = '#4E7D58'; textColor = '#fff'; }
+                        else if (isAbsent) { avatarColor = '#ef4444'; textColor = '#fff'; }
+                        
+                        return (
+                          <Avatar key={m.id} sx={{ 
+                            width: 36, height: 36, 
+                            ml: -1, 
+                            border: '2px solid #fff',
+                            bgcolor: avatarColor,
+                            color: textColor,
+                            fontSize: '0.85rem',
+                            fontWeight: 700
+                          }}>
+                            {m.name.substring(0, 2).toUpperCase()}
+                          </Avatar>
+                        )
+                      })}
+                      {family.members.length > 3 && (
+                        <Avatar sx={{ width: 36, height: 36, ml: -1, border: '2px solid #fff', bgcolor: 'var(--surface-sage)', color: 'var(--text-sage)', fontSize: '0.8rem', fontWeight: 700 }}>
+                          +{family.members.length - 3}
+                        </Avatar>
+                      )}
+                    </Box>
+                    <Box sx={{ ml: 1 }}>
+                      <Typography sx={{ fontWeight: 700, color: 'var(--text-deep)', fontSize: 16 }}>{family.head.name} family</Typography>
+                      <Typography sx={{ color: 'var(--text-supporting)', fontSize: 13, fontWeight: 500 }}>{family.members.length} members</Typography>
+                    </Box>
+                  </Box>
+                  <ChevronRightIcon sx={{ color: 'var(--text-supporting)', transform: expandedFamilies[family.familyId] ? 'rotate(90deg)' : 'none', transition: '0.3s' }} />
                 </Box>
+
+                <Collapse in={expandedFamilies[family.familyId]} timeout="auto" unmountOnExit>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 3, pt: 2, borderTop: '1px dashed var(--border-neutral)' }} onClick={(e) => e.stopPropagation()}>
+                    {family.members.map(m => {
+                      const mRec = attendance.find(a => a.studentId === m.id);
+                      const isPresent = mRec?.status === 'present';
+                      const isAbsent = mRec?.status === 'absent';
+                      return (
+                        <Fade in key={m.id}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Typography sx={{ fontWeight: 700, color: 'var(--text-deep)' }}>{m.name}</Typography>
+                            <Box sx={{ display: 'flex', gap: 1 }}>
+                              <Box 
+                                onClick={() => handleMark(m.id, m.name, 'present')}
+                                sx={{
+                                  width: 32, height: 32, borderRadius: '10px',
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  cursor: 'pointer',
+                                  bgcolor: isPresent ? '#4E7D58' : 'var(--surface-white)',
+                                  border: isPresent ? 'none' : '1px solid var(--border-neutral)',
+                                  color: isPresent ? '#fff' : 'transparent',
+                                  transition: 'all 0.2s',
+                                  '&:hover': { bgcolor: isPresent ? '#4E7D58' : 'var(--surface-sage)', borderColor: 'transparent' }
+                                }}
+                              >
+                                <CheckCircleIcon sx={{ fontSize: 20 }} />
+                              </Box>
+                              <Box 
+                                onClick={() => handleMark(m.id, m.name, 'absent')}
+                                sx={{
+                                  width: 32, height: 32, borderRadius: '10px',
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  cursor: 'pointer',
+                                  bgcolor: isAbsent ? '#ef4444' : 'var(--surface-white)',
+                                  border: isAbsent ? 'none' : '1px solid var(--border-neutral)',
+                                  color: isAbsent ? '#fff' : 'transparent',
+                                  transition: 'all 0.2s',
+                                  '&:hover': { bgcolor: isAbsent ? '#ef4444' : 'var(--app-bg)', borderColor: 'transparent' }
+                                }}
+                              >
+                                <CancelIcon sx={{ fontSize: 20 }} />
+                              </Box>
+                            </Box>
+                          </Box>
+                        </Fade>
+                      );
+                    })}
+                  </Box>
+                </Collapse>
               </Paper>
             ))}
           </Box>

@@ -4,38 +4,51 @@ export const theme = createTheme({
   palette: {
     mode: 'light',
     primary: {
-      main: '#6366f1',
-      light: '#818cf8',
-      dark: '#4f46e5',
+      main: '#315B46',
+      light: '#45785C',
+      dark: '#1E3C2D',
+      contrastText: '#FBF4DF',
     },
     secondary: {
-      main: '#8b5cf6',
-      light: '#a78bfa',
-      dark: '#7c3aed',
+      main: '#B7782A',
+      light: '#D5B16C',
+      dark: '#8C5B1F',
+      contrastText: '#FFFDF8',
     },
     background: {
-      default: '#f8fafc',
-      paper: '#ffffff',
+      default: 'transparent', // The body has the gradient
+      paper: 'rgba(255, 255, 255, 0.75)',
     },
     text: {
-      primary: '#0f172a',
-      secondary: '#475569',
+      primary: '#283D32',
+      secondary: '#788279',
     },
+    divider: '#E8E6DF',
   },
   typography: {
-    fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif',
-    h6: { fontWeight: 700, letterSpacing: '-0.02em' },
-    button: { textTransform: 'none', fontWeight: 600 },
+    fontFamily: '"DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif',
+    h1: { fontFamily: '"Playfair Display", serif', fontWeight: 700, color: '#293F33' },
+    h2: { fontFamily: '"Playfair Display", serif', fontWeight: 700, color: '#293F33' },
+    h3: { fontFamily: '"Playfair Display", serif', fontWeight: 700, color: '#293F33' },
+    h4: { fontFamily: '"Playfair Display", serif', fontWeight: 700, color: '#293F33' },
+    h5: { fontFamily: '"Playfair Display", serif', fontWeight: 700, color: '#293F33' },
+    h6: { fontFamily: '"Playfair Display", serif', fontWeight: 700, color: '#293F33' },
+    subtitle1: { fontWeight: 700, color: '#34473B' },
+    body1: { fontSize: 14 },
+    body2: { fontSize: 14, color: '#788279' },
+    button: { textTransform: 'none', fontWeight: 700, fontSize: 14 },
+    caption: { fontSize: 12, color: '#7E887F' },
   },
-  shape: { borderRadius: 12 },
+  shape: { borderRadius: 16 },
   components: {
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 12,
+          borderRadius: 16,
           boxShadow: 'none',
+          padding: '12px 24px',
           '&:hover': {
-            boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)',
+            boxShadow: '0 12px 28px rgba(49, 91, 70, 0.15)',
             transform: 'translateY(-2px)',
           },
           transition: 'all 0.2s ease-in-out',
@@ -45,9 +58,18 @@ export const theme = createTheme({
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 16,
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-          border: '1px solid rgba(226, 232, 240, 0.8)',
+          borderRadius: 21,
+          boxShadow: '0 2px 8px rgba(62, 72, 60, 0.05)',
+          border: '1px solid #E8E6DF',
+          background: 'rgba(255,255,255,0.75)',
+          backdropFilter: 'blur(16px)',
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          borderRadius: 21,
         },
       },
     },

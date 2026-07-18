@@ -32,11 +32,11 @@ function BirthdaysView({ user, isAdmin, onBack }) {
           p: 2.5,
           position: 'relative',
           overflow: 'hidden',
-          bgcolor: 'var(--bg-glass-strong)',
+          bgcolor: isToday ? 'var(--surface-gold)' : 'rgba(255,255,255,0.75)',
           backdropFilter: 'blur(12px)',
-          borderRadius: 4,
-          border: `1px solid ${isToday ? 'rgba(236,72,153,0.3)' : 'var(--border-light)'}`,
-          boxShadow: isToday ? '0 8px 32px rgba(236,72,153,0.15)' : 'var(--shadow-sm)',
+          borderRadius: '21px',
+          border: '1px solid var(--border-neutral)',
+          boxShadow: isToday ? '0 8px 32px rgba(207,138,66,0.15)' : 'var(--shadow-sm)',
           transition: 'all 0.3s ease',
           '&:hover': {
             transform: 'translateY(-4px)',
@@ -45,7 +45,7 @@ function BirthdaysView({ user, isAdmin, onBack }) {
         }}
       >
         {isToday && (
-          <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: 'linear-gradient(90deg, #ec489a, #f43f5e, #8b5cf6)' }} />
+          <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: 'linear-gradient(90deg, #CF8A42, #E6A756)' }} />
         )}
         
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -53,10 +53,11 @@ function BirthdaysView({ user, isAdmin, onBack }) {
             sx={{ 
               width: 56, 
               height: 56, 
-              background: isToday ? 'linear-gradient(135deg, #ec489a, #8b5cf6)' : 'rgba(99,102,241,0.1)',
-              color: isToday ? '#fff' : 'var(--color-primary)',
+              background: isToday ? 'linear-gradient(135deg, #CF8A42, #E6A756)' : 'var(--bg-glass-strong)',
+              color: isToday ? '#fff' : 'var(--text-gold)',
               fontWeight: 800,
-              fontSize: '1.2rem'
+              fontSize: '1.2rem',
+              border: isToday ? 'none' : '1px solid var(--border-neutral)'
             }}
           >
             {member.name.charAt(0).toUpperCase()}
@@ -73,9 +74,9 @@ function BirthdaysView({ user, isAdmin, onBack }) {
           
           <Box sx={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
             {isToday ? (
-              <Chip icon={<StarIcon fontSize="small"/>} label={t('bday.todayLabel')} size="small" sx={{ bgcolor: 'rgba(236,72,153,0.1)', color: '#ec489a', fontWeight: 700, px: 0.5 }} />
+              <Chip icon={<StarIcon fontSize="small"/>} label={t('bday.todayLabel')} size="small" sx={{ bgcolor: 'rgba(207,138,66,0.1)', color: 'var(--text-gold)', fontWeight: 700, px: 0.5, border: 'none' }} />
             ) : (
-              <Typography variant="caption" sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 0.5, color: '#f59e0b', bgcolor: 'rgba(245, 158, 11, 0.1)', px: 1, py: 0.2, borderRadius: 1 }}>
+              <Typography variant="caption" sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 0.5, color: 'var(--text-deep)', bgcolor: 'rgba(0,0,0,0.04)', px: 1, py: 0.2, borderRadius: 1 }}>
                 <EventIcon sx={{ fontSize: 14 }} />
                 {t('bday.in')} {member.diffDays} {member.diffDays === 1 ? t('bday.day') : t('bday.days')}
               </Typography>
@@ -96,17 +97,16 @@ function BirthdaysView({ user, isAdmin, onBack }) {
             <IconButton 
               onClick={onBack} 
               sx={{ 
-                bgcolor: 'var(--bg-glass-strong)', 
-                border: '1px solid var(--border-light)', 
-                boxShadow: 'var(--shadow-sm)',
-                '&:hover': { bgcolor: 'var(--bg-surface)' } 
+                bgcolor: 'transparent', 
+                color: 'var(--text-deep)',
+                '&:hover': { bgcolor: 'rgba(0,0,0,0.05)' } 
               }}
             >
-              <ArrowBackIcon fontSize="small" />
+              <ArrowBackIcon />
             </IconButton>
           )}
-          <CakeIcon sx={{ color: '#ec489a', fontSize: 32 }} />
-          <Typography variant="h6" sx={{ fontWeight: 800, color: 'var(--text-primary)' }}>
+          <CakeIcon sx={{ color: 'var(--text-gold)', fontSize: 32 }} />
+          <Typography variant="h5" className="font-playfair" sx={{ fontWeight: 700, color: 'var(--text-deep)' }}>
             {t('bday.title')}
           </Typography>
         </Box>
@@ -119,7 +119,7 @@ function BirthdaysView({ user, isAdmin, onBack }) {
 
         {todayList.length > 0 && (
           <Box sx={{ mb: 4 }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 800, color: 'var(--color-success)', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant="subtitle1" className="font-playfair" sx={{ fontSize: 18, fontWeight: 700, color: 'var(--text-gold)', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
               <CakeIcon fontSize="small" /> {t('bday.today')}
             </Typography>
             <Grid container spacing={2}>
@@ -134,7 +134,7 @@ function BirthdaysView({ user, isAdmin, onBack }) {
 
         {upcomingList.length > 0 && (
           <Box sx={{ mb: 4 }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#f59e0b', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant="subtitle1" className="font-playfair" sx={{ fontSize: 18, fontWeight: 700, color: 'var(--text-deep)', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
               <EventIcon fontSize="small" /> {t('bday.upcoming')}
             </Typography>
             <Grid container spacing={2}>

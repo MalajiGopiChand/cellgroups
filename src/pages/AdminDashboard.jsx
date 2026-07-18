@@ -132,20 +132,21 @@ function AdminDashboard({ user, onLogout }) {
     };
   }, []);
 
-  // Navigation buttons configuration
   const navButtons = [
     { 
       id: 0, 
       label: 'Dashboard', 
       icon: <DashboardIcon />, 
-      color: '#6366f1',
+      color: 'var(--primary-forest)',
+      bgColor: 'var(--surface-sage)',
       description: 'Overview & Stats'
     },
     { 
       id: 1, 
       label: 'Approvals', 
       icon: <ApproveIcon />, 
-      color: '#10b981',
+      color: 'var(--text-gold)',
+      bgColor: 'var(--surface-gold)',
       description: 'Pending requests',
       badge: stats.pendingApprovals
     },
@@ -153,21 +154,32 @@ function AdminDashboard({ user, onLogout }) {
       id: 2, 
       label: 'Members', 
       icon: <PeopleIcon />, 
-      color: '#f59e0b',
+      color: 'var(--primary-forest)',
+      bgColor: 'var(--light-sage)',
       description: 'Manage members'
+    },
+    {
+      id: 6,
+      label: 'Leader Attendance',
+      icon: <HowToRegIcon />,
+      color: 'var(--text-deep)',
+      bgColor: 'var(--border-neutral)',
+      description: 'Leader attendance'
     },
     { 
       id: 3, 
-      label: 'Attendance', 
+      label: 'Attendance Logs', 
       icon: <AttendanceIcon />, 
-      color: '#8b5cf6',
+      color: 'var(--text-sage)',
+      bgColor: 'var(--accent-sage)',
       description: 'Track attendance'
     },
     { 
       id: 4, 
       label: 'Announcements', 
       icon: <AnnouncementIcon />, 
-      color: '#ec489a',
+      color: 'var(--alert-dot)',
+      bgColor: 'rgba(207, 138, 66, 0.1)',
       description: 'Send alerts',
       badge: stats.activeAnnouncements
     },
@@ -175,15 +187,9 @@ function AdminDashboard({ user, onLogout }) {
       id: 5, 
       label: 'Birthdays', 
       icon: <CakeIcon />, 
-      color: '#ec489a',
+      color: 'var(--alert-dot)',
+      bgColor: 'rgba(207, 138, 66, 0.1)',
       description: 'Member birthdays'
-    },
-    {
-      id: 6,
-      label: 'Leader Attendance',
-      icon: <HowToRegIcon />,
-      color: '#0ea5e9',
-      description: 'Leader attendance'
     }
   ];
 
@@ -213,20 +219,26 @@ function AdminDashboard({ user, onLogout }) {
   // Stats cards data
   const statsCards = [
     {
-      title: 'Total Members',
-      value: stats.totalMembers,
-      icon: <PeopleIcon sx={{ fontSize: 28 }} />,
-      color: '#6366f1',
-      bgColor: 'rgba(99, 102, 241, 0.1)',
-      trend: '+12 this month'
-    },
-    {
       title: "Today's Attendance",
       value: `${stats.todayAttendance}%`,
       icon: <TrendingUpIcon sx={{ fontSize: 28 }} />,
-      color: '#10b981',
-      bgColor: 'rgba(16, 185, 129, 0.1)',
-      trend: stats.todayCount > 0 ? `${stats.presentCount} / ${stats.todayCount} Present` : 'No data today'
+      color: 'var(--surface-white)',
+      bgColor: 'rgba(255,255,255,0.2)',
+      trend: stats.todayCount > 0 ? `${stats.presentCount} / ${stats.todayCount} Present` : 'No data today',
+      cardBg: 'var(--primary-forest)',
+      textColor: 'var(--surface-white)',
+      subTextColor: 'rgba(255,255,255,0.8)'
+    },
+    {
+      title: 'Total Members',
+      value: stats.totalMembers,
+      icon: <PeopleIcon sx={{ fontSize: 28 }} />,
+      color: 'var(--text-gold)',
+      bgColor: 'var(--surface-gold)',
+      trend: '+12 this month',
+      cardBg: 'rgba(255,255,255,0.75)',
+      textColor: 'var(--text-deep)',
+      subTextColor: 'var(--text-supporting)'
     }
   ];
 
@@ -241,34 +253,29 @@ function AdminDashboard({ user, onLogout }) {
           bgcolor: 'transparent',
         }}
       >
-        {/* Top App Bar with glassmorphism */}
-        <AppBar
-          position="sticky"
-          elevation={0}
-          sx={{
-            bgcolor: 'var(--bg-glass-strong)',
-            backgroundImage: 'none',
-            borderBottom: '1px solid var(--border-light)',
-            backdropFilter: 'blur(22px)',
-          }}
-        >
-          <Toolbar sx={{ py: 1.5 }}>
+        {/* Top App Bar */}
+        <AppBar position="sticky" elevation={0} sx={{ bgcolor: 'transparent', backgroundImage: 'none', pt: '20px', px: '20px', pb: '12px' }}>
+          <Toolbar disableGutters sx={{ minHeight: 'auto !important' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexGrow: 1 }}>
               <Box
-                component="img"
-                src="/icon.png"
-                alt="Bethel Logo"
                 sx={{
-                  width: 45,
-                  height: 45,
-                  objectFit: 'contain',
+                  width: 40,
+                  height: 40,
+                  bgcolor: 'var(--primary-forest)',
+                  borderRadius: '16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: 'var(--shadow-sm)'
                 }}
-              />
+              >
+                <Box component="img" src="/icon.png" alt="Bethel Logo" sx={{ width: 28, height: 28, objectFit: 'contain' }} />
+              </Box>
               <Box>
-                <Typography variant="h6" sx={{ fontWeight: 800, letterSpacing: '-0.04em', color: 'var(--text-primary)' }}>
+                <Typography variant="h6" className="font-playfair" sx={{ fontWeight: 700, lineHeight: 1.2, color: 'var(--text-deep)' }}>
                   Bethel Admin
                 </Typography>
-                <Typography variant="caption" sx={{ fontWeight: 600, color: 'var(--text-secondary)' }}>
+                <Typography variant="caption" sx={{ fontWeight: 600, color: 'var(--text-supporting)' }}>
                   {user?.email || 'Admin'}
                 </Typography>
               </Box>
@@ -333,60 +340,27 @@ function AdminDashboard({ user, onLogout }) {
             {currentTab === 0 && (
               <Fade in timeout={400}>
                 <Box sx={{ mb: 4 }}>
-                  <Typography variant="h6" sx={{ fontWeight: 800, color: 'var(--text-primary)', mb: 2 }}>
+                  <Typography variant="h6" className="font-playfair" sx={{ fontSize: 22, fontWeight: 700, color: 'var(--text-deep)', mb: 2 }}>
                     Quick Overview
                   </Typography>
                   <Grid container spacing={isMobile ? 1.5 : 2}>
                     {statsCards.map((stat, index) => (
                       <Grid item xs={12} sm={6} md={6} key={index}>
-                        <Card
-                          sx={{
-                            borderRadius: 3,
-                            background: 'var(--bg-glass-strong)',
-                            backdropFilter: 'blur(12px)',
-                            border: '1px solid var(--border-light)',
-                            transition: 'all 0.3s ease',
-                            '&:hover': {
-                              transform: 'translateY(-4px)',
-                              boxShadow: 'var(--shadow-lg)',
-                            }
-                          }}
-                        >
-                          <CardContent sx={{ 
-                            p: isMobile ? 2 : 2.5,
-                            '&:last-child': { pb: isMobile ? 2 : 2.5 }
-                          }}>
+                        <Card sx={{ 
+                          borderRadius: 3, 
+                          background: stat.cardBg, 
+                          backdropFilter: 'blur(12px)', 
+                          border: stat.cardBg === 'var(--primary-forest)' ? 'none' : '1px solid var(--border-neutral)', 
+                          transition: 'all 0.3s ease', 
+                          '&:hover': { transform: 'translateY(-4px)', boxShadow: 'var(--shadow-md)' } 
+                        }}>
+                          <CardContent sx={{ p: isMobile ? 2 : 2.5, '&:last-child': { pb: isMobile ? 2 : 2.5 } }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: isMobile ? 1.5 : 2 }}>
-                              <Avatar
-                                sx={{
-                                  bgcolor: stat.bgColor,
-                                  color: stat.color,
-                                  width: 48,
-                                  height: 48,
-                                  borderRadius: 2
-                                }}
-                              >
-                                {stat.icon}
-                              </Avatar>
-                              {stat.trend && (
-                                <Chip
-                                  size="small"
-                                  label={stat.trend}
-                                  sx={{
-                                    fontSize: '0.65rem',
-                                    bgcolor: 'rgba(16, 185, 129, 0.1)',
-                                    color: '#10b981',
-                                    height: 22
-                                  }}
-                                />
-                              )}
+                              <Avatar sx={{ bgcolor: stat.bgColor, color: stat.color, width: 48, height: 48, borderRadius: 2 }}>{stat.icon}</Avatar>
+                              {stat.trend && <Chip size="small" label={stat.trend} sx={{ fontSize: '0.65rem', bgcolor: stat.cardBg === 'var(--primary-forest)' ? 'rgba(255,255,255,0.15)' : 'var(--light-sage)', color: stat.cardBg === 'var(--primary-forest)' ? '#fff' : 'var(--text-sage)', height: 22, border: 'none' }} />}
                             </Box>
-                            <Typography variant="h4" sx={{ fontWeight: 800, color: 'var(--text-primary)', mb: 0.5 }}>
-                              {stat.value}
-                            </Typography>
-                            <Typography variant="body2" sx={{ color: 'var(--text-secondary)', fontWeight: 500 }}>
-                              {stat.title}
-                            </Typography>
+                            <Typography variant="h4" sx={{ fontWeight: 800, color: stat.textColor, mb: 0.5 }}>{stat.value}</Typography>
+                            <Typography variant="body2" sx={{ color: stat.subTextColor, fontWeight: 500 }}>{stat.title}</Typography>
                           </CardContent>
                         </Card>
                       </Grid>
@@ -399,7 +373,7 @@ function AdminDashboard({ user, onLogout }) {
             {/* Navigation Buttons Grid */}
             {currentTab === 0 && (
               <Box sx={{ mb: 4 }}>
-                <Typography variant="h6" sx={{ fontWeight: 800, color: 'var(--text-primary)', mb: 2 }}>
+                <Typography variant="h6" className="font-playfair" sx={{ fontSize: 22, fontWeight: 700, color: 'var(--text-deep)', mb: 2 }}>
                   Quick Actions
                 </Typography>
                 <Grid container spacing={isMobile ? 1.5 : 2}>
@@ -409,20 +383,14 @@ function AdminDashboard({ user, onLogout }) {
                         sx={{
                           cursor: 'pointer',
                           borderRadius: 3,
-                          background: currentTab === button.id 
-                            ? 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))'
-                            : 'var(--bg-glass-strong)',
+                          background: 'rgba(255,255,255,0.75)',
                           backdropFilter: 'blur(12px)',
-                          border: currentTab === button.id 
-                            ? 'none'
-                            : '1px solid var(--border-light)',
+                          border: '1px solid var(--border-neutral)',
                           transition: 'all 0.3s ease',
                           '&:hover': {
                             transform: 'translateY(-4px)',
-                            boxShadow: 'var(--shadow-lg)',
-                            background: currentTab === button.id 
-                              ? 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))'
-                              : 'var(--bg-glass-strong)',
+                            boxShadow: 'var(--shadow-md)',
+                            background: 'rgba(255,255,255,0.9)',
                           }
                         }}
                         onClick={() => setCurrentTab(button.id)}

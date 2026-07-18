@@ -81,14 +81,14 @@ function AdminApprovePage({ onBack }) {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
             {onBack && (
               <IconButton 
-                onClick={onBack} 
+                onClick={onBack ? onBack : () => navigate('/admin/dashboard')} 
                 sx={{ 
-                  bgcolor: 'var(--bg-glass-strong)', 
-                  border: '1px solid var(--border-light)', 
-                  boxShadow: 'var(--shadow-sm)' 
+                  bgcolor: 'transparent', 
+                  color: 'var(--text-deep)',
+                  '&:hover': { bgcolor: 'rgba(0,0,0,0.05)' } 
                 }}
               >
-                <ArrowBackIcon fontSize="small" />
+                <ArrowBackIcon />
               </IconButton>
             )}
             <Typography variant="h6" sx={{ fontWeight: 800, color: 'var(--text-primary)' }}>

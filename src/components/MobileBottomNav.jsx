@@ -8,15 +8,16 @@ function MobileBottomNav({ tabs, currentTab, onChange }) {
   if (!isMobile) return null;
 
   return (
-    <Box sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000 }}>
+    <Box sx={{ position: 'fixed', bottom: 16, left: 16, right: 16, zIndex: 1000 }}>
       <Paper 
         elevation={0}
         sx={{
-          bgcolor: 'var(--bg-glass-strong)',
+          bgcolor: 'rgba(255, 255, 255, 0.75)',
           backdropFilter: 'blur(20px)',
-          borderTop: '1px solid var(--border-light)',
-          /* Support for iOS safe area at the bottom */
-          pb: 'env(safe-area-inset-bottom)', 
+          border: '1px solid var(--border-neutral)',
+          borderRadius: '24px',
+          boxShadow: 'var(--shadow-nav)',
+          overflow: 'hidden'
         }}
       >
         <BottomNavigation
@@ -29,13 +30,13 @@ function MobileBottomNav({ tabs, currentTab, onChange }) {
             bgcolor: 'transparent',
             height: 65,
             '& .MuiBottomNavigationAction-root': {
-              color: 'var(--text-tertiary)',
+              color: 'var(--text-muted)',
               minWidth: 'auto',
               padding: '6px 0',
               transition: 'all 0.2s ease',
             },
             '& .Mui-selected': {
-              color: 'var(--color-primary)',
+              color: 'var(--text-deep)',
             },
             '& .MuiBottomNavigationAction-label': {
               fontWeight: 600,
@@ -52,7 +53,21 @@ function MobileBottomNav({ tabs, currentTab, onChange }) {
             <BottomNavigationAction 
               key={idx} 
               label={tab.label} 
-              icon={tab.icon} 
+              icon={
+                <Box sx={{ 
+                  bgcolor: currentTab === tab.id ? 'var(--primary-forest)' : 'transparent',
+                  color: currentTab === tab.id ? 'var(--surface-white)' : 'inherit',
+                  borderRadius: '16px',
+                  px: 2, 
+                  py: 0.5,
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  transition: 'all 0.2s'
+                }}>
+                  {tab.icon}
+                </Box>
+              } 
               value={tab.id}
             />
           ))}

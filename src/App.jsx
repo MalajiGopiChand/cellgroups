@@ -37,65 +37,67 @@ function App() {
   }
 
   return (
-    <Router>
-      <InstallInstructions />
-      <Routes>
-        <Route 
-          path="/" 
-          element={
-            user ? (
-              user.role === 'admin' ? (
+    <div className="app-shell">
+      <Router>
+        <InstallInstructions />
+        <Routes>
+          <Route 
+            path="/" 
+            element={
+              user ? (
+                user.role === 'admin' ? (
+                  <Navigate to="/admin/dashboard" replace />
+                ) : (
+                  <Navigate to="/cellleader/dashboard" replace />
+                )
+              ) : (
+                <RoleSelection />
+              )
+            } 
+          />
+          <Route 
+            path="/admin/login" 
+            element={
+              user?.role === 'admin' ? (
                 <Navigate to="/admin/dashboard" replace />
               ) : (
-                <Navigate to="/cellleader/dashboard" replace />
+                <AdminLogin onLogin={handleLogin} />
               )
-            ) : (
-              <RoleSelection />
-            )
-          } 
-        />
-        <Route 
-          path="/admin/login" 
-          element={
-            user?.role === 'admin' ? (
-              <Navigate to="/admin/dashboard" replace />
-            ) : (
-              <AdminLogin onLogin={handleLogin} />
-            )
-          } 
-        />
-        <Route 
-          path="/cellleader/login" 
-          element={
-            user?.role === 'cellleader' ? (
-              user.approved !== false ? (
+            } 
+          />
+          <Route 
+            path="/cellleader/login" 
+            element={
+              user?.role === 'cellleader' ? (
+                user.approved !== false ? (
+                  <Navigate to="/cellleader/dashboard" replace />
+                ) : (
+                  <Navigate to="/pending-approval" replace />
+                )
+              ) : (
+                <CellLeaderLogin onLogin={handleLogin} />
+              )
+            } 
+          />
+          <Route 
+            path="/signup" 
+            element={
+              user ? (
                 <Navigate to="/cellleader/dashboard" replace />
               ) : (
-                <Navigate to="/pending-approval" replace />
+                <CellLeaderSignup />
               )
-            ) : (
-              <CellLeaderLogin onLogin={handleLogin} />
-            )
-          } 
-        />
-        <Route 
-          path="/signup" 
-          element={
-            user ? (
-              <Navigate to="/cellleader/dashboard" replace />
-            ) : (
-              <CellLeaderSignup />
-            )
-          } 
-        />
-        <Route path="/admin/*" element={user?.role === 'admin' ? <AdminDashboard user={user} onLogout={handleLogout} /> : <Navigate to="/admin/login" replace />} />
-        <Route path="/cellleader/*" element={user?.role === 'cellleader' && user.approved !== false ? <CellLeaderDashboard user={user} onLogout={handleLogout} /> : user?.role === 'cellleader' ? <PendingApproval onLogout={handleLogout} /> : <Navigate to="/cellleader/login" replace />} />
-        <Route 
-          path="/pending-approval" 
-          element={<PendingApproval onLogout={handleLogout} />} 
-        />
-      </Routes>
-    </Router>
+            } 
+          />
+          <Route path="/admin/*" element={user?.role === 'admin' ? <AdminDashboard user={user} onLogout={handleLogout} /> : <Navigate to="/admin/login" replace />} />
+          <Route path="/cellleader/*" element={user?.role === 'cellleader' && user.approved !== false ? <CellLeaderDashboard user={user} onLogout={handleLogout} /> : user?.role === 'cellleader' ? <PendingApproval onLogout={handleLogout} /> : <Navigate to="/cellleader/login" replace />} />
+          <Route 
+            path="/pending-approval" 
+            element={<PendingApproval onLogout={handleLogout} />} 
+          />
+        </Routes>
+      </Router>
+    </div>
   );
 }
 

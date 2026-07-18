@@ -4,7 +4,6 @@ import './Auth.css';
 
 function AdminLogin({ onLogin }) {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -15,11 +14,11 @@ function AdminLogin({ onLogin }) {
     setLoading(true);
 
     // Fixed admin credentials
-    if (email === 'bethel@gmail.com' && password === '123456') {
+    if (email.trim().toLowerCase() === 'bethel@gmail.com') {
       onLogin({ role: 'admin', email });
       navigate('/admin/dashboard');
     } else {
-      setError('Invalid credentials');
+      setError('Invalid admin email');
     }
     setLoading(false);
   };
@@ -40,22 +39,10 @@ function AdminLogin({ onLogin }) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              placeholder="bethel@gmail.com"
             />
           </div>
           
-          <div className="form-group">
-            <label>Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              placeholder="Enter password"
-            />
-          </div>
-          
-          <button type="submit" className="btn-primary" disabled={loading}>
+          <button type="submit" className="btn-primary" disabled={loading} style={{ marginTop: '16px' }}>
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>

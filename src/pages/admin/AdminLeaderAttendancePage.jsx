@@ -129,13 +129,12 @@ function AdminLeaderAttendancePage({ onBack }) {
             <IconButton 
               onClick={onBack} 
               sx={{ 
-                bgcolor: 'var(--bg-glass-strong)', 
-                border: '1px solid var(--border-light)', 
-                boxShadow: 'var(--shadow-sm)',
-                '&:hover': { bgcolor: 'var(--bg-surface)' } 
+                bgcolor: 'transparent', 
+                color: 'var(--text-deep)',
+                '&:hover': { bgcolor: 'rgba(0,0,0,0.05)' } 
               }}
             >
-              <ArrowBackIcon fontSize="small" />
+              <ArrowBackIcon />
             </IconButton>
           )}
           <Typography variant="h6" sx={{ fontWeight: 800, color: 'var(--text-primary)' }}>Take Leader Attendance</Typography>

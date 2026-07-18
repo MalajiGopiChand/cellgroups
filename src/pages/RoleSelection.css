@@ -36,12 +36,10 @@
 }
 
 .role-header h1 {
+  font-family: 'Playfair Display', serif;
   font-size: 32px;
-  font-weight: 800;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  font-weight: 700;
+  color: var(--primary-forest);
   margin-bottom: 8px;
   letter-spacing: -0.02em;
 }
@@ -53,14 +51,14 @@
 }
 
 .role-description {
-  background: var(--bg-glass);
+  background: rgba(255, 255, 255, 0.5);
   padding: 20px;
-  border-radius: var(--radius-lg);
+  border-radius: 20px;
   font-size: 14px;
-  color: var(--text-secondary);
+  color: var(--text-supporting);
   line-height: 1.6;
   text-align: center;
-  border: 1px solid var(--border-light);
+  border: 1px solid var(--border-neutral);
   margin-top: 16px;
 }
 
@@ -75,11 +73,11 @@
   align-items: center;
   gap: 20px;
   padding: 20px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-lg);
+  background: rgba(255,255,255,0.75);
+  border: 1px solid var(--border-neutral);
+  border-radius: 24px;
   cursor: pointer;
-  transition: all var(--transition-normal);
+  transition: all 0.3s ease;
   text-decoration: none;
   color: inherit;
   position: relative;
@@ -98,7 +96,7 @@
 }
 
 .role-card:hover {
-  border-color: var(--color-primary);
+  border-color: var(--primary-forest);
   box-shadow: var(--shadow-md);
   transform: translateX(4px);
 }
@@ -106,7 +104,7 @@
 .role-card:hover::after {
   opacity: 1;
   transform: translateX(0);
-  color: var(--color-primary);
+  color: var(--primary-forest);
 }
 
 .role-icon {
@@ -126,9 +124,10 @@
 }
 
 .role-content h2 {
-  font-size: 18px;
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--text-deep);
   margin-bottom: 4px;
 }
 
