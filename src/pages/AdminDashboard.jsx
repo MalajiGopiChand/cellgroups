@@ -426,7 +426,7 @@ function AdminDashboard({ user, onLogout }) {
                   Quick Actions
                 </Typography>
                 <Grid container spacing={isMobile ? 1.5 : 2}>
-                  {navButtons.filter(b => !b.isBottomNav).map((button) => (
+                  {navButtons.filter(b => b.id !== 0).map((button) => (
                     <Grid item xs={6} sm={4} md={2.4} key={button.id}>
                       <Card
                         sx={{

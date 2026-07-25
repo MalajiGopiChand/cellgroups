@@ -347,7 +347,7 @@ function CellLeaderDashboardInner({ user, onLogout }) {
                   {t('dash.quickActions')}
                 </Typography>
                 <Grid container spacing={isMobile ? 1.5 : 2}>
-                  {navButtons.filter(b => !b.isBottomNav).map((button) => (
+                  {navButtons.filter(b => b.id !== 0).map((button) => (
                     <Grid item xs={6} sm={6} md={3} key={button.id}>
                       <Card
                         sx={{
