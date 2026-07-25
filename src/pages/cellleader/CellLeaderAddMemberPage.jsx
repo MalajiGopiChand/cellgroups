@@ -43,6 +43,7 @@ import MemberDetailsDialog from '../../components/MemberDetailsDialog';
 import EditMemberDialog from '../../components/EditMemberDialog';
 import { Edit as EditIcon } from '@mui/icons-material';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useHardwareBack } from '../../hooks/useHardwareBack';
 
 function CellLeaderAddMemberPage({ user, onBack }) {
   const navigate = useNavigate();
@@ -61,6 +62,9 @@ function CellLeaderAddMemberPage({ user, onBack }) {
   // Edit dialog state
   const [memberToEdit, setMemberToEdit] = useState(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+
+  useHardwareBack(dialogOpen, () => setDialogOpen(false));
+  useHardwareBack(editDialogOpen, () => setEditDialogOpen(false));
 
   const fetchMembers = async () => {
     if (!user?.id) return;
