@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, Paper, Button, IconButton, Fade, Chip, CircularProgress } from '@mui/material';
-import { DeleteOutline as DeleteIcon, ThumbUpOutlined as ApproveIcon, PersonOutline as PersonIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
+import { DeleteOutline as DeleteIcon, ThumbUpOutlined as ApproveIcon, PersonOutline as PersonIcon } from '@mui/icons-material';
 import { collection, getDocs, doc, updateDoc, deleteDoc, query, where } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 
@@ -73,28 +73,13 @@ function AdminApprovePage({ onBack }) {
   }
 
   return (
-    <Fade in timeout={400}>
+    
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
         
         {/* Pending Section */}
         <Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
-            {onBack && (
-              <IconButton 
-                onClick={onBack ? onBack : () => navigate('/admin/dashboard')} 
-                sx={{ 
-                  bgcolor: 'transparent', 
-                  color: 'var(--text-deep)',
-                  '&:hover': { bgcolor: 'rgba(0,0,0,0.05)' } 
-                }}
-              >
-                <ArrowBackIcon />
-              </IconButton>
-            )}
-            <Typography variant="h6" sx={{ fontWeight: 800, color: 'var(--text-primary)' }}>
-              Pending Approvals
-            </Typography>
-            <Chip 
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                        <Chip 
               label={pending.length} 
               size="small" 
               sx={{ 
@@ -108,7 +93,7 @@ function AdminApprovePage({ onBack }) {
           {pending.length > 0 ? (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
               {pending.map((l, idx) => (
-                <Fade in timeout={300 + (idx * 100)} key={l.id}>
+                
                   <Paper 
                     elevation={0}
                     sx={{ 
@@ -120,11 +105,11 @@ function AdminApprovePage({ onBack }) {
                       gap: 2,
                       bgcolor: 'var(--bg-glass-strong)', 
                       backdropFilter: 'blur(12px)',
-                      borderRadius: 4,
+                      borderRadius: 1,
                       border: '1px solid var(--border-light)',
                       boxShadow: 'var(--shadow-sm)',
                       transition: 'all 0.2s ease',
-                      '&:hover': { transform: 'translateY(-2px)', boxShadow: 'var(--shadow-md)', borderColor: 'rgba(239, 68, 68, 0.4)' }
+                      '&:hover': { boxShadow: 'var(--shadow-md)', borderColor: 'rgba(239, 68, 68, 0.4)' }
                     }}
                   >
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -148,7 +133,7 @@ function AdminApprovePage({ onBack }) {
                         onClick={() => handleApprove(l.id)}
                         sx={{ 
                           bgcolor: 'var(--color-success)', 
-                          borderRadius: 3, 
+                          borderRadius: 1, 
                           textTransform: 'none', 
                           fontWeight: 600,
                           flexGrow: { xs: 1, sm: 0 },
@@ -161,17 +146,17 @@ function AdminApprovePage({ onBack }) {
                       <IconButton 
                         color="error" 
                         onClick={() => handleDelete(l.id)} 
-                        sx={{ bgcolor: 'rgba(239, 68, 68, 0.1)', borderRadius: 3, '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.2)' } }}
+                        sx={{ bgcolor: 'rgba(239, 68, 68, 0.1)', borderRadius: 1, '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.2)' } }}
                       >
                         <DeleteIcon />
                       </IconButton>
                     </Box>
                   </Paper>
-                </Fade>
+                
               ))}
             </Box>
           ) : (
-            <Paper elevation={0} sx={{ p: 4, textAlign: 'center', bgcolor: 'var(--bg-glass-strong)', borderRadius: 4, border: '1px dashed var(--border-light)' }}>
+            <Paper elevation={0} sx={{ p: 4, textAlign: 'center', bgcolor: 'var(--bg-glass-strong)', borderRadius: 1, border: '1px dashed var(--border-light)' }}>
               <Typography sx={{ color: 'var(--text-tertiary)' }}>No new leaders pending approval.</Typography>
             </Paper>
           )}
@@ -192,7 +177,7 @@ function AdminApprovePage({ onBack }) {
 
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
             {approved.map((l, idx) => (
-              <Fade in timeout={400 + (idx * 50)} key={l.id}>
+              
                 <Paper 
                   elevation={0}
                   sx={{ 
@@ -202,7 +187,7 @@ function AdminApprovePage({ onBack }) {
                     alignItems: 'center', 
                     bgcolor: 'var(--bg-glass-strong)', 
                     backdropFilter: 'blur(12px)',
-                    borderRadius: 3, 
+                    borderRadius: 1, 
                     border: '1px solid var(--border-light)',
                     transition: 'all 0.2s',
                     '&:hover': { borderColor: 'rgba(16, 185, 129, 0.4)', bgcolor: 'var(--bg-surface)' }
@@ -227,7 +212,7 @@ function AdminApprovePage({ onBack }) {
                     <DeleteIcon fontSize="small" />
                   </IconButton>
                 </Paper>
-              </Fade>
+              
             ))}
             
             {approved.length === 0 && (
@@ -237,7 +222,7 @@ function AdminApprovePage({ onBack }) {
         </Box>
 
       </Box>
-    </Fade>
+    
   );
 }
 

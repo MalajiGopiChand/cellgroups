@@ -1,3 +1,4 @@
+import PageHeader from '../../components/PageHeader';
 import { useState, useEffect } from 'react';
 import { 
   Box, 
@@ -217,23 +218,9 @@ function CellLeaderAddMemberPage({ user, onBack }) {
   const todayStr = new Date().toISOString().split('T')[0];
 
   return (
-    <Fade in timeout={350}>
+    
       <Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
-          <IconButton 
-            onClick={onBack ? onBack : () => navigate('/cellleader/dashboard')} 
-            sx={{ 
-              bgcolor: 'transparent', 
-              color: 'var(--text-deep)',
-              '&:hover': { bgcolor: 'rgba(0,0,0,0.05)' } 
-            }}
-          >
-            <ArrowBackIcon />
-          </IconButton>
-          <Typography variant="h6" sx={{ fontWeight: 800, color: 'var(--text-primary)' }}>
-            {t('add.title')}
-          </Typography>
-        </Box>
+        <PageHeader title={t('add.title')} onBack={onBack ? onBack : () => navigate('/cellleader/dashboard')} />
         <Paper 
           elevation={0}
           sx={{ 
@@ -241,7 +228,7 @@ function CellLeaderAddMemberPage({ user, onBack }) {
             mb: 3, 
             bgcolor: 'var(--bg-glass-strong)', 
             backdropFilter: 'blur(12px)',
-            borderRadius: 3,
+            borderRadius: 1,
             border: '1px solid var(--border-light)',
             boxShadow: 'var(--shadow-sm)'
           }}
@@ -254,20 +241,20 @@ function CellLeaderAddMemberPage({ user, onBack }) {
             <TextField 
               name="name" label={t('add.name')} fullWidth required 
               InputProps={{ startAdornment: <InputAdornment position="start"><PersonIcon sx={{ color: 'var(--color-primary)' }} /></InputAdornment> }}
-              sx={{ mb: 2.5, '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: 'var(--bg-surface)' } }} 
+              sx={{ mb: 2.5, '& .MuiOutlinedInput-root': { borderRadius: 1, bgcolor: 'var(--bg-surface)' } }} 
             />
             <TextField 
               name="dob" label="Date of Birth (Optional)" type="date" fullWidth 
               InputLabelProps={{ shrink: true }}
               inputProps={{ max: todayStr }}
               InputProps={{ startAdornment: <InputAdornment position="start"><CalendarTodayIcon sx={{ color: 'var(--color-primary)' }} /></InputAdornment> }}
-              sx={{ mb: 2.5, '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: 'var(--bg-surface)' } }} 
+              sx={{ mb: 2.5, '& .MuiOutlinedInput-root': { borderRadius: 1, bgcolor: 'var(--bg-surface)' } }} 
             />
             <TextField 
               name="phone" label="Mobile Number (Optional)" fullWidth type="tel"
               inputProps={{ pattern: "\\d{10}", maxLength: 10 }}
               InputProps={{ startAdornment: <InputAdornment position="start"><PhoneIcon sx={{ color: 'var(--color-primary)' }} /></InputAdornment> }}
-              sx={{ mb: 2.5, '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: 'var(--bg-surface)' } }} 
+              sx={{ mb: 2.5, '& .MuiOutlinedInput-root': { borderRadius: 1, bgcolor: 'var(--bg-surface)' } }} 
             />
             
             {/* Collapse / Accordion for Family Details */}
@@ -281,7 +268,6 @@ function CellLeaderAddMemberPage({ user, onBack }) {
                 borderRadius: '12px !important', 
                 border: '1px solid var(--border-light)',
                 bgcolor: 'var(--bg-surface)',
-                overflow: 'hidden',
                 '&:before': { display: 'none' }
               }}
             >
@@ -320,7 +306,7 @@ function CellLeaderAddMemberPage({ user, onBack }) {
                         p: 2,
                         mb: 2, 
                         border: '1px solid var(--border-light)', 
-                        borderRadius: 3, 
+                        borderRadius: 1, 
                         bgcolor: 'var(--bg-main)',
                         display: 'flex', 
                         flexDirection: 'column',
@@ -357,7 +343,7 @@ function CellLeaderAddMemberPage({ user, onBack }) {
                             required
                             value={member.name}
                             onChange={(e) => handleFamilyMemberChange(index, 'name', e.target.value)}
-                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2, bgcolor: 'var(--bg-surface)' } }}
+                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1, bgcolor: 'var(--bg-surface)' } }}
                           />
                         </Grid>
                         <Grid item xs={12} sm={6}>
@@ -367,7 +353,7 @@ function CellLeaderAddMemberPage({ user, onBack }) {
                               label="Relationship"
                               value={member.relation}
                               onChange={(e) => handleFamilyMemberChange(index, 'relation', e.target.value)}
-                              sx={{ borderRadius: 2, bgcolor: 'var(--bg-surface)' }}
+                              sx={{ borderRadius: 1, bgcolor: 'var(--bg-surface)' }}
                             >
                               <MenuItem value="Spouse">Spouse</MenuItem>
                               <MenuItem value="Father">Father</MenuItem>
@@ -389,7 +375,7 @@ function CellLeaderAddMemberPage({ user, onBack }) {
                             InputLabelProps={{ shrink: true }}
                             inputProps={{ max: todayStr }}
                             onChange={(e) => handleFamilyMemberChange(index, 'dob', e.target.value)}
-                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2, bgcolor: 'var(--bg-surface)' } }}
+                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1, bgcolor: 'var(--bg-surface)' } }}
                           />
                         </Grid>
                         <Grid item xs={12} sm={6}>
@@ -402,7 +388,7 @@ function CellLeaderAddMemberPage({ user, onBack }) {
                             inputProps={{ pattern: "\\d{10}", maxLength: 10 }}
                             onChange={(e) => handleFamilyMemberChange(index, 'phone', e.target.value)}
                             InputProps={{ startAdornment: <InputAdornment position="start"><PhoneIcon sx={{ fontSize: 16, color: 'var(--color-primary)' }} /></InputAdornment> }}
-                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2, bgcolor: 'var(--bg-surface)' } }}
+                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1, bgcolor: 'var(--bg-surface)' } }}
                           />
                         </Grid>
                       </Grid>
@@ -421,12 +407,12 @@ function CellLeaderAddMemberPage({ user, onBack }) {
             <TextField 
               label="Place" value={user?.place || ''} fullWidth disabled 
               InputProps={{ startAdornment: <InputAdornment position="start"><LocationIcon sx={{ color: 'var(--text-tertiary)' }} /></InputAdornment> }}
-              sx={{ mb: 2.5, '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: 'var(--bg-surface)' } }} 
+              sx={{ mb: 2.5, '& .MuiOutlinedInput-root': { borderRadius: 1, bgcolor: 'var(--bg-surface)' } }} 
             />
             <TextField 
               label="Cell Leader" value={user?.name || ''} fullWidth disabled 
               InputProps={{ startAdornment: <InputAdornment position="start"><GroupIcon sx={{ color: 'var(--text-tertiary)' }} /></InputAdornment> }}
-              sx={{ mb: 3, '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: 'var(--bg-surface)' } }} 
+              sx={{ mb: 3, '& .MuiOutlinedInput-root': { borderRadius: 1, bgcolor: 'var(--bg-surface)' } }} 
             />
             <Button 
               type="submit" 
@@ -436,7 +422,7 @@ function CellLeaderAddMemberPage({ user, onBack }) {
               sx={{ 
                 bgcolor: 'var(--color-primary)', 
                 color: '#fff',
-                borderRadius: 999, 
+                borderRadius: 199, 
                 py: 1.5,
                 fontWeight: 700,
                 boxShadow: '0 4px 12px rgba(99,102,241,0.3)',
@@ -463,11 +449,10 @@ function CellLeaderAddMemberPage({ user, onBack }) {
               mb: 2,
               bgcolor: 'var(--bg-glass-strong)',
               backdropFilter: 'blur(12px)',
-              borderRadius: 4,
+              borderRadius: 1,
               border: '1px solid var(--border-light)',
               boxShadow: 'var(--shadow-sm)',
-              overflow: 'hidden'
-            }}
+              }}
           >
             {/* Family Header */}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
@@ -489,7 +474,7 @@ function CellLeaderAddMemberPage({ user, onBack }) {
                     display: 'flex',
                     alignItems: 'center',
                     gap: 2,
-                    borderRadius: 2.5,
+                    borderRadius: 1.5,
                     border: '1px solid rgba(0, 0, 0, 0.03)',
                     bgcolor: 'rgba(255, 255, 255, 0.6)',
                     cursor: 'pointer',
@@ -546,7 +531,7 @@ function CellLeaderAddMemberPage({ user, onBack }) {
                     >
                       <EditIcon fontSize="small" />
                     </IconButton>
-                    <Chip size="small" label="Active" sx={{ bgcolor: 'rgba(16,185,129,0.08)', color: 'var(--color-success)', fontWeight: 700, borderRadius: 2, height: 20, fontSize: '0.65rem' }} />
+                    <Chip size="small" label="Active" sx={{ bgcolor: 'rgba(16,185,129,0.08)', color: 'var(--color-success)', fontWeight: 700, borderRadius: 1, height: 20, fontSize: '0.65rem' }} />
                   </Box>
                 </Box>
               ))}
@@ -555,7 +540,7 @@ function CellLeaderAddMemberPage({ user, onBack }) {
         ))}
 
         {members.length === 0 && (
-          <Paper elevation={0} sx={{ p: 4, textAlign: 'center', bgcolor: 'var(--bg-glass-strong)', borderRadius: 3, border: '1px dashed var(--border-light)' }}>
+          <Paper elevation={0} sx={{ p: 4, textAlign: 'center', bgcolor: 'var(--bg-glass-strong)', borderRadius: 1, border: '1px dashed var(--border-light)' }}>
             <Typography color="var(--text-tertiary)">No members found. Add one above.</Typography>
           </Paper>
         )}
@@ -575,7 +560,7 @@ function CellLeaderAddMemberPage({ user, onBack }) {
           onMemberUpdated={handleMemberUpdated}
         />
       </Box>
-    </Fade>
+    
   );
 }
 

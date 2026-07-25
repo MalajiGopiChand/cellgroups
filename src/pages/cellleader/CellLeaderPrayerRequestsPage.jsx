@@ -13,8 +13,10 @@ import {
 import { ArrowBack as ArrowBackIcon, Person as PersonIcon, Description as DescriptionIcon } from '@mui/icons-material';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 function CellLeaderPrayerRequestsPage({ user, onBack }) {
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   
@@ -52,24 +54,9 @@ function CellLeaderPrayerRequestsPage({ user, onBack }) {
   };
 
   return (
-    <Fade in timeout={350}>
+    
       <Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
-          <IconButton 
-            onClick={onBack} 
-            sx={{ 
-              bgcolor: 'transparent', 
-              color: 'var(--text-deep)',
-              '&:hover': { bgcolor: 'rgba(0,0,0,0.05)' } 
-            }}
-          >
-            <ArrowBackIcon />
-          </IconButton>
-          <Typography variant="h6" sx={{ fontWeight: 800, color: 'var(--text-primary)' }}>
-            Submit Prayer Request
-          </Typography>
-        </Box>
-
+        
         <Paper 
           elevation={0}
           sx={{ 
@@ -77,13 +64,13 @@ function CellLeaderPrayerRequestsPage({ user, onBack }) {
             mb: 3, 
             bgcolor: 'var(--bg-glass-strong)', 
             backdropFilter: 'blur(12px)',
-            borderRadius: 3,
+            borderRadius: 1,
             border: '1px solid var(--border-light)',
             boxShadow: 'var(--shadow-sm)'
           }}
         >
           {successMsg && (
-            <Alert severity="success" sx={{ mb: 3, borderRadius: 2 }}>
+            <Alert severity="success" sx={{ mb: 3, borderRadius: 1 }}>
               {successMsg}
             </Alert>
           )}
@@ -91,22 +78,22 @@ function CellLeaderPrayerRequestsPage({ user, onBack }) {
           <form onSubmit={handleSubmit}>
             <TextField 
               name="personName" 
-              label="Person Name" 
+              label={t('prayer.personName')} 
               fullWidth 
               required 
               InputProps={{ startAdornment: <InputAdornment position="start"><PersonIcon sx={{ color: 'var(--color-primary)' }} /></InputAdornment> }}
-              sx={{ mb: 3, '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: 'var(--bg-surface)' } }} 
+              sx={{ mb: 3, '& .MuiOutlinedInput-root': { borderRadius: 1, bgcolor: 'var(--bg-surface)' } }} 
             />
             
             <TextField 
               name="description" 
-              label="Prayer Request / Description" 
+              label={t('prayer.desc')} 
               fullWidth 
               required 
               multiline
               rows={4}
               InputProps={{ startAdornment: <InputAdornment position="start" sx={{ alignSelf: 'flex-start', mt: 1.5 }}><DescriptionIcon sx={{ color: 'var(--color-primary)' }} /></InputAdornment> }}
-              sx={{ mb: 3, '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: 'var(--bg-surface)' } }} 
+              sx={{ mb: 3, '& .MuiOutlinedInput-root': { borderRadius: 1, bgcolor: 'var(--bg-surface)' } }} 
             />
             
             <Button 
@@ -117,7 +104,7 @@ function CellLeaderPrayerRequestsPage({ user, onBack }) {
               sx={{ 
                 bgcolor: 'var(--color-primary)', 
                 color: '#fff',
-                borderRadius: 999, 
+                borderRadius: 199, 
                 py: 1.5,
                 fontWeight: 700,
                 boxShadow: '0 4px 12px rgba(99,102,241,0.3)',
@@ -127,12 +114,12 @@ function CellLeaderPrayerRequestsPage({ user, onBack }) {
                 }
               }}
             >
-              {loading ? 'Submitting...' : 'Submit Prayer Request'}
+              {loading ? 'Submitting...' : t('gen.submit')}
             </Button>
           </form>
         </Paper>
       </Box>
-    </Fade>
+    
   );
 }
 

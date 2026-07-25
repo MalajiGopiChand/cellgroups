@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import PageHeader from '../../components/PageHeader';
 import { Box, Typography, Paper, Fade, Chip, CircularProgress, Divider, IconButton } from '@mui/material';
 import { EventAvailable as EventIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 import { collection, getDocs, query, where } from 'firebase/firestore';
@@ -54,38 +55,54 @@ function CellLeaderAttendanceLogsPage({ user, onBack }) {
   }
 
   return (
-    <Fade in timeout={400}>
+    
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
         
         {/* Header */}
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <IconButton 
-              onClick={onBack ? onBack : () => navigate('/cellleader/dashboard')} 
-              sx={{ 
-                bgcolor: 'transparent', 
-                color: 'var(--text-deep)',
-                '&:hover': { bgcolor: 'rgba(0,0,0,0.05)' } 
-              }}
-            >
-              <ArrowBackIcon />
-            </IconButton>
-            <Typography variant="h6" sx={{ fontWeight: 800, color: 'var(--text-primary)' }}>
-              {t('logs.title')}
-            </Typography>
-          </Box>
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+          <PageHeader title={t('logs.title')} onBack={onBack ? onBack : () => navigate('/cellleader/dashboard')} />
           <Chip 
-            label={`${filtered.length} Logs`} 
+            label={`${filtered.length} Records`} 
             size="small" 
             sx={{ bgcolor: 'rgba(99, 102, 241, 0.1)', color: 'var(--color-primary)', fontWeight: 700 }} 
           />
         </Box>
 
-        {/* Filters */}
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-          <Typography variant="caption" sx={{ mr: 1.5, fontWeight: 700, color: 'var(--text-secondary)' }}>{t('logs.selectDate')}</Typography>
-          <input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid var(--border-light)', background: 'var(--bg-glass-strong)', color: 'var(--text-primary)', fontFamily: 'inherit', fontWeight: 600 }} />
-        </Box>
+        {/* Sleek Single-Line Filter Card */}
+        <Paper 
+          elevation={0}
+          sx={{ 
+            p: 1.5, 
+            mb: 2,
+            display: 'flex', 
+            gap: 1.5, alignItems: 'center',
+            bgcolor: 'var(--bg-glass-strong)', 
+            backdropFilter: 'blur(12px)',
+            borderRadius: 1,
+            border: '1px solid var(--border-light)',
+            flexWrap: 'wrap'
+          }}
+        >
+          <Typography variant="body2" fontWeight={600} color="var(--text-secondary)">
+            {t('logs.selectDate')}:
+          </Typography>
+          <input 
+            type="date" 
+            value={filterDate} 
+            onChange={(e) => setFilterDate(e.target.value)} 
+            style={{ 
+              padding: '6px 10px', 
+              borderRadius: 1, 
+              border: '1px solid var(--border-light)', 
+              background: 'var(--surface-white)', 
+              color: 'var(--text-primary)', 
+              fontFamily: 'inherit', 
+              fontWeight: 600,
+              outline: 'none',
+                minWidth: '100px'
+            }} 
+          />
+        </Paper>
 
         {/* Attendance Records */}
         {filtered.length > 0 ? (
@@ -93,25 +110,41 @@ function CellLeaderAttendanceLogsPage({ user, onBack }) {
             {filtered.map((rec, i) => {
               const presentCount = rec.attendance?.filter(a => a.status === 'present').length || 0;
               const totalCount = rec.attendance?.length || 0;
+              
+              const familyStatus = {};
+              rec.attendance?.forEach(a => {
+                const fid = a.familyId || `single_${a.studentId}`;
+                if (!familyStatus[fid]) {
+                  familyStatus[fid] = false;
+                }
+                if (a.status === 'present') {
+                  familyStatus[fid] = true;
+                }
+              });
+              let familiesPresent = 0;
+              let familiesAbsent = 0;
+              Object.values(familyStatus).forEach(isPresent => {
+                if (isPresent) familiesPresent++;
+                else familiesAbsent++;
+              });
 
               return (
-                <Fade in timeout={300 + (i * 100)} key={rec.id || i}>
+                
                   <Paper 
                     elevation={0}
                     sx={{ 
                       p: 2, 
                       bgcolor: 'var(--bg-glass-strong)', 
                       backdropFilter: 'blur(12px)',
-                      borderRadius: 4,
+                      borderRadius: 1,
                       border: '1px solid var(--border-light)',
                       boxShadow: 'var(--shadow-sm)',
-                      overflow: 'hidden'
-                    }}
+                      }}
                   >
                     {/* Log Header */}
                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                        <Box sx={{ width: 40, height: 40, borderRadius: 2, bgcolor: 'rgba(99, 102, 241, 0.1)', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Box sx={{ width: 40, height: 40, borderRadius: 1, bgcolor: 'rgba(99, 102, 241, 0.1)', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           <EventIcon />
                         </Box>
                         <Box>
@@ -121,11 +154,18 @@ function CellLeaderAttendanceLogsPage({ user, onBack }) {
                           <Typography fontWeight={700} sx={{ color: 'var(--text-primary)', display: 'block' }}>{rec.date}</Typography>
                         </Box>
                       </Box>
-                      <Chip 
-                        size="small" 
-                        label={`${presentCount}/${totalCount} ${t('logs.presentCount')}`} 
-                        sx={{ bgcolor: presentCount > 0 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', color: presentCount > 0 ? 'var(--color-success)' : 'var(--color-error)', fontWeight: 700 }} 
-                      />
+                      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0.5 }}>
+                        <Chip 
+                          size="small" 
+                          label={`${presentCount}/${totalCount} Members Present`} 
+                          sx={{ bgcolor: presentCount > 0 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', color: presentCount > 0 ? 'var(--color-success)' : 'var(--color-error)', fontWeight: 700 }} 
+                        />
+                        {(familiesPresent > 0 || familiesAbsent > 0) && (
+                          <Typography variant="caption" sx={{ color: 'var(--text-secondary)', fontWeight: 600 }}>
+                            {familiesPresent} Families Present • {familiesAbsent} Absent
+                          </Typography>
+                        )}
+                      </Box>
                     </Box>
 
                     <Divider sx={{ my: 1.5, borderColor: 'var(--border-light)' }} />
@@ -134,7 +174,7 @@ function CellLeaderAttendanceLogsPage({ user, onBack }) {
                     {totalCount > 0 ? (
                       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                         {rec.attendance.map((a, j) => (
-                          <Box key={j} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 1, borderRadius: 2, '&:hover': { bgcolor: 'rgba(99, 102, 241, 0.04)' } }}>
+                          <Box key={j} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 1, borderRadius: 1, '&:hover': { bgcolor: 'rgba(99, 102, 241, 0.04)' } }}>
                             <Typography variant="body2" sx={{ fontWeight: 600, color: 'var(--text-secondary)' }}>
                               {a.name}
                             </Typography>
@@ -159,18 +199,18 @@ function CellLeaderAttendanceLogsPage({ user, onBack }) {
                       </Typography>
                     )}
                   </Paper>
-                </Fade>
+                
               );
             })}
           </Box>
         ) : (
-          <Paper elevation={0} sx={{ p: 4, textAlign: 'center', bgcolor: 'var(--bg-glass-strong)', borderRadius: 4, border: '1px dashed var(--border-light)' }}>
+          <Paper elevation={0} sx={{ p: 4, textAlign: 'center', bgcolor: 'var(--bg-glass-strong)', borderRadius: 1, border: '1px dashed var(--border-light)' }}>
             <Typography sx={{ color: 'var(--text-tertiary)' }}>{t('logs.noLogs')}</Typography>
           </Paper>
         )}
 
       </Box>
-    </Fade>
+    
   );
 }
 

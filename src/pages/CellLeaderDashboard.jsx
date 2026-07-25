@@ -135,14 +135,45 @@ function CellLeaderDashboardInner({ user, onLogout }) {
   }, [user?.id, user?.place]);
 
   const navButtons = [
+    // --- Bottom Nav Items ---
     { 
       id: 0, 
       label: t('nav.home'), 
       icon: <DashboardIcon />, 
       color: 'var(--primary-forest)',
       bgColor: 'var(--surface-sage)',
-      description: t('desc.overview')
+      description: t('desc.overview'),
+      isBottomNav: true
     },
+    {
+      id: 5,
+      label: t('nav.prayerRequests'),
+      icon: <PrayerIcon />,
+      color: 'var(--text-gold)',
+      bgColor: 'var(--surface-gold)',
+      description: t('desc.submitRequests'),
+      isBottomNav: true
+    },
+    {
+      id: 6,
+      label: t('nav.reportCards'),
+      icon: <ReportIcon />,
+      color: 'var(--text-sage)',
+      bgColor: 'var(--light-sage)',
+      description: t('desc.submitReport'),
+      isBottomNav: true
+    },
+    { 
+      id: 3, 
+      label: t('nav.birthdays'), 
+      icon: <CakeIcon />, 
+      color: 'var(--alert-dot)',
+      bgColor: 'rgba(207, 138, 66, 0.1)',
+      description: t('desc.birthdays'),
+      isBottomNav: true
+    },
+
+    // --- Quick Actions ---
     { 
       id: 1, 
       label: t('nav.members'), 
@@ -159,14 +190,6 @@ function CellLeaderDashboardInner({ user, onLogout }) {
       bgColor: 'var(--light-sage)',
       description: t('desc.mark')
     },
-    { 
-      id: 3, 
-      label: t('nav.birthdays'), 
-      icon: <CakeIcon />, 
-      color: 'var(--alert-dot)',
-      bgColor: 'rgba(207, 138, 66, 0.1)',
-      description: t('desc.birthdays')
-    },
     {
       id: 4,
       label: t('nav.logs'),
@@ -174,22 +197,6 @@ function CellLeaderDashboardInner({ user, onLogout }) {
       color: 'var(--primary-forest)',
       bgColor: 'var(--surface-sage)',
       description: t('desc.past')
-    },
-    {
-      id: 5,
-      label: 'Prayer Requests',
-      icon: <PrayerIcon />,
-      color: 'var(--text-gold)',
-      bgColor: 'var(--surface-gold)',
-      description: 'Submit requests'
-    },
-    {
-      id: 6,
-      label: 'Report Card',
-      icon: <ReportIcon />,
-      color: 'var(--text-sage)',
-      bgColor: 'var(--light-sage)',
-      description: 'Submit report'
     },
     {
       id: 7,
@@ -217,7 +224,7 @@ function CellLeaderDashboardInner({ user, onLogout }) {
     })();
 
     return (
-      <Fade in timeout={350} key={currentTab}>
+      <Fade in timeout={250} key={currentTab}>
         <Box>
           {content}
         </Box>
@@ -253,26 +260,13 @@ function CellLeaderDashboardInner({ user, onLogout }) {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: 'transparent' }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', height: '100dvh', bgcolor: 'transparent' }}>
         
         {/* Top App Bar */}
         <AppBar position="sticky" elevation={0} sx={{ bgcolor: 'transparent', backgroundImage: 'none', pt: '20px', px: '20px', pb: '12px' }}>
           <Toolbar disableGutters sx={{ minHeight: 'auto !important' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexGrow: 1 }}>
-              <Box
-                sx={{
-                  width: 40,
-                  height: 40,
-                  bgcolor: 'var(--primary-forest)',
-                  borderRadius: '16px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: 'var(--shadow-sm)'
-                }}
-              >
-                <Box component="img" src="/icon.png" alt="Bethel Logo" sx={{ width: 28, height: 28, objectFit: 'contain' }} />
-              </Box>
+              <Box component="img" src="/icon.png" alt="Bethel Logo" sx={{ width: 44, height: 44, objectFit: 'contain' }} />
               <Box>
                 <Typography variant="h6" className="font-playfair" sx={{ fontWeight: 700, lineHeight: 1.2, color: 'var(--text-deep)' }}>Bethel Cell</Typography>
                 <Typography variant="caption" sx={{ fontWeight: 600, color: 'var(--text-supporting)' }}>Leader • {user?.name}</Typography>
@@ -285,13 +279,13 @@ function CellLeaderDashboardInner({ user, onLogout }) {
                 <Button 
                   onClick={toggleLanguage}
                   startIcon={<TranslateIcon />} 
-                  sx={{ borderRadius: 2, px: 2, color: 'var(--text-primary)', fontWeight: 'bold', '&:hover': { bgcolor: 'rgba(99, 102, 241, 0.1)' } }}
+                  sx={{ borderRadius: 1, px: 2, color: 'var(--text-primary)', fontWeight: 'bold', '&:hover': { bgcolor: 'rgba(99, 102, 241, 0.1)' } }}
                 >
                   {language === 'en' ? 'తెలుగు' : 'English'}
                 </Button>
-                <Chip size="small" color="primary" variant="outlined" label="Cell Leader" sx={{ borderRadius: 2 }} />
+                <Chip size="small" color="primary" variant="outlined" label="Cell Leader" sx={{ borderRadius: 1 }} />
                 <Tooltip title={t('nav.logout')}>
-                  <Button onClick={onLogout} startIcon={<LogoutIcon />} sx={{ borderRadius: 2, px: 2.5, color: 'var(--text-primary)', fontWeight: 'bold', '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' } }}>{t('nav.logout')}</Button>
+                  <Button onClick={onLogout} startIcon={<LogoutIcon />} sx={{ borderRadius: 1, px: 2.5, color: 'var(--text-primary)', fontWeight: 'bold', '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' } }}>{t('nav.logout')}</Button>
                 </Tooltip>
               </Box>
             )}
@@ -311,12 +305,12 @@ function CellLeaderDashboardInner({ user, onLogout }) {
         </AppBar>
 
         {/* Main Content Area */}
-        <Box sx={{ flexGrow: 1, overflow: 'auto', pb: isMobile ? '130px' : 6 }}>
+        <Box sx={{ flexGrow: 1, overflowY: 'auto', pb: isMobile ? 3 : 6 }}>
           <Container maxWidth="lg" sx={{ py: 3 }}>
             
             {/* Quick Stats Cards - Only show on Home tab */}
             {currentTab === 0 && (
-              <Fade in timeout={400}>
+              
                 <Box sx={{ mb: 4 }}>
                   <Typography variant="h6" className="font-playfair" sx={{ fontSize: 22, fontWeight: 700, color: 'var(--text-deep)', mb: 2 }}>
                     {t('dash.overview')}
@@ -325,16 +319,14 @@ function CellLeaderDashboardInner({ user, onLogout }) {
                     {statsCards.map((stat, index) => (
                       <Grid item xs={12} sm={6} md={6} key={index}>
                         <Card sx={{ 
-                          borderRadius: 3, 
+                          borderRadius: 1, 
                           background: stat.cardBg, 
                           backdropFilter: 'blur(12px)', 
-                          border: stat.cardBg === 'var(--primary-forest)' ? 'none' : '1px solid var(--border-neutral)', 
-                          transition: 'all 0.3s ease', 
-                          '&:hover': { transform: 'translateY(-4px)', boxShadow: 'var(--shadow-md)' } 
+                          border: stat.cardBg === 'var(--primary-forest)' ? 'none' : '1px solid var(--border-neutral)' 
                         }}>
                           <CardContent sx={{ p: isMobile ? 2 : 2.5, '&:last-child': { pb: isMobile ? 2 : 2.5 } }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: isMobile ? 1.5 : 2 }}>
-                              <Avatar sx={{ bgcolor: stat.bgColor, color: stat.color, width: 48, height: 48, borderRadius: 2 }}>{stat.icon}</Avatar>
+                              <Avatar sx={{ bgcolor: stat.bgColor, color: stat.color, width: 48, height: 48, borderRadius: 1 }}>{stat.icon}</Avatar>
                               {stat.trend && <Chip size="small" label={stat.trend} sx={{ fontSize: '0.65rem', bgcolor: stat.cardBg === 'var(--primary-forest)' ? 'rgba(255,255,255,0.15)' : 'var(--light-sage)', color: stat.cardBg === 'var(--primary-forest)' ? '#fff' : 'var(--text-sage)', height: 22, border: 'none' }} />}
                             </Box>
                             <Typography variant="h4" sx={{ fontWeight: 800, color: stat.textColor, mb: 0.5 }}>{stat.value}</Typography>
@@ -345,7 +337,7 @@ function CellLeaderDashboardInner({ user, onLogout }) {
                     ))}
                   </Grid>
                 </Box>
-              </Fade>
+              
             )}
 
             {/* Navigation Buttons Grid */}
@@ -355,19 +347,17 @@ function CellLeaderDashboardInner({ user, onLogout }) {
                   {t('dash.quickActions')}
                 </Typography>
                 <Grid container spacing={isMobile ? 1.5 : 2}>
-                  {navButtons.filter(b => b.id !== 0).map((button) => (
+                  {navButtons.filter(b => !b.isBottomNav).map((button) => (
                     <Grid item xs={6} sm={6} md={3} key={button.id}>
                       <Card
                         sx={{
                           cursor: 'pointer',
-                          borderRadius: 3,
+                          borderRadius: 1,
                           background: 'rgba(255,255,255,0.75)',
                           backdropFilter: 'blur(12px)',
                           border: '1px solid var(--border-neutral)',
-                          transition: 'all 0.3s ease',
+                          transition: 'all 0.2s ease',
                           '&:hover': {
-                            transform: 'translateY(-4px)',
-                            boxShadow: 'var(--shadow-md)',
                             background: 'rgba(255,255,255,0.9)',
                           }
                         }}
@@ -397,7 +387,7 @@ function CellLeaderDashboardInner({ user, onLogout }) {
           </Container>
         </Box>
         
-        <MobileBottomNav tabs={navButtons.slice(0, 3)} currentTab={currentTab} onChange={setCurrentTab} />
+        <MobileBottomNav tabs={navButtons.filter(b => b.isBottomNav)} currentTab={currentTab} onChange={setCurrentTab} />
       </Box>
     </ThemeProvider>
   );

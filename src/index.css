@@ -1,27 +1,28 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Playfair+Display:wght@700&display=swap');
 
 :root {
-  /* New Tokens */
-  --app-bg: #F4F1E9;
-  --app-surface: #FAF9F5;
-  --primary-forest: #315B46;
-  --text-deep: #283D32;
-  --text-supporting: #788279;
-  --border-neutral: #E8E6DF;
+  /* New Tokens (Royal Indigo & Soft Pearl) */
+  --app-bg: #F8FAFC;
+  --app-surface: #FFFFFF;
+  --primary-forest: #4F46E5;
+  --text-deep: #0F172A;
+  --text-supporting: #475569;
+  --border-neutral: #E2E8F0;
   --surface-white: #FFFFFF;
-  --surface-sage: #EAF2E7;
-  --light-sage: #EDF4EB;
-  --accent-sage: #DCE9D8;
-  --text-sage: #45634B;
-  --surface-gold: #FCF4E4;
-  --light-gold: #FAEAD1;
-  --accent-gold: #D5B16C;
-  --text-gold: #B7782A;
-  --alert-dot: #CF8A42;
-  --text-muted: #8B8F85;
+  --surface-sage: #EEF2FF;
+  --light-sage: #E0E7FF;
+  --accent-sage: #C7D2FE;
+  --text-sage: #4338CA;
+  --surface-gold: #F5F3FF;
+  --light-gold: #EDE9FE;
+  --accent-gold: #DDD6FE;
+  --text-gold: #7C3AED;
+  --alert-dot: #F43F5E;
+  --text-muted: #94A3B8;
 
   /* Legacy Mapping for safety */
   --color-primary: var(--primary-forest);
+  --color-primary-dark: #3730A3; /* Darker shade of indigo */
   --color-secondary: var(--text-gold);
   --color-success: var(--text-sage);
   --color-warning: #F59E0B;
@@ -29,8 +30,8 @@
 
   --bg-main: transparent;
   --bg-surface: var(--surface-white);
-  --bg-glass: rgba(255, 255, 255, 0.60);
-  --bg-glass-strong: rgba(255, 255, 255, 0.75);
+  --bg-glass: rgba(255, 255, 255, 0.70);
+  --bg-glass-strong: rgba(255, 255, 255, 0.85);
   
   --text-primary: var(--text-deep);
   --text-secondary: var(--text-supporting);
@@ -39,10 +40,10 @@
   --border-light: var(--border-neutral);
   
   /* Shadows */
-  --shadow-sm: 0 2px 8px rgba(62, 72, 60, 0.05);
-  --shadow-md: 0 12px 28px rgba(49, 91, 70, 0.15);
-  --shadow-lg: 0 25px 75px rgba(62, 72, 60, 0.16);
-  --shadow-nav: 0 12px 35px rgba(48, 61, 50, 0.18);
+  --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 12px 28px rgba(79, 70, 229, 0.15);
+  --shadow-lg: 0 25px 75px rgba(15, 23, 42, 0.12);
+  --shadow-nav: 0 -8px 25px rgba(15, 23, 42, 0.05);
   
   /* Radii */
   --radius-sm: 12px;
@@ -64,8 +65,8 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background: 
-    radial-gradient(circle at 96% 0%, rgba(207, 158, 87, .18), transparent 26rem),
-    radial-gradient(circle at 0% 38%, rgba(163, 186, 157, .23), transparent 27rem),
+    radial-gradient(circle at 96% 0%, rgba(124, 58, 237, 0.12), transparent 26rem),
+    radial-gradient(circle at 0% 38%, rgba(79, 70, 229, 0.12), transparent 27rem),
     var(--app-bg);
   background-attachment: fixed;
   color: var(--text-deep);
@@ -139,7 +140,6 @@ a {
 }
 
 .btn-primary:hover {
-  transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
 
@@ -161,13 +161,20 @@ a {
   flex-direction: column;
 }
 
-@media (max-width: 500px) {
+@media (max-width: 899px) {
   .app-shell {
-    max-width: 100%;
-    min-height: 100vh;
+    max-width: 100vw;
+    width: 100%;
+    height: 100dvh;
     margin: 0;
     border-radius: 0;
     border: none;
     box-shadow: none;
   }
+}
+
+
+/* Fix for first letters clipping in multiline textareas */
+.MuiInputBase-inputMultiline {
+  padding-left: 4px !important;
 }

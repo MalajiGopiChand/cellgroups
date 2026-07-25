@@ -1,5 +1,6 @@
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { Box, CircularProgress } from '@mui/material';
 import RoleSelection from './pages/RoleSelection';
 import InstallInstructions from './components/InstallInstructions';
 import AdminLogin from './pages/AdminLogin';
@@ -33,12 +34,16 @@ function App() {
   };
 
   if (loading) {
-    return <div className="loading">Loading...</div>;
+    return (
+      <Box sx={{ display: 'flex', height: '100dvh', width: '100vw', alignItems: 'center', justifyContent: 'center', bgcolor: 'transparent' }}>
+        <CircularProgress sx={{ color: 'var(--primary-forest)' }} />
+      </Box>
+    );
   }
 
   return (
     <div className="app-shell">
-      <Router>
+      <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <InstallInstructions />
         <Routes>
           <Route 

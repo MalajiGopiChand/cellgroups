@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
+import PageHeader from '../../components/PageHeader';
+import React, { useState, useEffect, useRef } from 'react';
 import { Box, Typography, Paper, Fade, Button, IconButton, Snackbar, Alert, Avatar, Collapse } from '@mui/material';
 import { collection, getDocs, query, where, doc, setDoc, getDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
@@ -65,15 +66,21 @@ function CellLeaderAttendancePage({ user, onBack }) {
     fetch();
   }, [user?.id, user?.place, selectedDate]);
 
-  const handleMark = async (memberId, memberName, status) => {
+  const isTuesday = new Date(selectedDate).getDay() === 2;
+
+  const handleMark = async (memberId, memberName, status, familyId) => {
+    if (!isTuesday) {
+      alert("Attendance can only be marked on Tuesdays.");
+      return;
+    }
     const current = attendance.find(a => a.studentId === memberId);
     let newAttendance;
     if (current) {
       newAttendance = attendance.map(a => 
-        a.studentId === memberId ? { ...a, status } : a
+        a.studentId === memberId ? { ...a, status, familyId } : a
       );
     } else {
-      newAttendance = [...attendance, { studentId: memberId, name: memberName, status }];
+      newAttendance = [...attendance, { studentId: memberId, name: memberName, status, familyId }];
     }
     setAttendance(newAttendance);
     
@@ -109,48 +116,74 @@ function CellLeaderAttendancePage({ user, onBack }) {
   });
 
   return (
-    <Fade in timeout={350}>
+    
       <Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
-          <IconButton 
-            onClick={onBack ? onBack : () => navigate('/cellleader/dashboard')} 
-            sx={{ 
-              bgcolor: 'transparent', 
-              color: 'var(--text-deep)',
-              '&:hover': { bgcolor: 'rgba(0,0,0,0.05)' } 
-            }}
-          >
-            <ArrowBackIcon />
-          </IconButton>
-          <Typography variant="h5" className="font-playfair" sx={{ fontWeight: 700, color: 'var(--text-deep)' }}>
-            {t('att.title')}
-          </Typography>
-        </Box>
+        <PageHeader title={t('att.title')} onBack={onBack ? onBack : () => navigate('/cellleader/dashboard')} />
         <Typography variant="body2" color="var(--text-secondary)" sx={{ mb: 3, fontWeight: 600 }}>{user?.name} • {user?.place}</Typography>
         
-        <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', bgcolor: 'var(--surface-sage)', p: 2, borderRadius: 4 }}>
-          <Typography variant="caption" sx={{ mr: 1.5, fontWeight: 700, color: 'var(--text-sage)' }}>Date:</Typography>
-          <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} style={{ padding: '8px 12px', borderRadius: '12px', border: 'none', background: 'var(--surface-white)', color: 'var(--text-deep)', fontFamily: 'inherit', fontWeight: 600, boxShadow: 'var(--shadow-sm)' }} />
-          <Box sx={{ flexGrow: 1 }} />
+        {/* Sleek Single-Line Filter Card */}
+        <Paper 
+          elevation={0}
+          sx={{ 
+            p: 1.5, 
+            mb: 4,
+            display: 'flex', 
+            gap: 1.5, alignItems: 'center',
+            bgcolor: 'var(--bg-glass-strong)', 
+            backdropFilter: 'blur(12px)',
+            borderRadius: 1,
+            border: '1px solid var(--border-light)',
+            flexWrap: 'wrap'
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Typography variant="body2" fontWeight={600} color="var(--text-secondary)">
+              Date:
+            </Typography>
+            <input 
+              type="date" 
+              value={selectedDate} 
+              onChange={(e) => setSelectedDate(e.target.value)} 
+              style={{ 
+                padding: '6px 10px', 
+                borderRadius: 1, 
+                border: '1px solid var(--border-light)', 
+                background: 'var(--surface-white)', 
+                color: 'var(--text-primary)', 
+                fontFamily: 'inherit', 
+                fontWeight: 600,
+                outline: 'none',
+                minWidth: '100px'
+              }} 
+            />
+          </Box>
           <Button 
             onClick={handleDownload} 
             startIcon={<DownloadIcon />} 
             size="small"
             sx={{ 
-              borderRadius: 3, 
+              ml: 'auto',
+              borderRadius: 1, 
               color: 'var(--surface-white)', 
               bgcolor: 'var(--primary-forest)',
               fontWeight: 700,
-              boxShadow: 'var(--shadow-sm)',
+              boxShadow: 'none',
+              whiteSpace: 'nowrap',
               '&:hover': { bgcolor: 'var(--primary-forest)', opacity: 0.9 } 
             }}
           >
             {t('att.download')}
           </Button>
-        </Box>
+        </Paper>
+
+        {!isTuesday && (
+          <Alert severity="warning" sx={{ mb: 3, borderRadius: 1, fontWeight: 600 }}>
+            Attendance can only be marked on Tuesdays.
+          </Alert>
+        )}
 
         {members.length === 0 ? (
-          <Paper elevation={0} sx={{ p: 4, textAlign: 'center', bgcolor: 'var(--bg-glass-strong)', borderRadius: 3, border: '1px dashed var(--border-light)' }}>
+          <Paper elevation={0} sx={{ p: 4, textAlign: 'center', bgcolor: 'var(--bg-glass-strong)', borderRadius: 1, border: '1px dashed var(--border-light)' }}>
             <Typography color="var(--text-tertiary)">{t('att.addFirst')}</Typography>
           </Paper>
         ) : (
@@ -166,7 +199,7 @@ function CellLeaderAttendancePage({ user, onBack }) {
                   backdropFilter: 'blur(12px)',
                   boxShadow: 'var(--shadow-sm)', 
                   border: '1px solid var(--border-neutral)',
-                  borderRadius: '21px',
+                  borderRadius: 1,
                   mb: 1,
                   cursor: 'pointer',
                   transition: 'all 0.2s',
@@ -220,43 +253,45 @@ function CellLeaderAttendancePage({ user, onBack }) {
                       const isPresent = mRec?.status === 'present';
                       const isAbsent = mRec?.status === 'absent';
                       return (
-                        <Fade in key={m.id}>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        
+                          <Box key={m.id} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <Typography sx={{ fontWeight: 700, color: 'var(--text-deep)' }}>{m.name}</Typography>
                             <Box sx={{ display: 'flex', gap: 1 }}>
                               <Box 
-                                onClick={() => handleMark(m.id, m.name, 'present')}
+                                onClick={() => handleMark(m.id, m.name, 'present', family.headId)}
                                 sx={{
-                                  width: 32, height: 32, borderRadius: '10px',
+                                  width: 32, height: 32, borderRadius: 1,
                                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                  cursor: 'pointer',
-                                  bgcolor: isPresent ? '#4E7D58' : 'var(--surface-white)',
-                                  border: isPresent ? 'none' : '1px solid var(--border-neutral)',
-                                  color: isPresent ? '#fff' : 'transparent',
+                                  cursor: isTuesday ? 'pointer' : 'not-allowed',
+                                  opacity: isTuesday ? 1 : 0.5,
+                                  bgcolor: mRec?.status === 'present' ? '#4E7D58' : 'var(--surface-white)',
+                                  border: mRec?.status === 'present' ? 'none' : '1px solid var(--border-neutral)',
+                                  color: mRec?.status === 'present' ? '#fff' : 'var(--text-secondary)',
                                   transition: 'all 0.2s',
-                                  '&:hover': { bgcolor: isPresent ? '#4E7D58' : 'var(--surface-sage)', borderColor: 'transparent' }
+                                  '&:hover': { bgcolor: mRec?.status === 'present' ? '#4E7D58' : 'var(--surface-sage)', borderColor: 'transparent' }
                                 }}
                               >
-                                <CheckCircleIcon sx={{ fontSize: 20 }} />
+                                <Typography sx={{ fontWeight: 800, fontSize: 16 }}>P</Typography>
                               </Box>
                               <Box 
-                                onClick={() => handleMark(m.id, m.name, 'absent')}
+                                onClick={() => handleMark(m.id, m.name, 'absent', family.headId)}
                                 sx={{
-                                  width: 32, height: 32, borderRadius: '10px',
+                                  width: 32, height: 32, borderRadius: 1,
                                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                  cursor: 'pointer',
-                                  bgcolor: isAbsent ? '#ef4444' : 'var(--surface-white)',
-                                  border: isAbsent ? 'none' : '1px solid var(--border-neutral)',
-                                  color: isAbsent ? '#fff' : 'transparent',
+                                  cursor: isTuesday ? 'pointer' : 'not-allowed',
+                                  opacity: isTuesday ? 1 : 0.5,
+                                  bgcolor: mRec?.status === 'absent' ? '#ef4444' : 'var(--surface-white)',
+                                  border: mRec?.status === 'absent' ? 'none' : '1px solid var(--border-neutral)',
+                                  color: mRec?.status === 'absent' ? '#fff' : 'var(--text-secondary)',
                                   transition: 'all 0.2s',
-                                  '&:hover': { bgcolor: isAbsent ? '#ef4444' : 'var(--app-bg)', borderColor: 'transparent' }
+                                  '&:hover': { bgcolor: mRec?.status === 'absent' ? '#ef4444' : 'var(--app-bg)', borderColor: 'transparent' }
                                 }}
                               >
-                                <CancelIcon sx={{ fontSize: 20 }} />
+                                <Typography sx={{ fontWeight: 800, fontSize: 16 }}>A</Typography>
                               </Box>
                             </Box>
                           </Box>
-                        </Fade>
+                        
                       );
                     })}
                   </Box>
@@ -307,12 +342,12 @@ function CellLeaderAttendancePage({ user, onBack }) {
           onClose={handleCloseSnackbar}
           anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         >
-          <Alert onClose={handleCloseSnackbar} severity="success" sx={{ width: '100%', borderRadius: 2, fontWeight: 600 }}>
+          <Alert onClose={handleCloseSnackbar} severity="success" sx={{ width: '100%', borderRadius: 1, fontWeight: 600 }}>
             {t('att.savedAlert')} {selectedDate}
           </Alert>
         </Snackbar>
       </Box>
-    </Fade>
+    
   );
 }
 

@@ -150,7 +150,7 @@ function EditMemberDialog({ open, onClose, member, onMemberUpdated }) {
       maxWidth="sm"
       PaperProps={{
         sx: {
-          borderRadius: 4,
+          borderRadius: 1,
           bgcolor: 'var(--bg-glass-strong)',
           backdropFilter: 'blur(22px)',
           border: '1px solid var(--border-light)',
@@ -159,7 +159,7 @@ function EditMemberDialog({ open, onClose, member, onMemberUpdated }) {
       }}
     >
       <DialogTitle sx={{ m: 0, p: 2.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', bgcolor: 'rgba(99, 102, 241, 0.04)' }}>
-        <Typography variant="h6" sx={{ fontWeight: 800, color: 'var(--text-primary)' }}>
+        <Typography variant="h6" component="div" sx={{ fontWeight: 800, color: 'var(--text-primary)' }}>
           Edit Member Details
         </Typography>
         <IconButton onClick={onClose} sx={{ color: 'var(--text-secondary)' }}>
@@ -180,12 +180,12 @@ function EditMemberDialog({ open, onClose, member, onMemberUpdated }) {
                 name="name" label="Name" fullWidth required 
                 value={formData.name} onChange={handleChange}
                 InputProps={{ startAdornment: <InputAdornment position="start"><PersonIcon sx={{ color: 'var(--color-primary)' }} /></InputAdornment> }}
-                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: 'var(--bg-surface)' } }} 
+                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1, bgcolor: 'var(--bg-surface)' } }} 
               />
             </Grid>
             
             <Grid item xs={12} sm={6}>
-              <FormControl fullWidth required sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: 'var(--bg-surface)' } }}>
+              <FormControl fullWidth required sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1, bgcolor: 'var(--bg-surface)' } }}>
                 <InputLabel>Relationship</InputLabel>
                 <Select name="relation" value={formData.relation} label="Relationship" onChange={handleChange}>
                   <MenuItem value="Head">Head</MenuItem>
@@ -206,7 +206,7 @@ function EditMemberDialog({ open, onClose, member, onMemberUpdated }) {
                 value={formData.dob} onChange={handleChange}
                 InputLabelProps={{ shrink: true }} inputProps={{ max: todayStr }}
                 InputProps={{ startAdornment: <InputAdornment position="start"><CalendarTodayIcon sx={{ color: 'var(--color-primary)' }} /></InputAdornment> }}
-                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: 'var(--bg-surface)' } }} 
+                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1, bgcolor: 'var(--bg-surface)' } }} 
               />
             </Grid>
             
@@ -216,7 +216,7 @@ function EditMemberDialog({ open, onClose, member, onMemberUpdated }) {
                 value={formData.phone} onChange={handleChange}
                 inputProps={{ pattern: "\\d{10}", maxLength: 10 }}
                 InputProps={{ startAdornment: <InputAdornment position="start"><PhoneIcon sx={{ color: 'var(--color-primary)' }} /></InputAdornment> }}
-                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: 'var(--bg-surface)' } }} 
+                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1, bgcolor: 'var(--bg-surface)' } }} 
               />
             </Grid>
           </Grid>
@@ -231,7 +231,6 @@ function EditMemberDialog({ open, onClose, member, onMemberUpdated }) {
                 borderRadius: '12px !important', 
                 border: '1px solid var(--border-light)',
                 bgcolor: 'var(--bg-surface)',
-                overflow: 'hidden',
                 '&:before': { display: 'none' }
               }}
             >
@@ -266,7 +265,7 @@ function EditMemberDialog({ open, onClose, member, onMemberUpdated }) {
                         p: 2,
                         mb: 2, 
                         border: '1px solid var(--border-light)', 
-                        borderRadius: 3, 
+                        borderRadius: 1, 
                         bgcolor: 'var(--bg-main)',
                         display: 'flex', 
                         flexDirection: 'column',
@@ -302,7 +301,7 @@ function EditMemberDialog({ open, onClose, member, onMemberUpdated }) {
                             required
                             value={newMem.name}
                             onChange={(e) => handleNewFamilyMemberChange(index, 'name', e.target.value)}
-                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2, bgcolor: 'var(--bg-surface)' } }}
+                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1, bgcolor: 'var(--bg-surface)' } }}
                           />
                         </Grid>
                         <Grid item xs={12} sm={6}>
@@ -312,7 +311,7 @@ function EditMemberDialog({ open, onClose, member, onMemberUpdated }) {
                               label="Relationship"
                               value={newMem.relation}
                               onChange={(e) => handleNewFamilyMemberChange(index, 'relation', e.target.value)}
-                              sx={{ borderRadius: 2, bgcolor: 'var(--bg-surface)' }}
+                              sx={{ borderRadius: 1, bgcolor: 'var(--bg-surface)' }}
                             >
                               <MenuItem value="Spouse">Spouse</MenuItem>
                               <MenuItem value="Father">Father</MenuItem>
@@ -334,7 +333,7 @@ function EditMemberDialog({ open, onClose, member, onMemberUpdated }) {
                             InputLabelProps={{ shrink: true }}
                             inputProps={{ max: todayStr }}
                             onChange={(e) => handleNewFamilyMemberChange(index, 'dob', e.target.value)}
-                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2, bgcolor: 'var(--bg-surface)' } }}
+                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1, bgcolor: 'var(--bg-surface)' } }}
                           />
                         </Grid>
                         <Grid item xs={12} sm={6}>
@@ -347,7 +346,7 @@ function EditMemberDialog({ open, onClose, member, onMemberUpdated }) {
                             inputProps={{ pattern: "\\d{10}", maxLength: 10 }}
                             onChange={(e) => handleNewFamilyMemberChange(index, 'phone', e.target.value)}
                             InputProps={{ startAdornment: <InputAdornment position="start"><PhoneIcon sx={{ fontSize: 16, color: 'var(--color-primary)' }} /></InputAdornment> }}
-                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2, bgcolor: 'var(--bg-surface)' } }}
+                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1, bgcolor: 'var(--bg-surface)' } }}
                           />
                         </Grid>
                       </Grid>
@@ -369,7 +368,7 @@ function EditMemberDialog({ open, onClose, member, onMemberUpdated }) {
           <Button onClick={onClose} sx={{ color: 'var(--text-secondary)', fontWeight: 700 }}>
             Cancel
           </Button>
-          <Button type="submit" variant="contained" disabled={loading} sx={{ bgcolor: 'var(--color-primary)', borderRadius: 2, px: 3, fontWeight: 700 }}>
+          <Button type="submit" variant="contained" disabled={loading} sx={{ bgcolor: 'var(--color-primary)', borderRadius: 1, px: 3, fontWeight: 700 }}>
             {loading ? 'Saving...' : 'Save Changes'}
           </Button>
         </DialogActions>

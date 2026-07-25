@@ -52,10 +52,9 @@ function BirthdayNotificationBar({ user, isAdmin, onNavigateToBirthdays }) {
           sx: {
             mt: 1.5,
             width: 320,
-            borderRadius: 4,
+            borderRadius: 1,
             border: '1px solid var(--border-light)',
             boxShadow: 'var(--shadow-lg)',
-            overflow: 'hidden',
             bgcolor: 'var(--bg-surface)'
           }
         }}

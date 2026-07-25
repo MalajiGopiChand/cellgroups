@@ -12,8 +12,10 @@ import {
 } from '@mui/icons-material';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 function CellLeaderReportCardPage({ user, onBack }) {
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
   const [alreadySubmitted, setAlreadySubmitted] = useState(false);
@@ -79,7 +81,7 @@ function CellLeaderReportCardPage({ user, onBack }) {
 
     try {
       await setDoc(doc(db, 'reports', `${user.id}_${meetingDate}`), reportData);
-      setSuccessMsg('Report submitted successfully.');
+      setSuccessMsg(t('report.success'));
       setAlreadySubmitted(true);
     } catch (err) {
       console.error('Error saving report:', err);
@@ -90,17 +92,9 @@ function CellLeaderReportCardPage({ user, onBack }) {
   };
 
   return (
-    <Fade in timeout={350}>
+    
       <Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
-          <IconButton onClick={onBack} sx={{ bgcolor: 'transparent', color: 'var(--text-deep)', '&:hover': { bgcolor: 'rgba(0,0,0,0.05)' } }}>
-            <ArrowBackIcon />
-          </IconButton>
-          <Typography variant="h6" sx={{ fontWeight: 800, color: 'var(--text-primary)' }}>
-            Report Card
-          </Typography>
-        </Box>
-
+        
         <Paper 
           elevation={0}
           sx={{ 
@@ -108,20 +102,20 @@ function CellLeaderReportCardPage({ user, onBack }) {
             mb: 3, 
             bgcolor: 'var(--bg-glass-strong)', 
             backdropFilter: 'blur(12px)',
-            borderRadius: 3,
+            borderRadius: 1,
             border: '1px solid var(--border-light)',
             boxShadow: 'var(--shadow-sm)'
           }}
         >
           {successMsg && (
-            <Alert severity="success" sx={{ mb: 3, borderRadius: 2 }}>
+            <Alert severity="success" sx={{ mb: 3, borderRadius: 1 }}>
               {successMsg}
             </Alert>
           )}
 
           <Box sx={{ mb: 3 }}>
             <TextField 
-              label="Meeting Date" 
+              label={t('report.meetingDate')} 
               type="date" 
               value={meetingDate}
               onChange={(e) => setMeetingDate(e.target.value)}
@@ -129,50 +123,50 @@ function CellLeaderReportCardPage({ user, onBack }) {
               InputLabelProps={{ shrink: true }}
               inputProps={{ max: todayStr }}
               InputProps={{ startAdornment: <InputAdornment position="start"><EventIcon sx={{ color: 'var(--color-primary)' }} /></InputAdornment> }}
-              sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: 'var(--bg-surface)' } }} 
+              sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1, bgcolor: 'var(--bg-surface)' } }} 
             />
           </Box>
 
           {checking ? (
             <Typography>Checking status...</Typography>
           ) : alreadySubmitted ? (
-            <Alert severity="info" sx={{ borderRadius: 2 }}>
+            <Alert severity="info" sx={{ borderRadius: 1 }}>
               A report for {meetingDate} has already been submitted. You cannot edit or delete it.
             </Alert>
           ) : (
             <form onSubmit={handleSubmit}>
               {/* Meeting Info */}
               <Typography variant="subtitle1" sx={{ fontWeight: 800, color: 'var(--primary-forest)', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                <GroupIcon /> Meeting Information
+                <GroupIcon /> {t('report.title')}
               </Typography>
               <Grid container spacing={2} sx={{ mb: 3 }}>
                 <Grid item xs={12} sm={6}>
-                  <TextField name="presentFamilies" label="Total Families Present" type="number" fullWidth required inputProps={{ min: 0 }} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: 'var(--bg-surface)' } }} />
+                  <TextField name="presentFamilies" label={t('report.presentFamilies')} type="number" fullWidth required inputProps={{ min: 0 }} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1, bgcolor: 'var(--bg-surface)' } }} />
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <TextField name="absentFamilies" label="Total Families Absent" type="number" fullWidth required inputProps={{ min: 0 }} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: 'var(--bg-surface)' } }} />
+                  <TextField name="absentFamilies" label={t('report.absentFamilies')} type="number" fullWidth required inputProps={{ min: 0 }} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1, bgcolor: 'var(--bg-surface)' } }} />
                 </Grid>
               </Grid>
               <Divider sx={{ mb: 3 }} />
 
               {/* New Visitor */}
               <Typography variant="subtitle1" sx={{ fontWeight: 800, color: 'var(--primary-forest)', mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-                <PersonAddIcon /> New Visitor
+                <PersonAddIcon /> {t('report.newVisitor')}
               </Typography>
               <FormControl component="fieldset" sx={{ mb: 2 }}>
-                <FormLabel component="legend" sx={{ fontWeight: 600, color: 'var(--text-secondary)' }}>New Visitor?</FormLabel>
+                <FormLabel component="legend" sx={{ fontWeight: 600, color: 'var(--text-secondary)' }}>{t('report.newVisitor')}?</FormLabel>
                 <RadioGroup row value={hasVisitor} onChange={(e) => setHasVisitor(e.target.value)}>
-                  <FormControlLabel value="yes" control={<Radio color="primary" />} label="Yes" />
-                  <FormControlLabel value="no" control={<Radio color="primary" />} label="No" />
+                  <FormControlLabel value="yes" control={<Radio color="primary" />} label={t('report.yes')} />
+                  <FormControlLabel value="no" control={<Radio color="primary" />} label={t('report.no')} />
                 </RadioGroup>
               </FormControl>
               {hasVisitor === 'yes' && (
                 <Grid container spacing={2} sx={{ mb: 3 }}>
                   <Grid item xs={12}>
-                    <TextField name="visitorName" label="Visitor Name" fullWidth required sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: 'var(--bg-surface)' } }} />
+                    <TextField name="visitorName" label={t('report.newVisitorName')} fullWidth required sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1, bgcolor: 'var(--bg-surface)' } }} />
                   </Grid>
                   <Grid item xs={12}>
-                    <TextField name="visitorPrayer" label="Prayer Request" fullWidth required multiline rows={2} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: 'var(--bg-surface)' } }} />
+                    <TextField name="visitorPrayer" label={t('prayer.title')} fullWidth required multiline rows={2} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1, bgcolor: 'var(--bg-surface)' } }} />
                   </Grid>
                 </Grid>
               )}
@@ -180,24 +174,24 @@ function CellLeaderReportCardPage({ user, onBack }) {
 
               {/* Message Shared */}
               <Typography variant="subtitle1" sx={{ fontWeight: 800, color: 'var(--primary-forest)', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                <BookIcon /> Message Shared
+                <BookIcon /> {t('report.msgShared')}
               </Typography>
               <Grid container spacing={2} sx={{ mb: 3 }}>
                 <Grid item xs={12}>
-                  <TextField name="messageTitle" label="Message Title" fullWidth required sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: 'var(--bg-surface)' } }} />
+                  <TextField name="messageTitle" label={t('report.msgTitle')} fullWidth required sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1, bgcolor: 'var(--bg-surface)' } }} />
                 </Grid>
                 <Grid item xs={12}>
-                  <TextField name="messageDescription" label="Message Description & Points" fullWidth required multiline rows={4} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: 'var(--bg-surface)' } }} />
+                  <TextField name="messageDescription" label={t('report.msgDesc')} fullWidth required multiline rows={4} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1, bgcolor: 'var(--bg-surface)' } }} />
                 </Grid>
               </Grid>
               <Divider sx={{ mb: 3 }} />
 
               {/* Discussion */}
               <Typography variant="subtitle1" sx={{ fontWeight: 800, color: 'var(--primary-forest)', mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-                <ForumIcon /> Discussion
+                <ForumIcon /> {t('report.discussion')}
               </Typography>
               <FormControl component="fieldset" sx={{ mb: 2 }}>
-                <FormLabel component="legend" sx={{ fontWeight: 600, color: 'var(--text-secondary)' }}>Discussion Conducted?</FormLabel>
+                <FormLabel component="legend" sx={{ fontWeight: 600, color: 'var(--text-secondary)' }}>{t('report.discConducted')}</FormLabel>
                 <RadioGroup row value={hasDiscussion} onChange={(e) => setHasDiscussion(e.target.value)}>
                   <FormControlLabel value="yes" control={<Radio color="primary" />} label="Yes" />
                   <FormControlLabel value="no" control={<Radio color="primary" />} label="No" />
@@ -206,10 +200,10 @@ function CellLeaderReportCardPage({ user, onBack }) {
               {hasDiscussion === 'yes' && (
                 <Grid container spacing={2} sx={{ mb: 3 }}>
                   <Grid item xs={12}>
-                    <TextField name="discussionTopic" label="Discussion Topic" fullWidth required sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: 'var(--bg-surface)' } }} />
+                    <TextField name="discussionTopic" label={t('report.discTopic')} fullWidth required sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1, bgcolor: 'var(--bg-surface)' } }} />
                   </Grid>
                   <Grid item xs={12}>
-                    <TextField name="discussionDetails" label="Discussion Details" fullWidth required multiline rows={3} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: 'var(--bg-surface)' } }} />
+                    <TextField name="discussionDetails" label={t('report.discDetails')} fullWidth required multiline rows={3} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1, bgcolor: 'var(--bg-surface)' } }} />
                   </Grid>
                 </Grid>
               )}
@@ -217,10 +211,10 @@ function CellLeaderReportCardPage({ user, onBack }) {
 
               {/* Testimony */}
               <Typography variant="subtitle1" sx={{ fontWeight: 800, color: 'var(--primary-forest)', mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-                <StarIcon /> Testimony
+                <StarIcon /> {t('report.testimony')}
               </Typography>
               <FormControl component="fieldset" sx={{ mb: 2 }}>
-                <FormLabel component="legend" sx={{ fontWeight: 600, color: 'var(--text-secondary)' }}>Testimony Shared?</FormLabel>
+                <FormLabel component="legend" sx={{ fontWeight: 600, color: 'var(--text-secondary)' }}>{t('report.testShared')}</FormLabel>
                 <RadioGroup row value={hasTestimony} onChange={(e) => setHasTestimony(e.target.value)}>
                   <FormControlLabel value="yes" control={<Radio color="primary" />} label="Yes" />
                   <FormControlLabel value="no" control={<Radio color="primary" />} label="No" />
@@ -229,10 +223,10 @@ function CellLeaderReportCardPage({ user, onBack }) {
               {hasTestimony === 'yes' && (
                 <Grid container spacing={2} sx={{ mb: 3 }}>
                   <Grid item xs={12}>
-                    <TextField name="testimonyName" label="Person Name" fullWidth required sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: 'var(--bg-surface)' } }} />
+                    <TextField name="testimonyName" label={t('prayer.personName')} fullWidth required sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1, bgcolor: 'var(--bg-surface)' } }} />
                   </Grid>
                   <Grid item xs={12}>
-                    <TextField name="testimonyDetails" label="Testimony" fullWidth required multiline rows={3} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: 'var(--bg-surface)' } }} />
+                    <TextField name="testimonyDetails" label={t('report.testDetails')} fullWidth required multiline rows={3} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1, bgcolor: 'var(--bg-surface)' } }} />
                   </Grid>
                 </Grid>
               )}
@@ -244,18 +238,18 @@ function CellLeaderReportCardPage({ user, onBack }) {
                 fullWidth
                 disabled={loading}
                 sx={{ 
-                  bgcolor: 'var(--color-primary)', color: '#fff', borderRadius: 999, py: 1.5, fontWeight: 700,
+                  bgcolor: 'var(--color-primary)', color: '#fff', borderRadius: 199, py: 1.5, fontWeight: 700,
                   boxShadow: '0 4px 12px rgba(99,102,241,0.3)',
                   '&:hover': { bgcolor: 'var(--color-primary-dark)', boxShadow: '0 6px 16px rgba(99,102,241,0.4)' }
                 }}
               >
-                {loading ? 'Submitting...' : 'Submit Report'}
+                {loading ? 'Submitting...' : t('gen.submit')}
               </Button>
             </form>
           )}
         </Paper>
       </Box>
-    </Fade>
+    
   );
 }
 

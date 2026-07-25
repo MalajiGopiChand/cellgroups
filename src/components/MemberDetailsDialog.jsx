@@ -56,18 +56,17 @@ function MemberDetailsDialog({ open, onClose, member, familyMembers = [] }) {
       maxWidth="sm"
       PaperProps={{
         sx: {
-          borderRadius: 4,
+          borderRadius: 1,
           bgcolor: 'var(--bg-glass-strong)',
           backdropFilter: 'blur(22px)',
           border: '1px solid var(--border-light)',
           boxShadow: 'var(--shadow-lg)',
-          overflow: 'hidden'
-        }
+          }
       }}
     >
       {/* Dialog Header */}
       <DialogTitle sx={{ m: 0, p: 2.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', bgcolor: 'rgba(99, 102, 241, 0.04)' }}>
-        <Typography variant="h6" sx={{ fontWeight: 800, color: 'var(--text-primary)' }}>
+        <Typography variant="h6" component="div" sx={{ fontWeight: 800, color: 'var(--text-primary)' }}>
           Member Profile
         </Typography>
         <IconButton
@@ -189,7 +188,7 @@ function MemberDetailsDialog({ open, onClose, member, familyMembers = [] }) {
                   variant="outlined" 
                   sx={{ 
                     p: 1.8, 
-                    borderRadius: 3, 
+                    borderRadius: 1, 
                     borderColor: 'var(--border-light)', 
                     bgcolor: 'rgba(0,0,0,0.01)',
                     display: 'flex',
@@ -260,7 +259,7 @@ function MemberDetailsDialog({ open, onClose, member, familyMembers = [] }) {
           sx={{ 
             bgcolor: 'var(--color-primary)', 
             color: '#fff',
-            borderRadius: 2,
+            borderRadius: 1,
             px: 3,
             fontWeight: 700,
             textTransform: 'none',

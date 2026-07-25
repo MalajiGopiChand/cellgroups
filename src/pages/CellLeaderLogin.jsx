@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import './Auth.css';
 
@@ -34,6 +34,21 @@ function CellLeaderLogin({ onLogin }) {
 
       const leaderData = querySnapshot.docs[0].data();
       const leaderId = querySnapshot.docs[0].id;
+
+      // Save login data in Firebase
+      try {
+        await addDoc(collection(db, 'login_history'), {
+          leaderId,
+          name: leaderData.name,
+          phone: leaderData.phone,
+          place: leaderData.place,
+          role: 'cellleader',
+          approved: leaderData.approved || false,
+          loginTime: new Date()
+        });
+      } catch (logErr) {
+        console.error("Failed to save login history: ", logErr);
+      }
 
       if (!leaderData.approved) {
         onLogin({ 

@@ -4,6 +4,7 @@ import './Auth.css';
 
 function AdminLogin({ onLogin }) {
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -14,11 +15,11 @@ function AdminLogin({ onLogin }) {
     setLoading(true);
 
     // Fixed admin credentials
-    if (email.trim().toLowerCase() === 'bethel@gmail.com') {
+    if (email.trim().toLowerCase() === 'bethel@gmail.com' && password === '123456') {
       onLogin({ role: 'admin', email });
       navigate('/admin/dashboard');
     } else {
-      setError('Invalid admin email');
+      setError('Invalid email or password');
     }
     setLoading(false);
   };
@@ -38,6 +39,15 @@ function AdminLogin({ onLogin }) {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          <div className="form-group" style={{ marginTop: '16px' }}>
+            <label>Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               required
             />
           </div>

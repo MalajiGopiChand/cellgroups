@@ -31,15 +31,13 @@ function BirthdaysView({ user, isAdmin, onBack }) {
         sx={{
           p: 2.5,
           position: 'relative',
-          overflow: 'hidden',
           bgcolor: isToday ? 'var(--surface-gold)' : 'rgba(255,255,255,0.75)',
           backdropFilter: 'blur(12px)',
-          borderRadius: '21px',
+          borderRadius: 1,
           border: '1px solid var(--border-neutral)',
           boxShadow: isToday ? '0 8px 32px rgba(207,138,66,0.15)' : 'var(--shadow-sm)',
           transition: 'all 0.3s ease',
           '&:hover': {
-            transform: 'translateY(-4px)',
             boxShadow: 'var(--shadow-md)',
           }
         }}
@@ -88,23 +86,11 @@ function BirthdaysView({ user, isAdmin, onBack }) {
   };
 
   return (
-    <Fade in timeout={350}>
+    
       <Box sx={{ pb: 4 }}>
         {todayList.length > 0 && <Confetti width={width} height={height} recycle={false} numberOfPieces={300} gravity={0.15} />}
         
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, gap: 1.5 }}>
-          {onBack && (
-            <IconButton 
-              onClick={onBack} 
-              sx={{ 
-                bgcolor: 'transparent', 
-                color: 'var(--text-deep)',
-                '&:hover': { bgcolor: 'rgba(0,0,0,0.05)' } 
-              }}
-            >
-              <ArrowBackIcon />
-            </IconButton>
-          )}
           <CakeIcon sx={{ color: 'var(--text-gold)', fontSize: 32 }} />
           <Typography variant="h5" className="font-playfair" sx={{ fontWeight: 700, color: 'var(--text-deep)' }}>
             {t('bday.title')}
@@ -112,7 +98,7 @@ function BirthdaysView({ user, isAdmin, onBack }) {
         </Box>
 
         {todayList.length === 0 && upcomingList.length === 0 && (
-          <Paper elevation={0} sx={{ p: 4, textAlign: 'center', bgcolor: 'var(--bg-glass-strong)', borderRadius: 4, border: '1px dashed var(--border-light)' }}>
+          <Paper elevation={0} sx={{ p: 4, textAlign: 'center', bgcolor: 'var(--bg-glass-strong)', borderRadius: 1, border: '1px dashed var(--border-light)' }}>
             <Typography color="var(--text-tertiary)" fontWeight={500}>{t('bday.noBirthdays')}</Typography>
           </Paper>
         )}
@@ -147,7 +133,7 @@ function BirthdaysView({ user, isAdmin, onBack }) {
           </Box>
         )}
       </Box>
-    </Fade>
+    
   );
 }
 

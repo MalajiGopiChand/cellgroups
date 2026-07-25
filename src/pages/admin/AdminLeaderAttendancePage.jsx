@@ -98,7 +98,7 @@ function AdminLeaderAttendancePage({ onBack }) {
     return {
       fontWeight: 600,
       textTransform: 'none',
-      borderRadius: 2,
+      borderRadius: 1,
       padding: '4px 12px',
       minWidth: '75px',
       fontSize: '0.875rem',
@@ -122,41 +122,54 @@ function AdminLeaderAttendancePage({ onBack }) {
   }
 
   return (
-    <Fade in timeout={350}>
+    
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          {onBack && (
-            <IconButton 
-              onClick={onBack} 
-              sx={{ 
-                bgcolor: 'transparent', 
-                color: 'var(--text-deep)',
-                '&:hover': { bgcolor: 'rgba(0,0,0,0.05)' } 
-              }}
-            >
-              <ArrowBackIcon />
-            </IconButton>
-          )}
-          <Typography variant="h6" sx={{ fontWeight: 800, color: 'var(--text-primary)' }}>Take Leader Attendance</Typography>
-        </Box>
         
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Typography variant="caption" sx={{ mr: 1.5, fontWeight: 700, color: 'var(--text-secondary)' }}>Date:</Typography>
-          <input 
-            type="date" 
-            value={selectedDate} 
-            onChange={(e) => setSelectedDate(e.target.value)} 
-            style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid var(--border-light)', background: 'var(--bg-glass-strong)', color: 'var(--text-primary)', fontFamily: 'inherit', fontWeight: 600 }} 
-          />
+        {/* Sleek Single-Line Filter Card */}
+        <Paper 
+          elevation={0}
+          sx={{ 
+            p: 1.5, 
+            mb: 3,
+            display: 'flex', 
+            gap: 1.5, alignItems: 'center',
+            bgcolor: 'var(--bg-glass-strong)', 
+            backdropFilter: 'blur(12px)',
+            borderRadius: 1,
+            border: '1px solid var(--border-light)',
+            flexWrap: 'wrap'
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Typography variant="body2" fontWeight={600} color="var(--text-secondary)">
+              Date:
+            </Typography>
+            <input 
+              type="date" 
+              value={selectedDate} 
+              onChange={(e) => setSelectedDate(e.target.value)} 
+              style={{ 
+                padding: '6px 10px', 
+                borderRadius: 1, 
+                border: '1px solid var(--border-light)', 
+                background: 'var(--surface-white)', 
+                color: 'var(--text-primary)', 
+                fontFamily: 'inherit', 
+                fontWeight: 600,
+                outline: 'none',
+                minWidth: '100px'
+              }} 
+            />
+          </Box>
           <Button 
             variant="contained" 
             size="small" 
             onClick={handleDownload}
-            sx={{ ml: 2, bgcolor: 'var(--color-primary)', borderRadius: 2, fontWeight: 700 }}
+            sx={{ ml: 'auto', bgcolor: 'var(--primary-forest)', color: '#fff', borderRadius: 1, fontWeight: 700, boxShadow: 'none', '&:hover': { bgcolor: 'var(--primary-forest)', opacity: 0.9 } }}
           >
-            Download IMG
+            Download Image
           </Button>
-        </Box>
+        </Paper>
 
         {leaders.length > 0 ? (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -168,7 +181,7 @@ function AdminLeaderAttendancePage({ onBack }) {
                 backdropFilter: 'blur(12px)',
                 boxShadow: 'var(--shadow-sm)', 
                 border: '1px solid var(--border-light)',
-                borderRadius: 4
+                borderRadius: 1
               }}
             >
               <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'var(--color-primary)', mb: 2, display: 'flex', alignItems: 'center', gap: 0.5 }}>
@@ -177,7 +190,7 @@ function AdminLeaderAttendancePage({ onBack }) {
               </Typography>
 
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                {leaders.map(leader => {
+                {leaders.map((leader, index) => {
                   const lRec = attendance.find(a => a.leaderId === leader.id);
                   const lStatus = lRec?.status || null;
 
@@ -195,7 +208,7 @@ function AdminLeaderAttendancePage({ onBack }) {
                     >
                       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                         <Typography fontWeight={700} sx={{ color: 'var(--text-primary)' }}>
-                          {leader.name}
+                          {index + 1}. {leader.name}
                         </Typography>
                         <Chip 
                           size="small" 
@@ -215,14 +228,14 @@ function AdminLeaderAttendancePage({ onBack }) {
                           onClick={() => handleMark(leader.id, leader.name, leader.place, 'present')}
                           sx={getButtonStyles(lStatus === 'present', 'present')}
                         >
-                          Present
+                          P
                         </Button>
                         <Button 
                           size="small" 
                           onClick={() => handleMark(leader.id, leader.name, leader.place, 'absent')}
                           sx={getButtonStyles(lStatus === 'absent', 'absent')}
                         >
-                          Absent
+                          A
                         </Button>
                       </Box>
                     </Box>
@@ -237,7 +250,7 @@ function AdminLeaderAttendancePage({ onBack }) {
                 variant="contained"
                 fullWidth
                 onClick={handleSave}
-                sx={{ mt: 1, py: 1.5, borderRadius: 3, fontWeight: 800, fontSize: '1rem', bgcolor: 'var(--color-success)', '&:hover': { bgcolor: '#059669' } }}
+                sx={{ mt: 1, py: 1.5, borderRadius: 1, fontWeight: 800, fontSize: '1rem', bgcolor: 'var(--color-success)', '&:hover': { bgcolor: '#059669' } }}
               >
                 Save Attendance
               </Button>
@@ -288,13 +301,13 @@ function AdminLeaderAttendancePage({ onBack }) {
           onClose={() => setShowSnackbar(false)}
           anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         >
-          <Alert onClose={() => setShowSnackbar(false)} severity="success" sx={{ width: '100%', fontWeight: 700, borderRadius: 2 }}>
+          <Alert onClose={() => setShowSnackbar(false)} severity="success" sx={{ width: '100%', fontWeight: 700, borderRadius: 1 }}>
             Attendance saved successfully for {selectedDate}!
           </Alert>
         </Snackbar>
 
       </Box>
-    </Fade>
+    
   );
 }
 

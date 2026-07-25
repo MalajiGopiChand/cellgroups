@@ -8,16 +8,13 @@ function MobileBottomNav({ tabs, currentTab, onChange }) {
   if (!isMobile) return null;
 
   return (
-    <Box sx={{ position: 'fixed', bottom: 16, left: 16, right: 16, zIndex: 1000 }}>
+    <Box sx={{ borderTop: '1px solid var(--border-neutral)', zIndex: 1000, pb: 'env(safe-area-inset-bottom)' }}>
       <Paper 
         elevation={0}
         sx={{
-          bgcolor: 'rgba(255, 255, 255, 0.75)',
+          bgcolor: 'rgba(255, 255, 255, 0.85)',
           backdropFilter: 'blur(20px)',
-          border: '1px solid var(--border-neutral)',
-          borderRadius: '24px',
-          boxShadow: 'var(--shadow-nav)',
-          overflow: 'hidden'
+          borderRadius: 0,
         }}
       >
         <BottomNavigation
@@ -57,7 +54,7 @@ function MobileBottomNav({ tabs, currentTab, onChange }) {
                 <Box sx={{ 
                   bgcolor: currentTab === tab.id ? 'var(--primary-forest)' : 'transparent',
                   color: currentTab === tab.id ? 'var(--surface-white)' : 'inherit',
-                  borderRadius: '16px',
+                  borderRadius: 1,
                   px: 2, 
                   py: 0.5,
                   display: 'flex', 

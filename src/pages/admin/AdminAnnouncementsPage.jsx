@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Box, Typography, Paper, Button, TextField, FormControl, InputLabel, Select, MenuItem, Fade, Collapse, CircularProgress, IconButton } from '@mui/material';
 import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
-import { AddAlert as AddAlertIcon, Send as SendIcon, CheckCircle as CheckIcon, DeleteOutline as DeleteIcon, EditOutlined as EditIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
+import { AddAlert as AddAlertIcon, Send as SendIcon, CheckCircle as CheckIcon, DeleteOutline as DeleteIcon, EditOutlined as EditIcon } from '@mui/icons-material';
 
 function AdminAnnouncementsPage({ onBack }) {
   const [announcements, setAnnouncements] = useState([]);
@@ -79,41 +79,24 @@ function AdminAnnouncementsPage({ onBack }) {
   }
 
   return (
-    <Fade in timeout={350}>
+    
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
         
         {/* Header */}
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            {onBack && (
-              <IconButton 
-                onClick={onBack} 
-                sx={{ 
-                  bgcolor: 'transparent', 
-                  color: 'var(--text-deep)',
-                  '&:hover': { bgcolor: 'rgba(0,0,0,0.05)' } 
-                }}
-              >
-                <ArrowBackIcon />
-              </IconButton>
-            )}
-            <Typography variant="h6" sx={{ fontWeight: 800, color: 'var(--text-primary)' }}>
-              Announcements & Alerts
-            </Typography>
-          </Box>
-          {!showForm && (
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                    {!showForm && (
             <Button 
               variant="contained" 
               onClick={() => { setShowForm(true); setEditing(null); }}
               startIcon={<AddAlertIcon />}
               sx={{ 
                 bgcolor: 'var(--color-primary)', 
-                borderRadius: 999,
+                borderRadius: 199,
                 boxShadow: '0 4px 12px rgba(99,102,241,0.3)',
                 textTransform: 'none',
                 fontWeight: 600,
                 transition: 'all 0.2s',
-                '&:hover': { transform: 'translateY(-2px)', boxShadow: '0 6px 16px rgba(99,102,241,0.4)' }
+                '&:hover': { boxShadow: '0 6px 16px rgba(99,102,241,0.4)' }
               }}
             >
               New Alert
@@ -129,7 +112,7 @@ function AdminAnnouncementsPage({ onBack }) {
               p: 3, 
               bgcolor: 'var(--bg-glass-strong)', 
               backdropFilter: 'blur(12px)',
-              borderRadius: 4,
+              borderRadius: 1,
               border: '1px solid var(--border-light)',
               boxShadow: 'var(--shadow-lg)'
             }}
@@ -144,7 +127,7 @@ function AdminAnnouncementsPage({ onBack }) {
                 label="Alert Title" 
                 fullWidth 
                 required 
-                sx={{ mb: 2.5, '& .MuiOutlinedInput-root': { borderRadius: 3 } }} 
+                sx={{ mb: 2.5, '& .MuiOutlinedInput-root': { borderRadius: 1 } }} 
               />
               <TextField 
                 name="message" 
@@ -153,7 +136,7 @@ function AdminAnnouncementsPage({ onBack }) {
                 multiline 
                 rows={4} 
                 required 
-                sx={{ mb: 2.5, '& .MuiOutlinedInput-root': { borderRadius: 3 } }} 
+                sx={{ mb: 2.5, '& .MuiOutlinedInput-root': { borderRadius: 1 } }} 
               />
               <FormControl fullWidth sx={{ mb: 2.5 }}>
                 <InputLabel>Recipient</InputLabel>
@@ -163,7 +146,7 @@ function AdminAnnouncementsPage({ onBack }) {
                   required 
                   value={recipientType} 
                   onChange={(e) => setRecipientType(e.target.value)}
-                  sx={{ borderRadius: 3 }}
+                  sx={{ borderRadius: 1 }}
                 >
                   <MenuItem value="all">All Cell Leaders</MenuItem>
                   <MenuItem value="specific">Specific Cell Leader</MenuItem>
@@ -176,7 +159,7 @@ function AdminAnnouncementsPage({ onBack }) {
                     name="cellLeaderId" 
                     label="Select Cell Leader" 
                     required={recipientType === 'specific'}
-                    sx={{ borderRadius: 3 }}
+                    sx={{ borderRadius: 1 }}
                   >
                     <MenuItem value=""><em>Select...</em></MenuItem>
                     {leaders.filter(l => l.approved).map(l => <MenuItem key={l.id} value={l.id}>{l.name}</MenuItem>)}
@@ -186,7 +169,7 @@ function AdminAnnouncementsPage({ onBack }) {
               <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 2 }}>
                 <Button 
                   onClick={() => setShowForm(false)}
-                  sx={{ borderRadius: 999, px: 3, fontWeight: 600, color: 'var(--text-secondary)' }}
+                  sx={{ borderRadius: 199, px: 3, fontWeight: 600, color: 'var(--text-secondary)' }}
                 >
                   Cancel
                 </Button>
@@ -194,7 +177,7 @@ function AdminAnnouncementsPage({ onBack }) {
                   type="submit" 
                   variant="contained"
                   endIcon={<SendIcon />}
-                  sx={{ borderRadius: 999, px: 4, fontWeight: 600, bgcolor: 'var(--color-primary)', boxShadow: '0 4px 12px rgba(99,102,241,0.3)' }}
+                  sx={{ borderRadius: 199, px: 4, fontWeight: 600, bgcolor: 'var(--color-primary)', boxShadow: '0 4px 12px rgba(99,102,241,0.3)' }}
                 >
                   Send Alert
                 </Button>
@@ -206,20 +189,19 @@ function AdminAnnouncementsPage({ onBack }) {
         {/* History List */}
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {announcements.map((a, idx) => (
-            <Fade in timeout={300 + (idx * 50)} key={a.id}>
+            
               <Paper 
                 elevation={0}
                 sx={{ 
                   p: 3, 
                   bgcolor: 'var(--bg-glass-strong)', 
                   backdropFilter: 'blur(12px)',
-                  borderRadius: 4,
+                  borderRadius: 1,
                   border: '1px solid var(--border-light)',
                   boxShadow: 'var(--shadow-sm)',
                   position: 'relative',
-                  overflow: 'hidden',
                   transition: 'all 0.2s ease',
-                  '&:hover': { transform: 'translateY(-2px)', boxShadow: 'var(--shadow-md)', borderColor: 'rgba(99,102,241,0.3)' }
+                  '&:hover': { boxShadow: 'var(--shadow-md)', borderColor: 'rgba(99,102,241,0.3)' }
                 }}
               >
                 {/* Decorative side accent */}
@@ -227,11 +209,11 @@ function AdminAnnouncementsPage({ onBack }) {
                 
                 {editing?.id === a.id ? (
                   <form onSubmit={handleUpdate}>
-                    <TextField name="title" label="Update Title" defaultValue={a.title} fullWidth required sx={{ mb: 2, '& .MuiOutlinedInput-root': { borderRadius: 2 } }} />
-                    <TextField name="message" label="Update Message" defaultValue={a.message} fullWidth multiline rows={3} required sx={{ mb: 2, '& .MuiOutlinedInput-root': { borderRadius: 2 } }} />
+                    <TextField name="title" label="Update Title" defaultValue={a.title} fullWidth required sx={{ mb: 2, '& .MuiOutlinedInput-root': { borderRadius: 1 } }} />
+                    <TextField name="message" label="Update Message" defaultValue={a.message} fullWidth multiline rows={3} required sx={{ mb: 2, '& .MuiOutlinedInput-root': { borderRadius: 1 } }} />
                     <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
                       <Button size="small" onClick={() => setEditing(null)} sx={{ color: 'var(--text-secondary)', fontWeight: 600 }}>Cancel</Button>
-                      <Button type="submit" variant="contained" size="small" startIcon={<CheckIcon />} sx={{ bgcolor: 'var(--color-success)', borderRadius: 2, fontWeight: 600 }}>Save Changes</Button>
+                      <Button type="submit" variant="contained" size="small" startIcon={<CheckIcon />} sx={{ bgcolor: 'var(--color-success)', borderRadius: 1, fontWeight: 600 }}>Save Changes</Button>
                     </Box>
                   </form>
                 ) : (
@@ -242,10 +224,10 @@ function AdminAnnouncementsPage({ onBack }) {
                         <Typography sx={{ color: 'var(--text-secondary)', mb: 2, whiteSpace: 'pre-wrap' }}>{a.message}</Typography>
                         
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
-                          <Typography variant="caption" sx={{ fontWeight: 600, color: 'var(--text-tertiary)', px: 1.5, py: 0.5, bgcolor: 'rgba(148, 163, 184, 0.1)', borderRadius: 999 }}>
+                          <Typography variant="caption" sx={{ fontWeight: 600, color: 'var(--text-tertiary)', px: 1.5, py: 0.5, bgcolor: 'rgba(148, 163, 184, 0.1)', borderRadius: 199 }}>
                             {a.createdAt?.toDate ? new Date(a.createdAt.toDate()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Just now'}
                           </Typography>
-                          <Typography variant="caption" sx={{ fontWeight: 600, color: a.recipientType === 'all' ? 'var(--color-success)' : 'var(--color-primary)', px: 1.5, py: 0.5, bgcolor: a.recipientType === 'all' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(99, 102, 241, 0.1)', borderRadius: 999 }}>
+                          <Typography variant="caption" sx={{ fontWeight: 600, color: a.recipientType === 'all' ? 'var(--color-success)' : 'var(--color-primary)', px: 1.5, py: 0.5, bgcolor: a.recipientType === 'all' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(99, 102, 241, 0.1)', borderRadius: 199 }}>
                             To: {a.recipientType === 'all' ? 'All Leaders' : leaders.find(l => l.id === a.cellLeaderId)?.name || 'Specific Leader'}
                           </Typography>
                         </Box>
@@ -264,17 +246,17 @@ function AdminAnnouncementsPage({ onBack }) {
                   </>
                 )}
               </Paper>
-            </Fade>
+            
           ))}
           {announcements.length === 0 && !showForm && (
-            <Paper elevation={0} sx={{ p: 4, textAlign: 'center', bgcolor: 'var(--bg-glass-strong)', borderRadius: 4, border: '1px dashed var(--border-light)' }}>
+            <Paper elevation={0} sx={{ p: 4, textAlign: 'center', bgcolor: 'var(--bg-glass-strong)', borderRadius: 1, border: '1px dashed var(--border-light)' }}>
               <Typography sx={{ color: 'var(--text-tertiary)' }}>No announcements sent yet.</Typography>
             </Paper>
           )}
         </Box>
 
       </Box>
-    </Fade>
+    
   );
 }
 

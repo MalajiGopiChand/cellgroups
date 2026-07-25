@@ -27,7 +27,7 @@ function AdminHomePage() {
   }, []);
 
   return (
-    <Fade in timeout={400}>
+    
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
 
 
@@ -42,7 +42,7 @@ function AdminHomePage() {
           ) : announcements.length > 0 ? (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               {announcements.map((a, index) => (
-                <Fade in timeout={400 + (index * 100)} key={a.id}>
+                
                   <Paper
                     sx={{
                       p: 3,
@@ -50,12 +50,10 @@ function AdminHomePage() {
                       backdropFilter: 'blur(12px)',
                       boxShadow: 'var(--shadow-sm)',
                       border: '1px solid var(--border-light)',
-                      borderRadius: 4,
+                      borderRadius: 1,
                       transition: 'all 0.2s',
                       position: 'relative',
-                      overflow: 'hidden',
                       '&:hover': {
-                        transform: 'translateY(-2px)',
                         boxShadow: 'var(--shadow-md)',
                         borderColor: 'rgba(99, 102, 241, 0.3)'
                       }
@@ -79,13 +77,13 @@ function AdminHomePage() {
                       />
                     </Box>
                   </Paper>
-                </Fade>
+                
               ))}
             </Box>
           ) : null}
         </Box>
       </Box>
-    </Fade>
+    
   );
 }
 

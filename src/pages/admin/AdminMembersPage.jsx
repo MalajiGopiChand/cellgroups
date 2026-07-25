@@ -6,6 +6,7 @@ import { db } from '../../firebase/config';
 import MemberDetailsDialog from '../../components/MemberDetailsDialog';
 import EditMemberDialog from '../../components/EditMemberDialog';
 import { Edit as EditIcon } from '@mui/icons-material';
+import AdminFamilyProfilePage from './AdminFamilyProfilePage';
 
 function AdminMembersPage({ onBack }) {
   const [members, setMembers] = useState([]);
@@ -17,6 +18,9 @@ function AdminMembersPage({ onBack }) {
   // Profile dialog state
   const [selectedMember, setSelectedMember] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  
+  // Family Profile state
+  const [selectedFamily, setSelectedFamily] = useState(null);
   
   // Edit dialog state
   const [memberToEdit, setMemberToEdit] = useState(null);
@@ -125,73 +129,59 @@ function AdminMembersPage({ onBack }) {
     );
   }
 
+  if (selectedFamily) {
+    return <AdminFamilyProfilePage family={selectedFamily} onBack={() => setSelectedFamily(null)} />;
+  }
+
   return (
-    <Fade in timeout={400}>
+    
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
         
-        {/* Header & Stats */}
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            {onBack && (
-              <IconButton 
-                onClick={onBack} 
-                sx={{ 
-                  bgcolor: 'transparent', 
-                  color: 'var(--text-deep)',
-                  '&:hover': { bgcolor: 'rgba(0,0,0,0.05)' } 
-                }}
-              >
-                <ArrowBackIcon />
-              </IconButton>
-            )}
-            <Typography variant="h6" sx={{ fontWeight: 800, color: 'var(--text-primary)' }}>
-              Cell Members
-            </Typography>
+        {/* Header */}
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+          <Box>
+            <Typography variant="h5" sx={{ fontWeight: 800, color: 'var(--text-primary)', mb: 0.5 }}>Manage Members</Typography>
+            <Typography variant="body2" sx={{ color: 'var(--text-secondary)' }}>View and manage all cell group members</Typography>
           </Box>
           <Chip 
-            label={`${filtered.length} Total`} 
+            label={`${filtered.length} Members`} 
             size="small" 
             sx={{ bgcolor: 'rgba(99, 102, 241, 0.1)', color: 'var(--color-primary)', fontWeight: 700 }} 
           />
         </Box>
 
-        {/* Filters */}
+        {/* Sleek Single-Line Filter Card */}
         <Paper 
           elevation={0}
           sx={{ 
-            p: 2, 
+            p: 1.5, 
             display: 'flex', 
-            gap: 2, 
-            flexWrap: 'wrap', 
+            gap: 1.5, alignItems: 'center',
             bgcolor: 'var(--bg-glass-strong)', 
             backdropFilter: 'blur(12px)',
-            borderRadius: 3,
-            border: '1px solid var(--border-light)'
+            borderRadius: 1,
+            border: '1px solid var(--border-light)',
+            flexWrap: 'wrap',
+            mb: 2
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', color: 'var(--text-secondary)', mr: 1 }}>
-            <FilterIcon fontSize="small" sx={{ mr: 1 }} />
-            <Typography variant="body2" fontWeight={600}>Filters</Typography>
-          </Box>
-          <FormControl size="small" sx={{ flexGrow: 1, minWidth: 160 }}>
+          <FormControl size="small" sx={{ minWidth: 110, flex: 1, '& .MuiOutlinedInput-root': { borderRadius: 1, bgcolor: 'var(--surface-white)' } }}>
             <InputLabel>Cell Leader</InputLabel>
             <Select 
               value={filterLeader} 
               label="Cell Leader" 
               onChange={(e) => setFilterLeader(e.target.value)}
-              sx={{ borderRadius: 2 }}
             >
               <MenuItem value=""><em>All Leaders</em></MenuItem>
               {leaders.map(l => <MenuItem key={l.id} value={l.id}>{l.name}</MenuItem>)}
             </Select>
           </FormControl>
-          <FormControl size="small" sx={{ flexGrow: 1, minWidth: 160 }}>
+          <FormControl size="small" sx={{ minWidth: 110, flex: 1, '& .MuiOutlinedInput-root': { borderRadius: 1, bgcolor: 'var(--surface-white)' } }}>
             <InputLabel>Place</InputLabel>
             <Select 
               value={filterPlace} 
               label="Place" 
               onChange={(e) => setFilterPlace(e.target.value)}
-              sx={{ borderRadius: 2 }}
             >
               <MenuItem value=""><em>All Places</em></MenuItem>
               {places.map(p => <MenuItem key={p} value={p}>{p}</MenuItem>)}
@@ -203,114 +193,50 @@ function AdminMembersPage({ onBack }) {
         {filtered.length > 0 ? (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
             {families.map((family, fIdx) => (
-              <Fade in timeout={300 + (fIdx * 50)} key={family.familyId || fIdx}>
-                <Paper 
-                  elevation={0}
-                  sx={{ 
-                    p: 2.5, 
-                    bgcolor: 'var(--bg-glass-strong)', 
-                    backdropFilter: 'blur(12px)',
-                    borderRadius: 4,
-                    border: '1px solid var(--border-light)',
-                    boxShadow: 'var(--shadow-sm)',
-                    overflow: 'hidden'
-                  }}
-                >
-                  {/* Family Card Header */}
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <FamilyIcon sx={{ fontSize: 18 }} />
-                      {family.head.name}'s Family ({family.members.length})
-                    </Typography>
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                      <Chip size="small" label={`Leader: ${family.head.cellLeaderName}`} sx={{ height: 20, fontSize: '0.65rem', bgcolor: 'rgba(99,102,241,0.08)', color: 'var(--color-primary)', fontWeight: 600 }} />
-                      <Chip size="small" label={family.head.place} sx={{ height: 20, fontSize: '0.65rem', bgcolor: 'var(--bg-main)' }} />
+              <Paper 
+                key={family.familyId}
+                elevation={0}
+                onClick={() => setSelectedFamily(family)}
+                sx={{ 
+                  p: 2.5, 
+                  bgcolor: 'var(--bg-glass-strong)', 
+                  backdropFilter: 'blur(12px)',
+                  borderRadius: 1,
+                  border: '1px solid var(--border-light)',
+                  boxShadow: 'var(--shadow-sm)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  '&:hover': {
+                    transform: 'translateY(-2px)',
+                    boxShadow: 'var(--shadow-md)',
+                    borderColor: 'rgba(99,102,241,0.3)'
+                  }
+                }}
+              >
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Box sx={{ width: 48, height: 48, borderRadius: '50%', background: 'linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.15))', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-primary)' }}>
+                      <FamilyIcon sx={{ fontSize: 24 }} />
+                    </Box>
+                    <Box>
+                      <Typography variant="h6" sx={{ fontWeight: 800, color: 'var(--text-deep)', lineHeight: 1.2 }}>
+                        {family.head.name}
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: 'var(--text-secondary)', mt: 0.5 }}>
+                        Family of {family.members.length}
+                      </Typography>
                     </Box>
                   </Box>
-
-                  {/* Family Members list */}
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                    {family.members.map((m) => (
-                      <Box 
-                        key={m.id} 
-                        onClick={() => {
-                          setSelectedMember(m);
-                          setDialogOpen(true);
-                        }}
-                        sx={{ 
-                          p: 1.5, 
-                          display: 'flex', 
-                          justifyContent: 'space-between', 
-                          alignItems: 'center', 
-                          bgcolor: 'rgba(255, 255, 255, 0.6)', 
-                          borderRadius: 2.5,
-                          border: '1px solid rgba(0, 0, 0, 0.03)',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease',
-                          '&:hover': { 
-                            transform: 'translateX(2px)', 
-                            borderColor: 'rgba(99,102,241,0.2)', 
-                            bgcolor: 'rgba(99, 102, 241, 0.02)' 
-                          }
-                        }}
-                      >
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                          <Box sx={{ width: 36, height: 36, borderRadius: '50%', background: m.relation === 'Head' ? 'linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.1))' : 'rgba(0,0,0,0.03)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: m.relation === 'Head' ? 'var(--color-primary)' : 'var(--text-secondary)' }}>
-                            <PersonIcon sx={{ fontSize: 18 }} />
-                          </Box>
-                          <Box>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <Typography fontWeight={700} sx={{ color: 'var(--text-primary)', fontSize: '0.9rem', lineHeight: 1.2 }}>{m.name}</Typography>
-                              <Chip 
-                                size="small" 
-                                label={m.relation || 'Head'} 
-                                sx={{ 
-                                  height: 16, 
-                                  fontSize: '0.6rem', 
-                                  fontWeight: 700, 
-                                  bgcolor: m.relation === 'Spouse' ? 'rgba(236,72,153,0.08)' : m.relation === 'Head' ? 'rgba(99,102,241,0.08)' : 'rgba(0,0,0,0.05)',
-                                  color: m.relation === 'Spouse' ? '#ec489a' : m.relation === 'Head' ? 'var(--color-primary)' : 'var(--text-secondary)'
-                                }} 
-                              />
-                            </Box>
-                          </Box>
-                        </Box>
-                        <Box sx={{ display: 'flex', gap: 0.5 }}>
-                          <IconButton 
-                            color="primary" 
-                            size="small" 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setMemberToEdit(m);
-                              setEditDialogOpen(true);
-                            }} 
-                            title="Edit Member"
-                            sx={{ opacity: 0.6, '&:hover': { opacity: 1, bgcolor: 'rgba(99, 102, 241, 0.1)' } }}
-                          >
-                            <EditIcon fontSize="small" />
-                          </IconButton>
-                          <IconButton 
-                            color="error" 
-                            size="small" 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDelete(m.id, m.name);
-                            }} 
-                            title="Delete Member"
-                            sx={{ opacity: 0.6, '&:hover': { opacity: 1, bgcolor: 'rgba(239, 68, 68, 0.1)' } }}
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
-                        </Box>
-                      </Box>
-                    ))}
+                  <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
+                    <Chip size="small" label={`Leader: ${family.head.cellLeaderName || 'Unassigned'}`} sx={{ height: 22, fontSize: '0.7rem', bgcolor: 'rgba(99,102,241,0.08)', color: 'var(--color-primary)', fontWeight: 700 }} />
+                    <Chip size="small" label={family.head.place || 'Unknown Place'} sx={{ height: 22, fontSize: '0.7rem', bgcolor: 'var(--bg-main)', fontWeight: 600, color: 'var(--text-secondary)' }} />
                   </Box>
-                </Paper>
-              </Fade>
+                </Box>
+              </Paper>
             ))}
           </Box>
         ) : (
-          <Paper elevation={0} sx={{ p: 4, textAlign: 'center', bgcolor: 'var(--bg-glass-strong)', borderRadius: 4, border: '1px dashed var(--border-light)' }}>
+          <Paper elevation={0} sx={{ p: 4, textAlign: 'center', bgcolor: 'var(--bg-glass-strong)', borderRadius: 1, border: '1px dashed var(--border-light)' }}>
             <Typography sx={{ color: 'var(--text-tertiary)' }}>No members found matching these filters.</Typography>
           </Paper>
         )}
@@ -330,7 +256,7 @@ function AdminMembersPage({ onBack }) {
           onMemberUpdated={handleMemberUpdated}
         />
       </Box>
-    </Fade>
+    
   );
 }
 

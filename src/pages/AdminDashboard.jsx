@@ -59,6 +59,7 @@ import AdminMeetingPlacesPage from './admin/AdminMeetingPlacesPage';
 import MobileBottomNav from '../components/MobileBottomNav';
 import BirthdaysView from '../components/BirthdaysView';
 import BirthdayNotificationBar from '../components/BirthdayNotificationBar';
+import { useLanguage } from '../contexts/LanguageContext';
 
 // New Icons
 import {
@@ -68,6 +69,7 @@ import {
 } from '@mui/icons-material';
 
 function AdminDashboard({ user, onLogout }) {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const muiTheme = useTheme();
   const isMobile = useMediaQuery(muiTheme.breakpoints.down('sm'));
@@ -127,19 +129,22 @@ function AdminDashboard({ user, onLogout }) {
     });
 
     const unsubAttendance = onSnapshot(collection(db, 'attendance'), (snap) => {
-      const getLocalDate = () => {
-      const d = new Date();
-      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    };
-    const todayStr = getLocalDate();
+      const getRecentTuesday = () => {
+        const d = new Date();
+        const day = d.getDay(); // 0 is Sunday, 2 is Tuesday
+        const diff = day >= 2 ? day - 2 : day + 5;
+        d.setDate(d.getDate() - diff);
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      };
+      const targetDateStr = getRecentTuesday();
       let todayCount = 0;
       let presentCount = 0;
       snap.forEach(doc => {
         const data = doc.data();
-        if (data.date === todayStr && Array.isArray(data.attendance)) {
+        if (data.date === targetDateStr && Array.isArray(data.attendance)) {
           data.attendance.forEach(record => {
             todayCount++;
-            if (record.status && record.status.toLowerCase() === 'present') {
+            if (record.status === 'present') {
               presentCount++;
             }
           });
@@ -158,87 +163,94 @@ function AdminDashboard({ user, onLogout }) {
   }, []);
 
   const navButtons = [
+    // --- Bottom Nav Items ---
     { 
       id: 0, 
-      label: 'Dashboard', 
+      label: t('nav.home'), 
       icon: <DashboardIcon />, 
       color: 'var(--primary-forest)',
       bgColor: 'var(--surface-sage)',
-      description: 'Overview & Stats'
-    },
-    { 
-      id: 1, 
-      label: 'Approvals', 
-      icon: <ApproveIcon />, 
-      color: 'var(--text-gold)',
-      bgColor: 'var(--surface-gold)',
-      description: 'Pending requests',
-      badge: stats.pendingApprovals
-    },
-    { 
-      id: 2, 
-      label: 'Members', 
-      icon: <PeopleIcon />, 
-      color: 'var(--primary-forest)',
-      bgColor: 'var(--light-sage)',
-      description: 'Manage members'
-    },
-    {
-      id: 6,
-      label: 'Leader Attendance',
-      icon: <HowToRegIcon />,
-      color: 'var(--text-deep)',
-      bgColor: 'var(--border-neutral)',
-      description: 'Leader attendance'
-    },
-    { 
-      id: 3, 
-      label: 'Attendance Logs', 
-      icon: <AttendanceIcon />, 
-      color: 'var(--text-sage)',
-      bgColor: 'var(--accent-sage)',
-      description: 'Track attendance'
-    },
-    { 
-      id: 4, 
-      label: 'Announcements', 
-      icon: <AnnouncementIcon />, 
-      color: 'var(--alert-dot)',
-      bgColor: 'rgba(207, 138, 66, 0.1)',
-      description: 'Send alerts',
-      badge: stats.activeAnnouncements
-    },
-    { 
-      id: 5, 
-      label: 'Birthdays', 
-      icon: <CakeIcon />, 
-      color: 'var(--alert-dot)',
-      bgColor: 'rgba(207, 138, 66, 0.1)',
-      description: 'Member birthdays'
-    },
-    {
-      id: 7,
-      label: 'Prayer Requests',
-      icon: <PrayerIcon />,
-      color: 'var(--text-gold)',
-      bgColor: 'var(--surface-gold)',
-      description: 'View requests'
+      description: t('desc.overview'),
+      isBottomNav: true
     },
     {
       id: 8,
-      label: 'Report Cards',
+      label: t('nav.reportCards'),
       icon: <ReportIcon />,
       color: 'var(--text-sage)',
       bgColor: 'var(--light-sage)',
-      description: 'View reports'
+      description: t('desc.viewReports'),
+      isBottomNav: true
+    },
+    {
+      id: 7,
+      label: t('nav.prayerRequests'),
+      icon: <PrayerIcon />,
+      color: 'var(--text-gold)',
+      bgColor: 'var(--surface-gold)',
+      description: t('desc.viewRequests'),
+      isBottomNav: true
+    },
+    { 
+      id: 2, 
+      label: t('nav.members'), 
+      icon: <PeopleIcon />, 
+      color: 'var(--primary-forest)',
+      bgColor: 'var(--light-sage)',
+      description: t('desc.manage'),
+      isBottomNav: true
+    },
+
+    // --- Quick Actions ---
+    { 
+      id: 3, 
+      label: t('nav.logs'), 
+      icon: <AttendanceIcon />, 
+      color: 'var(--text-sage)',
+      bgColor: 'var(--accent-sage)',
+      description: t('desc.past')
     },
     {
       id: 9,
-      label: 'Meeting Places',
+      label: t('nav.meetingPlaces'),
       icon: <LocationIcon />,
       color: 'var(--alert-dot)',
       bgColor: 'rgba(207, 138, 66, 0.1)',
-      description: 'View locations'
+      description: t('desc.viewLocations')
+    },
+    { 
+      id: 4, 
+      label: t('nav.announcements'), 
+      icon: <AnnouncementIcon />, 
+      color: 'var(--alert-dot)',
+      bgColor: 'rgba(207, 138, 66, 0.1)',
+      description: t('desc.sendAlerts'),
+      badge: stats.activeAnnouncements
+    },
+    {
+      id: 6,
+      label: t('nav.leaderAttendance'),
+      icon: <HowToRegIcon />,
+      color: 'var(--text-deep)',
+      bgColor: 'var(--border-neutral)',
+      description: t('desc.leaderAtt')
+    },
+    { 
+      id: 5, 
+      label: t('nav.birthdays'), 
+      icon: <CakeIcon />, 
+      color: 'var(--alert-dot)',
+      bgColor: 'rgba(207, 138, 66, 0.1)',
+      description: t('desc.birthdays')
+    },
+    { 
+      id: 1, 
+      label: t('nav.approvals'), 
+      icon: <ApproveIcon />, 
+      color: 'var(--text-gold)',
+      bgColor: 'var(--surface-gold)',
+      description: t('desc.pendingReq'),
+      badge: stats.pendingApprovals
     }
   ];
 
@@ -260,7 +272,7 @@ function AdminDashboard({ user, onLogout }) {
     })();
 
     return (
-      <Fade in timeout={350} key={currentTab}>
+      <Fade in timeout={250} key={currentTab}>
         <Box>
           {content}
         </Box>
@@ -271,12 +283,12 @@ function AdminDashboard({ user, onLogout }) {
   // Stats cards data
   const statsCards = [
     {
-      title: "Today's Attendance",
+      title: "Tuesday's Attendance",
       value: `${stats.todayAttendance}%`,
       icon: <TrendingUpIcon sx={{ fontSize: 28 }} />,
       color: 'var(--surface-white)',
       bgColor: 'rgba(255,255,255,0.2)',
-      trend: stats.todayCount > 0 ? `${stats.presentCount} / ${stats.todayCount} Present` : 'No data today',
+      trend: stats.todayCount > 0 ? `${stats.presentCount} / ${stats.todayCount} Present` : 'No data for this Tuesday',
       cardBg: 'var(--primary-forest)',
       textColor: 'var(--surface-white)',
       subTextColor: 'rgba(255,255,255,0.8)'
@@ -301,7 +313,7 @@ function AdminDashboard({ user, onLogout }) {
         sx={{
           display: 'flex',
           flexDirection: 'column',
-          minHeight: '100vh',
+          height: '100dvh',
           bgcolor: 'transparent',
         }}
       >
@@ -309,20 +321,7 @@ function AdminDashboard({ user, onLogout }) {
         <AppBar position="sticky" elevation={0} sx={{ bgcolor: 'transparent', backgroundImage: 'none', pt: '20px', px: '20px', pb: '12px' }}>
           <Toolbar disableGutters sx={{ minHeight: 'auto !important' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexGrow: 1 }}>
-              <Box
-                sx={{
-                  width: 40,
-                  height: 40,
-                  bgcolor: 'var(--primary-forest)',
-                  borderRadius: '16px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: 'var(--shadow-sm)'
-                }}
-              >
-                <Box component="img" src="/icon.png" alt="Bethel Logo" sx={{ width: 28, height: 28, objectFit: 'contain' }} />
-              </Box>
+              <Box component="img" src="/icon.png" alt="Bethel Logo" sx={{ width: 44, height: 44, objectFit: 'contain' }} />
               <Box>
                 <Typography variant="h6" className="font-playfair" sx={{ fontWeight: 700, lineHeight: 1.2, color: 'var(--text-deep)' }}>
                   Bethel Admin
@@ -341,14 +340,14 @@ function AdminDashboard({ user, onLogout }) {
                   color="primary"
                   variant="outlined"
                   label="Admin Control"
-                  sx={{ borderRadius: 2 }}
+                  sx={{ borderRadius: 1 }}
                 />
                 <Tooltip title="Logout">
                   <Button
                     onClick={onLogout}
                     startIcon={<LogoutIcon />}
                     sx={{ 
-                      borderRadius: 2, 
+                      borderRadius: 1, 
                       px: 2.5, 
                       color: 'var(--text-primary)', 
                       fontWeight: 'bold',
@@ -385,12 +384,12 @@ function AdminDashboard({ user, onLogout }) {
         </AppBar>
 
         {/* Main Content Area */}
-        <Box sx={{ flexGrow: 1, overflow: 'auto', pb: isMobile ? '130px' : 6 }}>
+        <Box sx={{ flexGrow: 1, overflowY: 'auto', pb: isMobile ? 3 : 6 }}>
           <Container maxWidth="lg" sx={{ py: 3 }}>
             
             {/* Quick Stats Cards - Only show on Dashboard tab */}
             {currentTab === 0 && (
-              <Fade in timeout={400}>
+              
                 <Box sx={{ mb: 4 }}>
                   <Typography variant="h6" className="font-playfair" sx={{ fontSize: 22, fontWeight: 700, color: 'var(--text-deep)', mb: 2 }}>
                     Quick Overview
@@ -399,16 +398,14 @@ function AdminDashboard({ user, onLogout }) {
                     {statsCards.map((stat, index) => (
                       <Grid item xs={12} sm={6} md={6} key={index}>
                         <Card sx={{ 
-                          borderRadius: 3, 
+                          borderRadius: 1, 
                           background: stat.cardBg, 
                           backdropFilter: 'blur(12px)', 
-                          border: stat.cardBg === 'var(--primary-forest)' ? 'none' : '1px solid var(--border-neutral)', 
-                          transition: 'all 0.3s ease', 
-                          '&:hover': { transform: 'translateY(-4px)', boxShadow: 'var(--shadow-md)' } 
+                          border: stat.cardBg === 'var(--primary-forest)' ? 'none' : '1px solid var(--border-neutral)' 
                         }}>
                           <CardContent sx={{ p: isMobile ? 2 : 2.5, '&:last-child': { pb: isMobile ? 2 : 2.5 } }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: isMobile ? 1.5 : 2 }}>
-                              <Avatar sx={{ bgcolor: stat.bgColor, color: stat.color, width: 48, height: 48, borderRadius: 2 }}>{stat.icon}</Avatar>
+                              <Avatar sx={{ bgcolor: stat.bgColor, color: stat.color, width: 48, height: 48, borderRadius: 1 }}>{stat.icon}</Avatar>
                               {stat.trend && <Chip size="small" label={stat.trend} sx={{ fontSize: '0.65rem', bgcolor: stat.cardBg === 'var(--primary-forest)' ? 'rgba(255,255,255,0.15)' : 'var(--light-sage)', color: stat.cardBg === 'var(--primary-forest)' ? '#fff' : 'var(--text-sage)', height: 22, border: 'none' }} />}
                             </Box>
                             <Typography variant="h4" sx={{ fontWeight: 800, color: stat.textColor, mb: 0.5 }}>{stat.value}</Typography>
@@ -419,7 +416,7 @@ function AdminDashboard({ user, onLogout }) {
                     ))}
                   </Grid>
                 </Box>
-              </Fade>
+              
             )}
 
             {/* Navigation Buttons Grid */}
@@ -429,19 +426,17 @@ function AdminDashboard({ user, onLogout }) {
                   Quick Actions
                 </Typography>
                 <Grid container spacing={isMobile ? 1.5 : 2}>
-                  {navButtons.filter(b => b.id !== 0 && b.id !== 1).map((button) => (
+                  {navButtons.filter(b => !b.isBottomNav).map((button) => (
                     <Grid item xs={6} sm={4} md={2.4} key={button.id}>
                       <Card
                         sx={{
                           cursor: 'pointer',
-                          borderRadius: 3,
+                          borderRadius: 1,
                           background: 'rgba(255,255,255,0.75)',
                           backdropFilter: 'blur(12px)',
                           border: '1px solid var(--border-neutral)',
-                          transition: 'all 0.3s ease',
+                          transition: 'all 0.2s ease',
                           '&:hover': {
-                            transform: 'translateY(-4px)',
-                            boxShadow: 'var(--shadow-md)',
                             background: 'rgba(255,255,255,0.9)',
                           }
                         }}
@@ -529,7 +524,7 @@ function AdminDashboard({ user, onLogout }) {
           </Container>
         </Box>
         
-        <MobileBottomNav tabs={navButtons.slice(0, 4)} currentTab={currentTab} onChange={setCurrentTab} />
+        <MobileBottomNav tabs={navButtons.filter(b => b.isBottomNav)} currentTab={currentTab} onChange={setCurrentTab} />
       </Box>
     </ThemeProvider>
   );
