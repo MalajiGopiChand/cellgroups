@@ -53,9 +53,19 @@ import AdminMembersPage from './admin/AdminMembersPage';
 import AdminAttendancePage from './admin/AdminAttendancePage';
 import AdminAnnouncementsPage from './admin/AdminAnnouncementsPage';
 import AdminLeaderAttendancePage from './admin/AdminLeaderAttendancePage';
+import AdminPrayerRequestsPage from './admin/AdminPrayerRequestsPage';
+import AdminReportCardPage from './admin/AdminReportCardPage';
+import AdminMeetingPlacesPage from './admin/AdminMeetingPlacesPage';
 import MobileBottomNav from '../components/MobileBottomNav';
 import BirthdaysView from '../components/BirthdaysView';
 import BirthdayNotificationBar from '../components/BirthdayNotificationBar';
+
+// New Icons
+import {
+  VolunteerActivism as PrayerIcon,
+  Assessment as ReportIcon,
+  LocationOn as LocationIcon
+} from '@mui/icons-material';
 
 function AdminDashboard({ user, onLogout }) {
   const navigate = useNavigate();
@@ -205,6 +215,30 @@ function AdminDashboard({ user, onLogout }) {
       color: 'var(--alert-dot)',
       bgColor: 'rgba(207, 138, 66, 0.1)',
       description: 'Member birthdays'
+    },
+    {
+      id: 7,
+      label: 'Prayer Requests',
+      icon: <PrayerIcon />,
+      color: 'var(--text-gold)',
+      bgColor: 'var(--surface-gold)',
+      description: 'View requests'
+    },
+    {
+      id: 8,
+      label: 'Report Cards',
+      icon: <ReportIcon />,
+      color: 'var(--text-sage)',
+      bgColor: 'var(--light-sage)',
+      description: 'View reports'
+    },
+    {
+      id: 9,
+      label: 'Meeting Places',
+      icon: <LocationIcon />,
+      color: 'var(--alert-dot)',
+      bgColor: 'rgba(207, 138, 66, 0.1)',
+      description: 'View locations'
     }
   ];
 
@@ -218,6 +252,9 @@ function AdminDashboard({ user, onLogout }) {
         case 4: return <AdminAnnouncementsPage onBack={() => setCurrentTab(0)} />;
         case 5: return <BirthdaysView isAdmin={true} onBack={() => setCurrentTab(0)} />;
         case 6: return <AdminLeaderAttendancePage onBack={() => setCurrentTab(0)} />;
+        case 7: return <AdminPrayerRequestsPage onBack={() => setCurrentTab(0)} />;
+        case 8: return <AdminReportCardPage onBack={() => setCurrentTab(0)} />;
+        case 9: return <AdminMeetingPlacesPage onBack={() => setCurrentTab(0)} />;
         default: return <AdminHomePage />;
       }
     })();
@@ -348,7 +385,7 @@ function AdminDashboard({ user, onLogout }) {
         </AppBar>
 
         {/* Main Content Area */}
-        <Box sx={{ flexGrow: 1, overflow: 'auto', pb: isMobile ? '100px' : 6 }}>
+        <Box sx={{ flexGrow: 1, overflow: 'auto', pb: isMobile ? '130px' : 6 }}>
           <Container maxWidth="lg" sx={{ py: 3 }}>
             
             {/* Quick Stats Cards - Only show on Dashboard tab */}

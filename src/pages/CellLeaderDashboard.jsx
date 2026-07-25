@@ -42,9 +42,19 @@ import CellLeaderHomePage from './cellleader/CellLeaderHomePage';
 import CellLeaderAddMemberPage from './cellleader/CellLeaderAddMemberPage';
 import CellLeaderAttendancePage from './cellleader/CellLeaderAttendancePage';
 import CellLeaderAttendanceLogsPage from './cellleader/CellLeaderAttendanceLogsPage';
+import CellLeaderPrayerRequestsPage from './cellleader/CellLeaderPrayerRequestsPage';
+import CellLeaderReportCardPage from './cellleader/CellLeaderReportCardPage';
+import CellLeaderMeetingPlacePage from './cellleader/CellLeaderMeetingPlacePage';
 import MobileBottomNav from '../components/MobileBottomNav';
 import BirthdaysView from '../components/BirthdaysView';
 import BirthdayNotificationBar from '../components/BirthdayNotificationBar';
+
+// New Icons
+import {
+  VolunteerActivism as PrayerIcon,
+  Assessment as ReportIcon,
+  LocationOn as LocationIcon
+} from '@mui/icons-material';
 
 function CellLeaderDashboardInner({ user, onLogout }) {
   const muiTheme = useTheme();
@@ -164,6 +174,30 @@ function CellLeaderDashboardInner({ user, onLogout }) {
       color: 'var(--primary-forest)',
       bgColor: 'var(--surface-sage)',
       description: t('desc.past')
+    },
+    {
+      id: 5,
+      label: 'Prayer Requests',
+      icon: <PrayerIcon />,
+      color: 'var(--text-gold)',
+      bgColor: 'var(--surface-gold)',
+      description: 'Submit requests'
+    },
+    {
+      id: 6,
+      label: 'Report Card',
+      icon: <ReportIcon />,
+      color: 'var(--text-sage)',
+      bgColor: 'var(--light-sage)',
+      description: 'Submit report'
+    },
+    {
+      id: 7,
+      label: 'Meeting Place',
+      icon: <LocationIcon />,
+      color: 'var(--alert-dot)',
+      bgColor: 'rgba(207, 138, 66, 0.1)',
+      description: 'Set location'
     }
   ];
 
@@ -175,6 +209,9 @@ function CellLeaderDashboardInner({ user, onLogout }) {
         case 2: return <CellLeaderAttendancePage user={user} onBack={() => setCurrentTab(0)} />;
         case 3: return <BirthdaysView user={user} onBack={() => setCurrentTab(0)} />;
         case 4: return <CellLeaderAttendanceLogsPage user={user} onBack={() => setCurrentTab(0)} />;
+        case 5: return <CellLeaderPrayerRequestsPage user={user} onBack={() => setCurrentTab(0)} />;
+        case 6: return <CellLeaderReportCardPage user={user} onBack={() => setCurrentTab(0)} />;
+        case 7: return <CellLeaderMeetingPlacePage user={user} onBack={() => setCurrentTab(0)} />;
         default: return <CellLeaderHomePage user={user} />;
       }
     })();
@@ -274,7 +311,7 @@ function CellLeaderDashboardInner({ user, onLogout }) {
         </AppBar>
 
         {/* Main Content Area */}
-        <Box sx={{ flexGrow: 1, overflow: 'auto', pb: isMobile ? '100px' : 6 }}>
+        <Box sx={{ flexGrow: 1, overflow: 'auto', pb: isMobile ? '130px' : 6 }}>
           <Container maxWidth="lg" sx={{ py: 3 }}>
             
             {/* Quick Stats Cards - Only show on Home tab */}
