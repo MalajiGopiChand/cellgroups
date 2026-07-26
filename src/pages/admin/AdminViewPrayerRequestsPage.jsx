@@ -3,29 +3,26 @@ import {
   Box, 
   Typography, 
   Paper, 
-  IconButton,
   Button,
   Grid,
   Chip,
   TextField
 } from '@mui/material';
 import { 
-  ArrowBack as ArrowBackIcon, 
   Delete as DeleteIcon,
   Person as PersonIcon,
   Event as EventIcon,
-  FilterList as FilterIcon,
   Download as DownloadIcon
 } from '@mui/icons-material';
 import { collection, query, orderBy, onSnapshot, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
-import { useLanguage } from '../../contexts/LanguageContext';
 import { downloadAsImage } from '../../utils/downloadImage';
+import { getISOWeekString, parseDDMMYYYY } from '../../utils/dateUtils';
 
-function AdminPrayerRequestsPage({ onBack }) {
+function AdminViewPrayerRequestsPage({ user, onBack }) {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filterDate, setFilterDate] = useState('');
+  const [filterWeek, setFilterWeek] = useState(() => getISOWeekString(new Date()));
 
   useEffect(() => {
     const q = query(collection(db, 'prayer_requests'), orderBy('timestamp', 'desc'));
@@ -48,14 +45,16 @@ function AdminPrayerRequestsPage({ onBack }) {
     }
   };
 
-  const filteredRequests = filterDate 
-    ? requests.filter(r => r.date === new Date(filterDate).toLocaleDateString('en-GB').replace(/\//g, '-'))
+  const filteredRequests = filterWeek 
+    ? requests.filter(r => {
+        if (!r.date) return false;
+        const reqDateObj = parseDDMMYYYY(r.date);
+        return getISOWeekString(reqDateObj) === filterWeek;
+      })
     : requests;
 
   return (
     <Box>
-      
-      {/* Sleek Single-Line Filter Card */}
       <Paper 
         elevation={0}
         sx={{ 
@@ -72,20 +71,20 @@ function AdminPrayerRequestsPage({ onBack }) {
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <Typography variant="body2" fontWeight={600} color="var(--text-secondary)">
-            Date:
+            Week:
           </Typography>
           <TextField
-            type="date"
+            type="week"
             size="small"
-            value={filterDate}
-            onChange={(e) => setFilterDate(e.target.value)}
-            sx={{ minWidth: 110, flex: 1, '& .MuiOutlinedInput-root': { borderRadius: 1, bgcolor: 'var(--surface-white)' } }}
+            value={filterWeek}
+            onChange={(e) => setFilterWeek(e.target.value)}
+            sx={{ minWidth: 160, flex: 1, '& .MuiOutlinedInput-root': { borderRadius: 1, bgcolor: 'var(--surface-white)' } }}
           />
         </Box>
         <Button 
           variant="contained" 
           startIcon={<DownloadIcon />} 
-          onClick={() => downloadAsImage('prayer-requests-list', `Prayer_Requests_${filterDate || 'All'}.png`)}
+          onClick={() => downloadAsImage('prayer-requests-list', `Prayer_Requests_${filterWeek || 'All'}.png`)}
           sx={{ ml: 'auto', bgcolor: 'var(--primary-forest)', color: '#fff', borderRadius: 1, fontWeight: 700, boxShadow: 'none', '&:hover': { bgcolor: 'var(--primary-forest)', opacity: 0.9 } }}
         >
           Download Image
@@ -96,12 +95,12 @@ function AdminPrayerRequestsPage({ onBack }) {
         <Typography sx={{ p: 3, textAlign: 'center', color: 'var(--text-secondary)' }}>Loading requests...</Typography>
       ) : filteredRequests.length === 0 ? (
         <Paper elevation={0} sx={{ p: 4, textAlign: 'center', bgcolor: 'var(--bg-glass-strong)', borderRadius: 1, border: '1px dashed var(--border-light)' }}>
-          <Typography color="var(--text-tertiary)">No prayer requests found for this selection.</Typography>
+          <Typography color="var(--text-tertiary)">No prayer requests found for this week.</Typography>
         </Paper>
       ) : (
         <Box id="prayer-requests-list" sx={{ display: 'flex', flexDirection: 'column', gap: 2, p: 1 }}>
           <Typography variant="h6" sx={{ display: 'none', mb: 2, color: 'var(--text-primary)', fontWeight: 800 }}>
-            Prayer Requests {filterDate && `- ${new Date(filterDate).toLocaleDateString('en-GB').replace(/\//g, '-')}`}
+            Prayer Requests {filterWeek && `- Week ${filterWeek}`}
           </Typography>
           {filteredRequests.map((req, index) => (
             <Paper 
@@ -176,4 +175,4 @@ function AdminPrayerRequestsPage({ onBack }) {
   );
 }
 
-export default AdminPrayerRequestsPage;
+export default AdminViewPrayerRequestsPage;

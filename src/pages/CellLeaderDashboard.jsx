@@ -42,7 +42,8 @@ import CellLeaderHomePage from './cellleader/CellLeaderHomePage';
 import CellLeaderAddMemberPage from './cellleader/CellLeaderAddMemberPage';
 import CellLeaderAttendancePage from './cellleader/CellLeaderAttendancePage';
 import CellLeaderAttendanceLogsPage from './cellleader/CellLeaderAttendanceLogsPage';
-import CellLeaderPrayerRequestsPage from './cellleader/CellLeaderPrayerRequestsPage';
+import CellLeaderSubmitPrayerRequestPage from './cellleader/CellLeaderSubmitPrayerRequestPage';
+import CellLeaderViewPrayerRequestsPage from './cellleader/CellLeaderViewPrayerRequestsPage';
 import CellLeaderReportCardPage from './cellleader/CellLeaderReportCardPage';
 import CellLeaderMeetingPlacePage from './cellleader/CellLeaderMeetingPlacePage';
 import MobileBottomNav from '../components/MobileBottomNav';
@@ -53,7 +54,8 @@ import BirthdayNotificationBar from '../components/BirthdayNotificationBar';
 import {
   VolunteerActivism as PrayerIcon,
   Assessment as ReportIcon,
-  LocationOn as LocationIcon
+  LocationOn as LocationIcon,
+  FormatListBulleted as ListIcon
 } from '@mui/icons-material';
 
 function CellLeaderDashboardInner({ user, onLogout }) {
@@ -147,11 +149,20 @@ function CellLeaderDashboardInner({ user, onLogout }) {
     },
     {
       id: 5,
-      label: t('nav.prayerRequests'),
+      label: 'Submit Prayer',
       icon: <PrayerIcon />,
       color: 'var(--text-gold)',
       bgColor: 'var(--surface-gold)',
-      description: t('desc.submitRequests'),
+      description: 'Submit request',
+      isBottomNav: true
+    },
+    {
+      id: 8,
+      label: 'View Prayers',
+      icon: <ListIcon />,
+      color: 'var(--text-gold)',
+      bgColor: 'var(--surface-gold)',
+      description: 'View requests',
       isBottomNav: true
     },
     {
@@ -216,9 +227,10 @@ function CellLeaderDashboardInner({ user, onLogout }) {
         case 2: return <CellLeaderAttendancePage user={user} onBack={() => setCurrentTab(0)} />;
         case 3: return <BirthdaysView user={user} onBack={() => setCurrentTab(0)} />;
         case 4: return <CellLeaderAttendanceLogsPage user={user} onBack={() => setCurrentTab(0)} />;
-        case 5: return <CellLeaderPrayerRequestsPage user={user} onBack={() => setCurrentTab(0)} />;
+        case 5: return <CellLeaderSubmitPrayerRequestPage user={user} onBack={() => setCurrentTab(0)} />;
         case 6: return <CellLeaderReportCardPage user={user} onBack={() => setCurrentTab(0)} />;
         case 7: return <CellLeaderMeetingPlacePage user={user} onBack={() => setCurrentTab(0)} />;
+        case 8: return <CellLeaderViewPrayerRequestsPage user={user} onBack={() => setCurrentTab(0)} />;
         default: return <CellLeaderHomePage user={user} />;
       }
     })();

@@ -53,7 +53,8 @@ import AdminMembersPage from './admin/AdminMembersPage';
 import AdminAttendancePage from './admin/AdminAttendancePage';
 import AdminAnnouncementsPage from './admin/AdminAnnouncementsPage';
 import AdminLeaderAttendancePage from './admin/AdminLeaderAttendancePage';
-import AdminPrayerRequestsPage from './admin/AdminPrayerRequestsPage';
+import AdminSubmitPrayerRequestPage from './admin/AdminSubmitPrayerRequestPage';
+import AdminViewPrayerRequestsPage from './admin/AdminViewPrayerRequestsPage';
 import AdminReportCardPage from './admin/AdminReportCardPage';
 import AdminMeetingPlacesPage from './admin/AdminMeetingPlacesPage';
 import MobileBottomNav from '../components/MobileBottomNav';
@@ -65,7 +66,8 @@ import { useLanguage } from '../contexts/LanguageContext';
 import {
   VolunteerActivism as PrayerIcon,
   Assessment as ReportIcon,
-  LocationOn as LocationIcon
+  LocationOn as LocationIcon,
+  FormatListBulleted as ListIcon
 } from '@mui/icons-material';
 
 function AdminDashboard({ user, onLogout }) {
@@ -184,11 +186,20 @@ function AdminDashboard({ user, onLogout }) {
     },
     {
       id: 7,
-      label: t('nav.prayerRequests'),
+      label: 'Submit Prayer',
       icon: <PrayerIcon />,
       color: 'var(--text-gold)',
       bgColor: 'var(--surface-gold)',
-      description: t('desc.viewRequests'),
+      description: 'Submit request',
+      isBottomNav: true
+    },
+    {
+      id: 10,
+      label: 'View Prayers',
+      icon: <ListIcon />,
+      color: 'var(--text-gold)',
+      bgColor: 'var(--surface-gold)',
+      description: 'View requests',
       isBottomNav: true
     },
     { 
@@ -264,9 +275,10 @@ function AdminDashboard({ user, onLogout }) {
         case 4: return <AdminAnnouncementsPage onBack={() => setCurrentTab(0)} />;
         case 5: return <BirthdaysView isAdmin={true} onBack={() => setCurrentTab(0)} />;
         case 6: return <AdminLeaderAttendancePage onBack={() => setCurrentTab(0)} />;
-        case 7: return <AdminPrayerRequestsPage onBack={() => setCurrentTab(0)} />;
+        case 7: return <AdminSubmitPrayerRequestPage user={user} onBack={() => setCurrentTab(0)} />;
         case 8: return <AdminReportCardPage onBack={() => setCurrentTab(0)} />;
         case 9: return <AdminMeetingPlacesPage onBack={() => setCurrentTab(0)} />;
+        case 10: return <AdminViewPrayerRequestsPage user={user} onBack={() => setCurrentTab(0)} />;
         default: return <AdminHomePage />;
       }
     })();
