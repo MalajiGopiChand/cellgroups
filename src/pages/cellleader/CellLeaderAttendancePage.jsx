@@ -66,13 +66,7 @@ function CellLeaderAttendancePage({ user, onBack }) {
     fetch();
   }, [user?.id, user?.place, selectedDate]);
 
-  const isTuesday = new Date(selectedDate).getDay() === 2;
-
   const handleMark = async (memberId, memberName, status, familyId) => {
-    if (!isTuesday) {
-      alert("Attendance can only be marked on Tuesdays.");
-      return;
-    }
     const current = attendance.find(a => a.studentId === memberId);
     let newAttendance;
     if (current) {
@@ -83,14 +77,21 @@ function CellLeaderAttendancePage({ user, onBack }) {
       newAttendance = [...attendance, { studentId: memberId, name: memberName, status, familyId }];
     }
     setAttendance(newAttendance);
-    
-    await setDoc(doc(db, 'attendance', `${user.id}_${user.place}_${selectedDate}`), {
-      cellLeaderId: user.id,
-      place: user.place,
-      date: selectedDate,
-      attendance: newAttendance,
-      updatedAt: new Date()
-    }, { merge: true });
+  };
+
+  const handleSave = async () => {
+    if (attendance.length > 0) {
+      await setDoc(doc(db, 'attendance', `${user.id}_${user.place}_${selectedDate}`), {
+        cellLeaderId: user.id,
+        place: user.place,
+        date: selectedDate,
+        attendance: attendance,
+        updatedAt: new Date()
+      }, { merge: true });
+      setSnackbarOpen(true);
+    } else {
+      alert(t('att.addFirst') || "Please mark attendance before saving.");
+    }
   };
 
   const familyGroups = {};
@@ -176,11 +177,7 @@ function CellLeaderAttendancePage({ user, onBack }) {
           </Button>
         </Paper>
 
-        {!isTuesday && (
-          <Alert severity="warning" sx={{ mb: 3, borderRadius: 1, fontWeight: 600 }}>
-            Attendance can only be marked on Tuesdays.
-          </Alert>
-        )}
+
 
         {members.length === 0 ? (
           <Paper elevation={0} sx={{ p: 4, textAlign: 'center', bgcolor: 'var(--bg-glass-strong)', borderRadius: 1, border: '1px dashed var(--border-light)' }}>
@@ -262,8 +259,8 @@ function CellLeaderAttendancePage({ user, onBack }) {
                                 sx={{
                                   width: 32, height: 32, borderRadius: 1,
                                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                  cursor: isTuesday ? 'pointer' : 'not-allowed',
-                                  opacity: isTuesday ? 1 : 0.5,
+                                  cursor: 'pointer',
+                                  opacity: 1,
                                   bgcolor: mRec?.status === 'present' ? '#4E7D58' : 'var(--surface-white)',
                                   border: mRec?.status === 'present' ? 'none' : '1px solid var(--border-neutral)',
                                   color: mRec?.status === 'present' ? '#fff' : 'var(--text-secondary)',
@@ -278,8 +275,8 @@ function CellLeaderAttendancePage({ user, onBack }) {
                                 sx={{
                                   width: 32, height: 32, borderRadius: 1,
                                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                  cursor: isTuesday ? 'pointer' : 'not-allowed',
-                                  opacity: isTuesday ? 1 : 0.5,
+                                  cursor: 'pointer',
+                                  opacity: 1,
                                   bgcolor: mRec?.status === 'absent' ? '#ef4444' : 'var(--surface-white)',
                                   border: mRec?.status === 'absent' ? 'none' : '1px solid var(--border-neutral)',
                                   color: mRec?.status === 'absent' ? '#fff' : 'var(--text-secondary)',
@@ -298,6 +295,18 @@ function CellLeaderAttendancePage({ user, onBack }) {
                 </Collapse>
               </Paper>
             ))}
+
+            {/* Submit Button */}
+            {attendance.length > 0 && (
+              <Button 
+                variant="contained"
+                fullWidth
+                onClick={handleSave}
+                sx={{ mt: 1, py: 1.5, borderRadius: 1, fontWeight: 800, fontSize: '1rem', bgcolor: 'var(--color-success)', '&:hover': { bgcolor: '#059669' } }}
+              >
+                {t('att.saveAttendance') || "Save Attendance"}
+              </Button>
+            )}
           </Box>
         )}
 

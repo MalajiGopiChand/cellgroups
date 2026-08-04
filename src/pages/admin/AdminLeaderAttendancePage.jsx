@@ -69,12 +69,6 @@ function AdminLeaderAttendancePage({ onBack }) {
       newAttendance = [...attendance, { leaderId, name: leaderName, place: leaderPlace, status }];
     }
     setAttendance(newAttendance);
-    // Auto-save instantly so data is not lost if date changes
-    await setDoc(doc(db, 'leader_attendance', `admin_leaders_${selectedDate}`), {
-      date: selectedDate,
-      attendance: newAttendance,
-      updatedAt: new Date()
-    }, { merge: true });
   };
 
   const handleSave = async () => {
