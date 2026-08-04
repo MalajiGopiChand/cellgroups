@@ -13,6 +13,7 @@ function CellLeaderAttendancePage({ user, onBack }) {
   const navigate = useNavigate();
   const [members, setMembers] = useState([]);
   const [attendance, setAttendance] = useState([]);
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const getLocalDate = () => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -58,15 +59,23 @@ function CellLeaderAttendancePage({ user, onBack }) {
   useEffect(() => {
     const fetch = async () => {
       setAttendance([]); 
+      setIsSubmitted(false);
       if (!user?.id) return;
       const ref = doc(db, 'attendance', `${user.id}_${user.place}_${selectedDate}`);
       const snap = await getDoc(ref);
-      setAttendance(snap.exists() ? (snap.data().attendance || []) : []);
+      if (snap.exists()) {
+        setAttendance(snap.data().attendance || []);
+        setIsSubmitted(true);
+      } else {
+        setAttendance([]);
+        setIsSubmitted(false);
+      }
     };
     fetch();
   }, [user?.id, user?.place, selectedDate]);
 
   const handleMark = async (memberId, memberName, status, familyId) => {
+    if (isSubmitted) return;
     const current = attendance.find(a => a.studentId === memberId);
     let newAttendance;
     if (current) {
@@ -88,8 +97,8 @@ function CellLeaderAttendancePage({ user, onBack }) {
         attendance: attendance,
         updatedAt: new Date()
       }, { merge: true });
+      setIsSubmitted(true);
       setSnackbarOpen(true);
-      alert("Saved Successfully!");
     } else {
       alert(t('att.addFirst') || "Please mark attendance before saving.");
     }
@@ -178,9 +187,11 @@ function CellLeaderAttendancePage({ user, onBack }) {
           </Button>
         </Paper>
 
-
-
-        {members.length === 0 ? (
+        {isSubmitted && (
+          <Alert severity="info" sx={{ mb: 3, borderRadius: 1, fontWeight: 600 }}>
+            Attendance for this date has already been submitted.
+          </Alert>
+        )}        {members.length === 0 ? (
           <Paper elevation={0} sx={{ p: 4, textAlign: 'center', bgcolor: 'var(--bg-glass-strong)', borderRadius: 1, border: '1px dashed var(--border-light)' }}>
             <Typography color="var(--text-tertiary)">{t('att.addFirst')}</Typography>
           </Paper>
@@ -260,13 +271,13 @@ function CellLeaderAttendancePage({ user, onBack }) {
                                 sx={{
                                   width: 32, height: 32, borderRadius: 1,
                                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                  cursor: 'pointer',
-                                  opacity: 1,
+                                  cursor: isSubmitted ? 'default' : 'pointer',
+                                  opacity: (isSubmitted && mRec?.status !== 'present') ? 0.4 : 1,
                                   bgcolor: mRec?.status === 'present' ? '#4E7D58' : 'var(--surface-white)',
                                   border: mRec?.status === 'present' ? 'none' : '1px solid var(--border-neutral)',
                                   color: mRec?.status === 'present' ? '#fff' : 'var(--text-secondary)',
                                   transition: 'all 0.2s',
-                                  '&:hover': { bgcolor: mRec?.status === 'present' ? '#4E7D58' : 'var(--surface-sage)', borderColor: 'transparent' }
+                                  '&:hover': isSubmitted ? {} : { bgcolor: mRec?.status === 'present' ? '#4E7D58' : 'var(--surface-sage)', borderColor: 'transparent' }
                                 }}
                               >
                                 <Typography sx={{ fontWeight: 800, fontSize: 16 }}>P</Typography>
@@ -276,13 +287,13 @@ function CellLeaderAttendancePage({ user, onBack }) {
                                 sx={{
                                   width: 32, height: 32, borderRadius: 1,
                                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                  cursor: 'pointer',
-                                  opacity: 1,
+                                  cursor: isSubmitted ? 'default' : 'pointer',
+                                  opacity: (isSubmitted && mRec?.status !== 'absent') ? 0.4 : 1,
                                   bgcolor: mRec?.status === 'absent' ? '#ef4444' : 'var(--surface-white)',
                                   border: mRec?.status === 'absent' ? 'none' : '1px solid var(--border-neutral)',
                                   color: mRec?.status === 'absent' ? '#fff' : 'var(--text-secondary)',
                                   transition: 'all 0.2s',
-                                  '&:hover': { bgcolor: mRec?.status === 'absent' ? '#ef4444' : 'var(--app-bg)', borderColor: 'transparent' }
+                                  '&:hover': isSubmitted ? {} : { bgcolor: mRec?.status === 'absent' ? '#ef4444' : 'var(--app-bg)', borderColor: 'transparent' }
                                 }}
                               >
                                 <Typography sx={{ fontWeight: 800, fontSize: 16 }}>A</Typography>
@@ -298,7 +309,7 @@ function CellLeaderAttendancePage({ user, onBack }) {
             ))}
 
             {/* Submit Button */}
-            {attendance.length > 0 && (
+            {attendance.length > 0 && !isSubmitted && (
               <Button 
                 variant="contained"
                 fullWidth
