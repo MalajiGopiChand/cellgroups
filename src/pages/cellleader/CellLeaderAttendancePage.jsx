@@ -89,7 +89,7 @@ function CellLeaderAttendancePage({ user, onBack }) {
         updatedAt: new Date()
       }, { merge: true });
       setSnackbarOpen(true);
-      alert("Saved successfully!");
+      alert("Attendance marked successfully!");
     } else {
       alert(t('att.addFirst') || "Please mark attendance before saving.");
     }

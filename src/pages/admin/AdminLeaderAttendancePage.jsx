@@ -79,7 +79,7 @@ function AdminLeaderAttendancePage({ onBack }) {
         updatedAt: new Date()
       }, { merge: true });
       setShowSnackbar(true);
-      alert("Saved successfully!");
+      alert("Attendance marked successfully!");
     }
   };
 
@@ -247,7 +247,7 @@ function AdminLeaderAttendancePage({ onBack }) {
                 onClick={handleSave}
                 sx={{ mt: 1, py: 1.5, borderRadius: 1, fontWeight: 800, fontSize: '1rem', bgcolor: 'var(--color-success)', '&:hover': { bgcolor: '#059669' } }}
               >
-                Save Attendance
+                Save Cell Leader Attendance
               </Button>
             )}
           </Box>
