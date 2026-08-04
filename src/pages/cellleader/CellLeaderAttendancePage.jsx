@@ -305,7 +305,7 @@ function CellLeaderAttendancePage({ user, onBack }) {
                 onClick={handleSave}
                 sx={{ mt: 1, py: 1.5, borderRadius: 1, fontWeight: 800, fontSize: '1rem', bgcolor: 'var(--color-success)', '&:hover': { bgcolor: '#059669' } }}
               >
-                Submit Cell Attendance
+                Submit Attendance
               </Button>
             )}
           </Box>
