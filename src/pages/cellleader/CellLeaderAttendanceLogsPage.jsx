@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import PageHeader from '../../components/PageHeader';
 import { Box, Typography, Paper, Fade, Chip, CircularProgress, Divider, IconButton } from '@mui/material';
-import { EventAvailable as EventIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { EventAvailable as EventIcon, ArrowBack as ArrowBackIcon, Edit as EditIcon } from '@mui/icons-material';
+import { collection, getDocs, query, where, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -40,6 +40,27 @@ function CellLeaderAttendanceLogsPage({ user, onBack }) {
     };
     fetchLogs();
   }, [user?.id]);
+
+  const handleToggleStatus = async (recordId, currentArray, studentObj) => {
+    try {
+      const updatedArray = currentArray.map(a => {
+        const match = (a.studentId && studentObj.studentId) 
+          ? a.studentId === studentObj.studentId 
+          : a.name === studentObj.name;
+        
+        if (match) {
+          return { ...a, status: a.status === 'present' ? 'absent' : 'present' };
+        }
+        return a;
+      });
+
+      await updateDoc(doc(db, 'attendance', recordId), { attendance: updatedArray });
+      setAttendanceLogs(prev => prev.map(rec => rec.id === recordId ? { ...rec, attendance: updatedArray } : rec));
+    } catch (error) {
+      console.error('Error toggling status:', error);
+      alert('Failed to update status.');
+    }
+  };
 
   const filtered = attendanceLogs.filter(a => {
     if (a.date !== filterDate) return false;
@@ -178,18 +199,28 @@ function CellLeaderAttendanceLogsPage({ user, onBack }) {
                             <Typography variant="body2" sx={{ fontWeight: 600, color: 'var(--text-secondary)' }}>
                               {a.name}
                             </Typography>
-                            <Chip 
-                              size="small" 
-                              label={a.status === 'present' ? t('att.presentBtn') : t('att.absentBtn')}
-                              sx={{ 
-                                height: 22, 
-                                fontSize: '0.65rem', 
-                                fontWeight: 700, 
-                                textTransform: 'uppercase',
-                                bgcolor: a.status === 'present' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                                color: a.status === 'present' ? 'var(--color-success)' : 'var(--color-error)'
-                              }} 
-                            />
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Chip 
+                                size="small" 
+                                label={a.status === 'present' ? t('att.presentBtn') : t('att.absentBtn')}
+                                sx={{ 
+                                  height: 22, 
+                                  fontSize: '0.65rem', 
+                                  fontWeight: 700, 
+                                  textTransform: 'uppercase',
+                                  bgcolor: a.status === 'present' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                                  color: a.status === 'present' ? 'var(--color-success)' : 'var(--color-error)'
+                                }} 
+                              />
+                              <IconButton
+                                size="small"
+                                onClick={() => handleToggleStatus(rec.id, rec.attendance, a)}
+                                sx={{ color: 'var(--color-primary)', bgcolor: 'rgba(99,102,241,0.05)', '&:hover': { bgcolor: 'rgba(99,102,241,0.1)' } }}
+                                title="Toggle Status"
+                              >
+                                <EditIcon sx={{ fontSize: 16 }} />
+                              </IconButton>
+                            </Box>
                           </Box>
                         ))}
                       </Box>
