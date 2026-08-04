@@ -108,8 +108,7 @@ function CellLeaderDashboardInner({ user, onLogout }) {
       setStats(prev => ({ ...prev, totalMembers: cellMems.length }));
     });
 
-    const qAttendance = query(collection(db, 'attendance'), where('cellLeaderId', '==', user.id));
-    const unsubAttendance = onSnapshot(qAttendance, (snap) => {
+    const unsubAttendance = onSnapshot(collection(db, 'attendance'), (snap) => {
       let totalAttCount = 0;
       let presentCount = 0;
       
