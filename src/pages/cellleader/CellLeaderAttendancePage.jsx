@@ -99,6 +99,7 @@ function CellLeaderAttendancePage({ user, onBack }) {
       }, { merge: true });
       setIsSubmitted(true);
       setSnackbarOpen(true);
+      alert("Saved Successfully!");
     } else {
       alert(t('att.addFirst') || "Please mark attendance before saving.");
     }
