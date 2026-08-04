@@ -89,7 +89,7 @@ function CellLeaderAttendancePage({ user, onBack }) {
         updatedAt: new Date()
       }, { merge: true });
       setSnackbarOpen(true);
-      alert("Attendance marked successfully!");
+      alert("Saved Successfully!");
     } else {
       alert(t('att.addFirst') || "Please mark attendance before saving.");
     }
@@ -305,7 +305,7 @@ function CellLeaderAttendancePage({ user, onBack }) {
                 onClick={handleSave}
                 sx={{ mt: 1, py: 1.5, borderRadius: 1, fontWeight: 800, fontSize: '1rem', bgcolor: 'var(--color-success)', '&:hover': { bgcolor: '#059669' } }}
               >
-                {t('att.saveAttendance') || "Save Attendance"}
+                Submit Cell Attendance
               </Button>
             )}
           </Box>
