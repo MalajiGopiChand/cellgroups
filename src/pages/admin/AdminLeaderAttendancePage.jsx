@@ -79,6 +79,7 @@ function AdminLeaderAttendancePage({ onBack }) {
         updatedAt: new Date()
       }, { merge: true });
       setShowSnackbar(true);
+      alert("Saved successfully!");
     }
   };
 
