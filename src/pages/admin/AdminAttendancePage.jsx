@@ -174,6 +174,9 @@ function AdminAttendancePage({ onBack }) {
                 if (isPresent) familiesPresent++;
                 else familiesAbsent++;
               });
+              
+              const leaderObj = leaders.find(l => l.id === rec.cellLeaderId);
+              const leaderName = leaderObj ? leaderObj.name : 'Unknown Leader';
 
               return (
                 
@@ -199,7 +202,7 @@ function AdminAttendancePage({ onBack }) {
                         <Box>
                           <Typography fontWeight={700} sx={{ color: 'var(--text-primary)' }}>{rec.date}</Typography>
                           <Typography variant="caption" sx={{ color: 'var(--text-secondary)' }}>
-                            {rec.place} • By Leader
+                            {rec.place} • By {leaderName}
                           </Typography>
                         </Box>
                       </Box>

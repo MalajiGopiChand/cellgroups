@@ -131,19 +131,11 @@ function AdminDashboard({ user, onLogout }) {
     });
 
     const unsubAttendance = onSnapshot(collection(db, 'attendance'), (snap) => {
-      const getRecentTuesday = () => {
-        const d = new Date();
-        const day = d.getDay(); // 0 is Sunday, 2 is Tuesday
-        const diff = day >= 2 ? day - 2 : day + 5;
-        d.setDate(d.getDate() - diff);
-        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      };
-      const targetDateStr = getRecentTuesday();
       let todayCount = 0;
       let presentCount = 0;
       snap.forEach(doc => {
         const data = doc.data();
-        if (data.date === targetDateStr && Array.isArray(data.attendance)) {
+        if (Array.isArray(data.attendance)) {
           data.attendance.forEach(record => {
             todayCount++;
             if (record.status === 'present') {
@@ -295,12 +287,12 @@ function AdminDashboard({ user, onLogout }) {
   // Stats cards data
   const statsCards = [
     {
-      title: "Tuesday's Attendance",
+      title: "Overall Attendance",
       value: `${stats.todayAttendance}%`,
       icon: <TrendingUpIcon sx={{ fontSize: 28 }} />,
       color: 'var(--surface-white)',
       bgColor: 'rgba(255,255,255,0.2)',
-      trend: stats.todayCount > 0 ? `${stats.presentCount} / ${stats.todayCount} Present` : 'No data for this Tuesday',
+      trend: stats.todayCount > 0 ? `${stats.presentCount} / ${stats.todayCount} Present` : 'No data available',
       cardBg: 'var(--primary-forest)',
       textColor: 'var(--surface-white)',
       subTextColor: 'rgba(255,255,255,0.8)'
