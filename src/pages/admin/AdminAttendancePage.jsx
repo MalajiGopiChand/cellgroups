@@ -10,11 +10,7 @@ function AdminAttendancePage({ onBack }) {
   const [leaders, setLeaders] = useState([]);
   const [filterLeader, setFilterLeader] = useState('');
   const [filterPlace, setFilterPlace] = useState('');
-  const getLocalDate = () => {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  };
-  const [filterDate, setFilterDate] = useState(getLocalDate());
+  const [filterDate, setFilterDate] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -45,7 +41,8 @@ function AdminAttendancePage({ onBack }) {
             return { id: d.id, ...data, attendance: filteredArr };
           })
           // Completely hide attendance logs if the Cell Leader is deleted OR the roster is entirely empty
-          .filter(rec => validLeaderIds.has(rec.cellLeaderId) && rec.attendance.length > 0);
+          .filter(rec => validLeaderIds.has(rec.cellLeaderId) && rec.attendance.length > 0)
+          .sort((a, b) => new Date(b.date) - new Date(a.date));
         
         setAttendance(cleanedAttendance);
         setLeaders(leadersSnap.docs.map(d => ({ id: d.id, ...d.data() })));
@@ -84,7 +81,7 @@ function AdminAttendancePage({ onBack }) {
   const filtered = attendance.filter(a => {
     if (filterLeader && a.cellLeaderId !== filterLeader) return false;
     if (filterPlace && a.place !== filterPlace) return false;
-    if (a.date !== filterDate) return false;
+    if (filterDate && a.date !== filterDate) return false;
     return true;
   });
 
