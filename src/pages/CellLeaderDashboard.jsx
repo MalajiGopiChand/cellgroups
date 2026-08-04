@@ -108,23 +108,26 @@ function CellLeaderDashboardInner({ user, onLogout }) {
       setStats(prev => ({ ...prev, totalMembers: cellMems.length }));
     });
 
-    const getLocalDate = () => {
-      const d = new Date();
-      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    };
-    const todayStr = getLocalDate();
-    const docRefId = `${user.id}_${user.place}_${todayStr}`;
-    
-    const unsubAttendance = onSnapshot(doc(db, 'attendance', docRefId), (docSnap) => {
-      if (docSnap.exists() && docSnap.data().attendance) {
-        const attArray = docSnap.data().attendance;
-        if (attArray.length > 0) {
-          const presentCount = attArray.filter(a => a.status === 'present').length;
-          const rate = Math.round((presentCount / attArray.length) * 100);
-          setStats(prev => ({ ...prev, todayAttendance: rate, presentCount, totalAttCount: attArray.length, attendanceTaken: true }));
-        } else {
-          setStats(prev => ({ ...prev, todayAttendance: 0, presentCount: 0, totalAttCount: 0, attendanceTaken: false }));
+    const qAttendance = query(collection(db, 'attendance'), where('cellLeaderId', '==', user.id));
+    const unsubAttendance = onSnapshot(qAttendance, (snap) => {
+      let totalAttCount = 0;
+      let presentCount = 0;
+      
+      snap.forEach(docSnap => {
+        const data = docSnap.data();
+        if (Array.isArray(data.attendance)) {
+          data.attendance.forEach(record => {
+            totalAttCount++;
+            if (record.status === 'present') {
+              presentCount++;
+            }
+          });
         }
+      });
+      
+      if (totalAttCount > 0) {
+        const rate = Math.round((presentCount / totalAttCount) * 100);
+        setStats(prev => ({ ...prev, todayAttendance: rate, presentCount, totalAttCount, attendanceTaken: true }));
       } else {
         setStats(prev => ({ ...prev, todayAttendance: 0, presentCount: 0, totalAttCount: 0, attendanceTaken: false }));
       }
@@ -246,12 +249,12 @@ function CellLeaderDashboardInner({ user, onLogout }) {
 
   const statsCards = [
     {
-      title: t('dash.todayAtt'),
+      title: "Overall Attendance",
       value: stats.attendanceTaken ? `${stats.todayAttendance}%` : '--',
       icon: <TrendingUpIcon sx={{ fontSize: 28 }} />,
       color: 'var(--surface-white)',
       bgColor: 'rgba(255,255,255,0.2)',
-      trend: stats.attendanceTaken ? `${stats.presentCount} / ${stats.totalAttCount} ${t('dash.present')}` : t('dash.notMarked'),
+      trend: stats.attendanceTaken ? `${stats.presentCount} / ${stats.totalAttCount} ${t('dash.present')}` : "No data available",
       cardBg: 'var(--primary-forest)',
       textColor: 'var(--surface-white)',
       subTextColor: 'rgba(255,255,255,0.8)'
