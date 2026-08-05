@@ -1,8 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './InstallInstructions.css';
 
 function InstallInstructions() {
   const [show, setShow] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
+
+  useEffect(() => {
+    // Check if running as a PWA (standalone mode)
+    const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    setIsStandalone(isPWA);
+  }, []);
+
+  if (isStandalone) return null;
 
   return (
     <>

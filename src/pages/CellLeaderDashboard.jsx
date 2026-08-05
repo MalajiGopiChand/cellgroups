@@ -37,6 +37,7 @@ import {
 
 import { collection, onSnapshot, query, where, doc } from 'firebase/firestore';
 import { db } from '../firebase/config';
+import { getTuesdayWeekDetails } from '../utils/dateUtils';
 
 import CellLeaderHomePage from './cellleader/CellLeaderHomePage';
 import CellLeaderAddMemberPage from './cellleader/CellLeaderAddMemberPage';
@@ -46,6 +47,7 @@ import CellLeaderSubmitPrayerRequestPage from './cellleader/CellLeaderSubmitPray
 import CellLeaderViewPrayerRequestsPage from './cellleader/CellLeaderViewPrayerRequestsPage';
 import CellLeaderReportCardPage from './cellleader/CellLeaderReportCardPage';
 import CellLeaderMeetingPlacePage from './cellleader/CellLeaderMeetingPlacePage';
+import CellLeaderTestimoniesPage from './cellleader/CellLeaderTestimoniesPage';
 import MobileBottomNav from '../components/MobileBottomNav';
 import BirthdaysView from '../components/BirthdaysView';
 import BirthdayNotificationBar from '../components/BirthdayNotificationBar';
@@ -55,7 +57,9 @@ import {
   VolunteerActivism as PrayerIcon,
   Assessment as ReportIcon,
   LocationOn as LocationIcon,
-  FormatListBulleted as ListIcon
+  FormatListBulleted as ListIcon,
+  Announcement as AnnouncementIcon,
+  Comment as CommentIcon
 } from '@mui/icons-material';
 
 function CellLeaderDashboardInner({ user, onLogout }) {
@@ -94,6 +98,13 @@ function CellLeaderDashboardInner({ user, onLogout }) {
     attendanceTaken: false
   });
 
+  const [announcements, setAnnouncements] = useState([]);
+  const [prayers, setPrayers] = useState([]);
+  const [currentPrayerIndex, setCurrentPrayerIndex] = useState(0);
+
+  const [testimonies, setTestimonies] = useState([]);
+  const [currentTestimonyIndex, setCurrentTestimonyIndex] = useState(0);
+
   useEffect(() => {
     sessionStorage.setItem('CellLeaderDashboard_currentTab', currentTab.toString());
   }, [currentTab]);
@@ -108,19 +119,22 @@ function CellLeaderDashboardInner({ user, onLogout }) {
       setStats(prev => ({ ...prev, totalMembers: cellMems.length }));
     });
 
-    const unsubAttendance = onSnapshot(collection(db, 'attendance'), (snap) => {
+    // Fetch attendance stats for this leader
+    const { tuesdayWeekStartDate } = getTuesdayWeekDetails();
+    const qAtt = query(collection(db, 'memberAttendance'), 
+      where('leaderId', '==', user.id),
+      where('tuesdayWeekStartDate', '==', tuesdayWeekStartDate)
+    );
+    
+    const unsubAttendance = onSnapshot(qAtt, (snap) => {
       let totalAttCount = 0;
       let presentCount = 0;
       
       snap.forEach(docSnap => {
         const data = docSnap.data();
-        if (Array.isArray(data.attendance)) {
-          data.attendance.forEach(record => {
-            totalAttCount++;
-            if (record.status === 'present') {
-              presentCount++;
-            }
-          });
+        totalAttCount++;
+        if (data.status === 'present') {
+          presentCount++;
         }
       });
       
@@ -132,11 +146,77 @@ function CellLeaderDashboardInner({ user, onLogout }) {
       }
     });
 
+    const qPrayers = query(collection(db, 'prayer_requests'));
+    const unsubPrayers = onSnapshot(qPrayers, (snap) => {
+      let data = snap.docs.map(d => d.data());
+      
+      // Filter for past 10 days only
+      const tenDaysAgo = new Date();
+      tenDaysAgo.setDate(tenDaysAgo.getDate() - 10);
+      const tenDaysAgoSeconds = Math.floor(tenDaysAgo.getTime() / 1000);
+      
+      data = data.filter(p => (p.timestamp?.seconds || 0) >= tenDaysAgoSeconds);
+      data.sort((a,b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+      setPrayers(data);
+    });
+
+    const qAnnouncements = query(collection(db, 'announcements'));
+    const unsubAnnouncements = onSnapshot(qAnnouncements, (snap) => {
+      const data = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+        .filter(a => a.recipientType === 'all' || a.cellLeaderId === user?.id)
+        .sort((a, b) => {
+          const da = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+          const db_ = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+          return db_ - da;
+        });
+      setAnnouncements(data);
+    });
+
+    const qTestimonies = query(collection(db, 'reports'), where('hasTestimony', '==', true));
+    const unsubTestimonies = onSnapshot(qTestimonies, (snap) => {
+      let data = snap.docs.map(d => d.data());
+      // Filter for past 30 days for testimonies
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const thirtyDaysAgoSeconds = Math.floor(thirtyDaysAgo.getTime() / 1000);
+      data = data.filter(t => (t.timestamp?.seconds || 0) >= thirtyDaysAgoSeconds);
+      data.sort((a,b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+      setTestimonies(data);
+    });
+
     return () => {
       unsubMembers();
       unsubAttendance();
+      unsubPrayers();
+      unsubAnnouncements();
+      unsubTestimonies();
     };
   }, [user?.id, user?.place]);
+
+  useEffect(() => {
+    if (prayers.length === 0) return;
+    const interval = setInterval(() => {
+      setCurrentPrayerIndex(prev => (prev + 1) % prayers.length);
+    }, 15000); // Scroll every 15 seconds
+    return () => clearInterval(interval);
+  }, [prayers]);
+
+  useEffect(() => {
+    if (testimonies.length === 0) return;
+    
+    let intervalId;
+    const timeoutId = setTimeout(() => {
+      setCurrentTestimonyIndex(prev => (prev + 1) % testimonies.length);
+      intervalId = setInterval(() => {
+        setCurrentTestimonyIndex(prev => (prev + 1) % testimonies.length);
+      }, 15000);
+    }, 7500); // 7.5 seconds stagger
+
+    return () => {
+      clearTimeout(timeoutId);
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [testimonies]);
 
   const navButtons = [
     // --- Bottom Nav Items ---
@@ -151,20 +231,11 @@ function CellLeaderDashboardInner({ user, onLogout }) {
     },
     {
       id: 5,
-      label: 'Submit Prayer',
+      label: t('nav.submitPrayer'),
       icon: <PrayerIcon />,
       color: 'var(--text-gold)',
       bgColor: 'var(--surface-gold)',
-      description: 'Submit request',
-      isBottomNav: true
-    },
-    {
-      id: 8,
-      label: 'View Prayers',
-      icon: <ListIcon />,
-      color: 'var(--text-gold)',
-      bgColor: 'var(--surface-gold)',
-      description: 'View requests',
+      description: t('desc.submitPrayer'),
       isBottomNav: true
     },
     {
@@ -213,11 +284,11 @@ function CellLeaderDashboardInner({ user, onLogout }) {
     },
     {
       id: 7,
-      label: 'Meeting Place',
+      label: t('nav.meetingPlace'),
       icon: <LocationIcon />,
       color: 'var(--alert-dot)',
       bgColor: 'rgba(207, 138, 66, 0.1)',
-      description: 'Set location'
+      description: t('desc.setLocation')
     }
   ];
 
@@ -233,6 +304,7 @@ function CellLeaderDashboardInner({ user, onLogout }) {
         case 6: return <CellLeaderReportCardPage user={user} onBack={() => setCurrentTab(0)} />;
         case 7: return <CellLeaderMeetingPlacePage user={user} onBack={() => setCurrentTab(0)} />;
         case 8: return <CellLeaderViewPrayerRequestsPage user={user} onBack={() => setCurrentTab(0)} />;
+        case 9: return <CellLeaderTestimoniesPage onBack={() => setCurrentTab(0)} />;
         default: return <CellLeaderHomePage user={user} />;
       }
     })();
@@ -248,7 +320,7 @@ function CellLeaderDashboardInner({ user, onLogout }) {
 
   const statsCards = [
     {
-      title: "Overall Attendance",
+      title: t('dash.tuesdayAtt'),
       value: stats.attendanceTaken ? `${stats.todayAttendance}%` : '--',
       icon: <TrendingUpIcon sx={{ fontSize: 28 }} />,
       color: 'var(--surface-white)',
@@ -326,30 +398,161 @@ function CellLeaderDashboardInner({ user, onLogout }) {
             {currentTab === 0 && (
               
                 <Box sx={{ mb: 4 }}>
-                  <Typography variant="h6" className="font-playfair" sx={{ fontSize: 22, fontWeight: 700, color: 'var(--text-deep)', mb: 2 }}>
-                    {t('dash.overview')}
-                  </Typography>
-                  <Grid container spacing={isMobile ? 1.5 : 2}>
+                  <Grid container spacing={isMobile ? 1 : 2}>
                     {statsCards.map((stat, index) => (
-                      <Grid item xs={12} sm={6} md={6} key={index}>
+                      <Grid item xs={6} sm={6} md={prayers.length > 0 ? 3 : 6} key={index}>
                         <Card sx={{ 
                           borderRadius: 1, 
                           background: stat.cardBg, 
                           backdropFilter: 'blur(12px)', 
-                          border: stat.cardBg === 'var(--primary-forest)' ? 'none' : '1px solid var(--border-neutral)' 
+                          border: stat.cardBg === 'var(--primary-forest)' ? 'none' : '1px solid var(--border-neutral)',
+                          height: '100%'
                         }}>
-                          <CardContent sx={{ p: isMobile ? 2 : 2.5, '&:last-child': { pb: isMobile ? 2 : 2.5 } }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: isMobile ? 1.5 : 2 }}>
-                              <Avatar sx={{ bgcolor: stat.bgColor, color: stat.color, width: 48, height: 48, borderRadius: 1 }}>{stat.icon}</Avatar>
-                              {stat.trend && <Chip size="small" label={stat.trend} sx={{ fontSize: '0.65rem', bgcolor: stat.cardBg === 'var(--primary-forest)' ? 'rgba(255,255,255,0.15)' : 'var(--light-sage)', color: stat.cardBg === 'var(--primary-forest)' ? '#fff' : 'var(--text-sage)', height: 22, border: 'none' }} />}
+                          <CardContent sx={{ p: isMobile ? 2 : 2.5, '&:last-child': { pb: isMobile ? 2 : 2.5 }, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 1.5 }}>
+                              <Box>
+                                <Typography variant="h4" sx={{ fontWeight: 800, color: stat.textColor, lineHeight: 1, mb: 0.5, fontSize: isMobile ? '1.5rem' : '2.125rem' }}>
+                                  {stat.value}
+                                </Typography>
+                                <Typography variant="body2" sx={{ color: stat.subTextColor, fontWeight: 600, fontSize: isMobile ? '0.75rem' : '0.875rem', lineHeight: 1.2 }}>
+                                  {stat.title}
+                                </Typography>
+                              </Box>
+                              <Avatar sx={{ bgcolor: stat.bgColor, color: stat.color, width: isMobile ? 40 : 48, height: isMobile ? 40 : 48, borderRadius: 2 }}>
+                                {React.cloneElement(stat.icon, { sx: { fontSize: isMobile ? 22 : 28 } })}
+                              </Avatar>
                             </Box>
-                            <Typography variant="h4" sx={{ fontWeight: 800, color: stat.textColor, mb: 0.5 }}>{stat.value}</Typography>
-                            <Typography variant="body2" sx={{ color: stat.subTextColor, fontWeight: 500 }}>{stat.title}</Typography>
+                            {stat.trend && (
+                              <Box sx={{ mt: 2 }}>
+                                <Chip size="small" label={stat.trend} sx={{ fontSize: isMobile ? '0.65rem' : '0.75rem', fontWeight: 600, bgcolor: stat.cardBg === 'var(--primary-forest)' ? 'rgba(255,255,255,0.15)' : 'var(--light-sage)', color: stat.cardBg === 'var(--primary-forest)' ? '#fff' : 'var(--text-sage)', height: 24, borderRadius: 1, border: 'none' }} />
+                              </Box>
+                            )}
                           </CardContent>
                         </Card>
                       </Grid>
                     ))}
+
+                    {prayers.length > 0 && (
+                      <Grid item xs={12} sm={12} md={6}>
+                        <Card 
+                          onClick={() => setCurrentTab(8)}
+                          sx={{ 
+                            borderRadius: 1, 
+                            border: '1px solid var(--border-neutral)', 
+                            background: 'rgba(255,255,255,0.75)', 
+                            backdropFilter: 'blur(12px)',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            transition: 'all 0.2s',
+                            '&:hover': {
+                              background: 'rgba(255,255,255,0.95)',
+                              borderColor: 'var(--text-gold)'
+                            }
+                          }}
+                        >
+                          <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', p: isMobile ? 1.5 : 2.5, '&:last-child': { pb: isMobile ? 1.5 : 2.5 } }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
+                              <Avatar sx={{ bgcolor: 'var(--surface-gold)', color: 'var(--text-gold)', width: isMobile ? 32 : 36, height: isMobile ? 32 : 36, borderRadius: 1 }}>
+                                <PrayerIcon sx={{ fontSize: isMobile ? 18 : 20 }} />
+                              </Avatar>
+                              <Typography variant={isMobile ? "subtitle1" : "h6"} className="font-playfair" sx={{ fontWeight: 700, color: 'var(--text-deep)' }}>
+                                {t('dash.recentPrayers')}
+                              </Typography>
+                              <Chip className="live-badge-glow" size="small" label={t('dash.live')} sx={{ ml: 'auto', bgcolor: 'rgba(239,68,68,0.1)', color: '#ef4444', fontWeight: 700, height: 20, fontSize: '0.65rem', border: 'none' }} />
+                            </Box>
+
+                            <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                              <Fade in={true} key={currentPrayerIndex} timeout={800}>
+                                <Box sx={{ width: '100%', textAlign: 'center', px: 1 }}>
+                                  <Typography variant="body1" sx={{ color: 'var(--text-primary)', fontStyle: 'italic', mb: 1, fontSize: isMobile ? '0.9rem' : '1.05rem', lineHeight: 1.5 }}>
+                                    "{prayers[currentPrayerIndex].description}"
+                                  </Typography>
+                                  <Typography variant="subtitle2" sx={{ color: 'var(--text-gold)', fontWeight: 800, fontSize: isMobile ? '0.8rem' : '0.875rem' }}>
+                                    — {prayers[currentPrayerIndex].personName}
+                                  </Typography>
+                                </Box>
+                              </Fade>
+                            </Box>
+                          </CardContent>
+                        </Card>
+                      </Grid>
+                    )}
+
+                    {testimonies.length > 0 && (
+                      <Grid item xs={12} sm={12} md={6}>
+                        <Card 
+                          onClick={() => setCurrentTab(9)}
+                          sx={{ 
+                            borderRadius: 1, 
+                            border: '1px solid var(--border-neutral)', 
+                            background: 'rgba(255,255,255,0.75)', 
+                            backdropFilter: 'blur(12px)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            '&:hover': {
+                              background: 'rgba(255,255,255,0.95)',
+                              borderColor: 'var(--primary-forest)'
+                            }
+                          }}
+                        >
+                          <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', p: isMobile ? 1.5 : 2.5, '&:last-child': { pb: isMobile ? 1.5 : 2.5 } }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
+                              <Avatar sx={{ bgcolor: 'var(--surface-sage)', color: 'var(--primary-forest)', width: isMobile ? 32 : 36, height: isMobile ? 32 : 36, borderRadius: 1 }}>
+                                <CommentIcon sx={{ fontSize: isMobile ? 18 : 20 }} />
+                              </Avatar>
+                              <Typography variant={isMobile ? "subtitle1" : "h6"} className="font-playfair" sx={{ fontWeight: 700, color: 'var(--text-deep)' }}>
+                                {t('nav.testimonies')}
+                              </Typography>
+                              <Chip className="live-badge-glow" size="small" label={t('dash.live')} sx={{ ml: 'auto', bgcolor: 'rgba(239,68,68,0.1)', color: '#ef4444', fontWeight: 700, height: 20, fontSize: '0.65rem', border: 'none' }} />
+                            </Box>
+
+                            <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                              <Fade in={true} key={currentTestimonyIndex} timeout={800}>
+                                <Box sx={{ width: '100%', textAlign: 'center', px: 1 }}>
+                                  <Typography variant="body1" sx={{ color: 'var(--text-primary)', fontStyle: 'italic', mb: 1, fontSize: isMobile ? '0.9rem' : '1.05rem', lineHeight: 1.5 }}>
+                                    "{testimonies[currentTestimonyIndex].testimonyDetails}"
+                                  </Typography>
+                                  <Typography variant="subtitle2" sx={{ color: 'var(--primary-forest)', fontWeight: 800, fontSize: isMobile ? '0.8rem' : '0.875rem' }}>
+                                    — {testimonies[currentTestimonyIndex].testimonyName}
+                                  </Typography>
+                                </Box>
+                              </Fade>
+                            </Box>
+                          </CardContent>
+                        </Card>
+                      </Grid>
+                    )}
                   </Grid>
+
+                  {announcements.length > 0 && (
+                    <Card sx={{ 
+                      mt: 2, 
+                      bgcolor: 'var(--bg-glass-strong)', 
+                      backdropFilter: 'blur(12px)',
+                      borderRadius: 1,
+                      border: '1px solid var(--border-light)',
+                      position: 'relative',
+                      overflow: 'hidden'
+                    }}>
+                      <Box sx={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, bgcolor: announcements[0].recipientType === 'all' ? 'var(--color-success)' : 'var(--color-primary)' }} />
+                      <CardContent sx={{ p: 2, '&:last-child': { pb: 2 }, display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Avatar sx={{ bgcolor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', width: 40, height: 40 }}>
+                          <AnnouncementIcon />
+                        </Avatar>
+                        <Box sx={{ flexGrow: 1 }}>
+                          <Typography variant="subtitle1" sx={{ fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.2, mb: 0.5 }}>
+                            {announcements[0].title}
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: 'var(--text-secondary)' }}>
+                            {announcements[0].message}
+                          </Typography>
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  )}
                 </Box>
               
             )}
@@ -360,10 +563,11 @@ function CellLeaderDashboardInner({ user, onLogout }) {
                 <Typography variant="h6" className="font-playfair" sx={{ fontSize: 22, fontWeight: 700, color: 'var(--text-deep)', mb: 2 }}>
                   {t('dash.quickActions')}
                 </Typography>
-                <Grid container spacing={isMobile ? 1.5 : 2}>
-                  {navButtons.filter(b => b.id !== 0).map((button) => (
-                    <Grid item xs={6} sm={6} md={3} key={button.id}>
+                <Grid container spacing={isMobile ? 1 : 2}>
+                  {navButtons.filter(b => b.id !== 0 && (!isMobile || !b.isBottomNav)).map((button) => (
+                    <Grid item xs={4} sm={4} md={3} key={button.id}>
                       <Card
+                        className="glass-gradient-card"
                         sx={{
                           cursor: 'pointer',
                           borderRadius: 1,
@@ -377,11 +581,11 @@ function CellLeaderDashboardInner({ user, onLogout }) {
                         }}
                         onClick={() => setCurrentTab(button.id)}
                       >
-                        <CardContent sx={{ textAlign: 'center', p: isMobile ? 1.5 : 2.5, position: 'relative', '&:last-child': { pb: isMobile ? 1.5 : 2.5 } }}>
-                          <Avatar sx={{ bgcolor: currentTab === button.id ? 'rgba(255, 255, 255, 0.2)' : button.bgColor, color: currentTab === button.id ? '#fff' : button.color, width: 56, height: 56, margin: '0 auto', mb: 1.5, transition: 'all 0.3s ease' }}>
-                            {button.icon}
+                        <CardContent sx={{ textAlign: 'center', p: isMobile ? 1 : 2.5, position: 'relative', '&:last-child': { pb: isMobile ? 1 : 2.5 } }}>
+                          <Avatar sx={{ bgcolor: currentTab === button.id ? 'rgba(255, 255, 255, 0.2)' : button.bgColor, color: currentTab === button.id ? '#fff' : button.color, width: isMobile ? 36 : 56, height: isMobile ? 36 : 56, margin: '0 auto', mb: isMobile ? 0.5 : 1.5, transition: 'all 0.3s ease' }}>
+                            {React.cloneElement(button.icon, { sx: { fontSize: isMobile ? 20 : 24 } })}
                           </Avatar>
-                          <Typography variant="body1" sx={{ fontWeight: 700, color: currentTab === button.id ? '#fff' : 'var(--text-primary)', mb: 0.5 }}>
+                          <Typography variant="body1" sx={{ fontWeight: 700, color: currentTab === button.id ? '#fff' : 'var(--text-primary)', mb: isMobile ? 0 : 0.5, fontSize: isMobile ? '0.7rem' : '1rem', lineHeight: 1.2 }}>
                             {button.label}
                           </Typography>
                           <Typography variant="caption" sx={{ color: currentTab === button.id ? 'rgba(255,255,255,0.8)' : 'var(--text-secondary)', display: isMobile ? 'none' : 'block' }}>

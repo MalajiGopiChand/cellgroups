@@ -19,6 +19,18 @@ import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 
 function CellLeaderMeetingPlacePage({ user, onBack }) {
+  const getUpcomingTuesday = () => {
+    const d = new Date();
+    const day = d.getDay();
+    const daysUntilTuesday = (2 - day + 7) % 7;
+    d.setDate(d.getDate() + daysUntilTuesday);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+  const getLocalDate = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+  const [selectedDate, setSelectedDate] = useState(getUpcomingTuesday());
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [successMsg, setSuccessMsg] = useState('');
@@ -26,8 +38,10 @@ function CellLeaderMeetingPlacePage({ user, onBack }) {
   
   useEffect(() => {
     const fetchPlace = async () => {
+      setFetching(true);
+      setMeetingPlace('');
       try {
-        const docRef = doc(db, 'meeting_places', user.id);
+        const docRef = doc(db, 'meeting_places', `${user.id}_${selectedDate}`);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
           setMeetingPlace(docSnap.data().address);
@@ -39,7 +53,7 @@ function CellLeaderMeetingPlacePage({ user, onBack }) {
       }
     };
     if (user?.id) fetchPlace();
-  }, [user?.id]);
+  }, [user?.id, selectedDate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -55,10 +69,11 @@ function CellLeaderMeetingPlacePage({ user, onBack }) {
     }
 
     try {
-      await setDoc(doc(db, 'meeting_places', user.id), {
+      await setDoc(doc(db, 'meeting_places', `${user.id}_${selectedDate}`), {
         leaderId: user.id,
         leaderName: user.name,
         address: address,
+        date: selectedDate,
         timestamp: new Date()
       });
       setSuccessMsg('Meeting place saved successfully.');
@@ -96,14 +111,34 @@ function CellLeaderMeetingPlacePage({ user, onBack }) {
             <Typography>Loading...</Typography>
           ) : (
             <form onSubmit={handleSubmit}>
-              <TextField 
-                label="Cell Leader Name" 
-                value={user.name}
-                fullWidth 
-                disabled
-                InputProps={{ startAdornment: <InputAdornment position="start"><PersonIcon sx={{ color: 'var(--text-tertiary)' }} /></InputAdornment> }}
-                sx={{ mb: 3, '& .MuiOutlinedInput-root': { borderRadius: 1, bgcolor: 'var(--bg-surface)' } }} 
-              />
+              <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+                <TextField 
+                  label="Cell Leader Name" 
+                  value={user.name}
+                  fullWidth 
+                  disabled
+                  InputProps={{ startAdornment: <InputAdornment position="start"><PersonIcon sx={{ color: 'var(--text-tertiary)' }} /></InputAdornment> }}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1, bgcolor: 'var(--bg-surface)' } }} 
+                />
+                <TextField 
+                  label="Date (Tuesdays Only)"
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => {
+                    const selectedDateObj = new Date(e.target.value);
+                    if (selectedDateObj.getDay() !== 2) {
+                      alert("Please select a Tuesday for the meeting.");
+                      return;
+                    }
+                    setSelectedDate(e.target.value);
+                  }}
+                  fullWidth
+                  required
+                  InputLabelProps={{ shrink: true }}
+                  inputProps={{ min: getLocalDate() }}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1, bgcolor: 'var(--bg-surface)' } }} 
+                />
+              </Box>
               
               <TextField 
                 name="meetingPlace" 
@@ -112,7 +147,8 @@ function CellLeaderMeetingPlacePage({ user, onBack }) {
                 required 
                 multiline
                 rows={3}
-                defaultValue={meetingPlace}
+                value={meetingPlace}
+                onChange={(e) => setMeetingPlace(e.target.value)}
                 placeholder="House No.14,&#10;ABC Colony,&#10;Hyderabad."
                 InputProps={{ startAdornment: <InputAdornment position="start" sx={{ alignSelf: 'flex-start', mt: 1.5 }}><LocationIcon sx={{ color: 'var(--color-primary)' }} /></InputAdornment> }}
                 sx={{ mb: 3, '& .MuiOutlinedInput-root': { borderRadius: 1, bgcolor: 'var(--bg-surface)' } }} 

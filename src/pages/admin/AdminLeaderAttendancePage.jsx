@@ -2,8 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import html2canvas from 'html2canvas';
 import { Box, Typography, Paper, Fade, Button, IconButton, Chip, CircularProgress, Snackbar, Alert } from '@mui/material';
 import { ArrowBack as ArrowBackIcon, PersonOutline as PersonIcon } from '@mui/icons-material';
-import { collection, getDocs, doc, setDoc, getDoc, query, where } from 'firebase/firestore';
+import { collection, getDocs, doc, setDoc, getDoc, query, where, writeBatch } from 'firebase/firestore';
 import { db } from '../../firebase/config';
+import { getTuesdayWeekDetails } from '../../utils/dateUtils';
 
 function AdminLeaderAttendancePage({ onBack }) {
   const [leaders, setLeaders] = useState([]);
@@ -14,6 +15,7 @@ function AdminLeaderAttendancePage({ onBack }) {
   };
   const [selectedDate, setSelectedDate] = useState(getLocalDate());
   const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [showSnackbar, setShowSnackbar] = useState(false);
   const printRef = useRef(null);
 
@@ -50,9 +52,21 @@ function AdminLeaderAttendancePage({ onBack }) {
     const fetchAttendance = async () => {
       setAttendance([]); // Clear data instantly when date changes
       try {
-        const ref = doc(db, 'leader_attendance', `admin_leaders_${selectedDate}`);
-        const snap = await getDoc(ref);
-        setAttendance(snap.exists() ? (snap.data().attendance || []) : []);
+        const q = query(collection(db, 'leaderAttendance'), where('date', '==', selectedDate));
+        const snap = await getDocs(q);
+        
+        if (!snap.empty) {
+          const records = snap.docs.map(d => {
+            const data = d.data();
+            return {
+              leaderId: data.leaderId,
+              name: data.leaderName,
+              place: data.place,
+              status: data.status
+            };
+          });
+          setAttendance(records);
+        }
       } catch (error) {
         console.error('Error fetching leader attendance:', error);
       }
@@ -73,13 +87,38 @@ function AdminLeaderAttendancePage({ onBack }) {
 
   const handleSave = async () => {
     if (attendance.length > 0) {
-      await setDoc(doc(db, 'leader_attendance', `admin_leaders_${selectedDate}`), {
-        date: selectedDate,
-        attendance: attendance,
-        updatedAt: new Date()
-      }, { merge: true });
-      setShowSnackbar(true);
-      alert("Attendance marked successfully!");
+      setIsSaving(true);
+      try {
+        const { tuesdayWeekStartDate, weekNumber, month, year } = getTuesdayWeekDetails(selectedDate);
+        const batch = writeBatch(db);
+
+        attendance.forEach(record => {
+          const docId = `${record.leaderId}_${selectedDate}`;
+          const ref = doc(db, 'leaderAttendance', docId);
+          batch.set(ref, {
+            attendanceId: docId,
+            leaderId: record.leaderId,
+            leaderName: record.name,
+            place: record.place,
+            status: record.status,
+            date: selectedDate,
+            tuesdayWeekStartDate,
+            weekNumber,
+            month,
+            year,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          }, { merge: true });
+        });
+
+        await batch.commit();
+        setShowSnackbar(true);
+      } catch (error) {
+        console.error("Failed to save leader attendance", error);
+        alert("Failed to save. Please try again.");
+      } finally {
+        setIsSaving(false);
+      }
     }
   };
 
@@ -245,9 +284,10 @@ function AdminLeaderAttendancePage({ onBack }) {
                 variant="contained"
                 fullWidth
                 onClick={handleSave}
-                sx={{ mt: 1, py: 1.5, borderRadius: 1, fontWeight: 800, fontSize: '1rem', bgcolor: 'var(--color-success)', '&:hover': { bgcolor: '#059669' } }}
+                disabled={isSaving}
+                sx={{ mt: 1, py: 1.5, borderRadius: 1, fontWeight: 800, fontSize: '1rem', bgcolor: 'var(--color-success)', '&:hover': { bgcolor: '#059669' }, '&.Mui-disabled': { bgcolor: 'rgba(16,185,129,0.5)', color: '#fff' } }}
               >
-                Save Cell Leader Attendance
+                {isSaving ? 'Saving...' : 'Save Cell Leader Attendance'}
               </Button>
             )}
           </Box>

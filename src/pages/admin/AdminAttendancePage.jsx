@@ -1,51 +1,61 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Paper, FormControl, InputLabel, Select, MenuItem, Fade, Chip, CircularProgress, Divider, IconButton, TextField } from '@mui/material';
-import { EventAvailable as EventIcon, FilterList as FilterIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
-import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { Box, Typography, Paper, FormControl, InputLabel, Select, MenuItem, Fade, Chip, CircularProgress, Divider, IconButton, TextField, Button } from '@mui/material';
+import { EventAvailable as EventIcon, FilterList as FilterIcon, ArrowBack as ArrowBackIcon, Download as DownloadIcon } from '@mui/icons-material';
+import { collection, getDocs, doc, updateDoc, query, orderBy } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { DeleteOutline as DeleteIcon, Edit as EditIcon } from '@mui/icons-material';
+import * as XLSX from 'xlsx';
 
 function AdminAttendancePage({ onBack }) {
   const [attendance, setAttendance] = useState([]);
   const [leaders, setLeaders] = useState([]);
   const [filterLeader, setFilterLeader] = useState('');
   const [filterPlace, setFilterPlace] = useState('');
-  const [filterDate, setFilterDate] = useState('');
+  const getLocalDate = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+  const [filterDate, setFilterDate] = useState(getLocalDate());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetch = async () => {
       try {
-        const [attSnap, leadersSnap, studentsSnap] = await Promise.all([
-          getDocs(collection(db, 'attendance')),
-          getDocs(collection(db, 'cellleaders')),
-          getDocs(collection(db, 'students'))
+        const [attSnap, leadersSnap] = await Promise.all([
+          getDocs(collection(db, 'memberAttendance')),
+          getDocs(collection(db, 'cellleaders'))
         ]);
         
-        // Dynamically track all valid members to filter out any "orphaned" attendance records
-        const validStudentIds = new Set(studentsSnap.docs.map(d => d.id));
-        const validStudentNames = new Set(studentsSnap.docs.map(d => d.data().name));
-        const validLeaderIds = new Set(leadersSnap.docs.map(d => d.id));
+        const leadersData = leadersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
         
-        const cleanedAttendance = attSnap.docs
-          .map(d => {
-            const data = d.data();
-            // Strictly check ID if available to prevent name collision bugs
-            const filteredArr = (data.attendance || []).filter(a => {
-              if (a.studentId && a.studentId.length > 15) {
-                const baseId = a.studentId.split('_')[0];
-                return validStudentIds.has(baseId);
-              }
-              return validStudentNames.has(a.name);
-            });
-            return { id: d.id, ...data, attendance: filteredArr };
-          })
-          // Completely hide attendance logs if the Cell Leader is deleted OR the roster is entirely empty
-          .filter(rec => validLeaderIds.has(rec.cellLeaderId) && rec.attendance.length > 0)
-          .sort((a, b) => new Date(b.date) - new Date(a.date));
+        // Group by leader and date
+        const grouped = {};
         
-        setAttendance(cleanedAttendance);
-        setLeaders(leadersSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+        attSnap.docs.forEach(d => {
+          const data = d.data();
+          const key = `${data.leaderId}_${data.date}`;
+          if (!grouped[key]) {
+            grouped[key] = {
+              id: key,
+              date: data.date,
+              cellLeaderId: data.leaderId,
+              place: data.cellId,
+              attendance: []
+            };
+          }
+          grouped[key].attendance.push({
+            id: d.id,
+            studentId: data.memberId,
+            name: data.memberName,
+            status: data.status
+          });
+        });
+
+        const logs = Object.values(grouped);
+        logs.sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        setAttendance(logs);
+        setLeaders(leadersData);
       } catch (error) {
         console.error('Error fetching attendance logs:', error);
       } finally {
@@ -57,25 +67,22 @@ function AdminAttendancePage({ onBack }) {
 
   const handleToggleStatus = async (recordId, currentArray, studentObj) => {
     try {
+      const newStatus = studentObj.status === 'present' ? 'absent' : 'present';
+      await updateDoc(doc(db, 'memberAttendance', studentObj.id), { status: newStatus });
+
       const updatedArray = currentArray.map(a => {
-        const match = (a.studentId && studentObj.studentId) 
-          ? a.studentId === studentObj.studentId 
-          : a.name === studentObj.name;
-        
-        if (match) {
-          return { ...a, status: a.status === 'present' ? 'absent' : 'present' };
+        if (a.id === studentObj.id) {
+          return { ...a, status: newStatus };
         }
         return a;
       });
 
-      await updateDoc(doc(db, 'attendance', recordId), { attendance: updatedArray });
       setAttendance(prev => prev.map(rec => rec.id === recordId ? { ...rec, attendance: updatedArray } : rec));
     } catch (error) {
       console.error('Error toggling status:', error);
       alert('Failed to update status.');
     }
   };
-
 
   const places = [...new Set(attendance.map(a => a.place))].filter(Boolean).sort();
   const filtered = attendance.filter(a => {
@@ -84,6 +91,34 @@ function AdminAttendancePage({ onBack }) {
     if (filterDate && a.date !== filterDate) return false;
     return true;
   });
+
+  const handleExport = () => {
+    const exportData = [];
+    filtered.forEach(rec => {
+      const leaderObj = leaders.find(l => l.id === rec.cellLeaderId);
+      const leaderName = leaderObj ? leaderObj.name : 'Unknown Leader';
+      
+      rec.attendance.forEach(a => {
+        exportData.push({
+          Date: rec.date,
+          'Cell Leader': leaderName,
+          Place: rec.place,
+          'Member Name': a.name,
+          Status: a.status.toUpperCase()
+        });
+      });
+    });
+
+    if (exportData.length === 0) {
+      alert("No data to export.");
+      return;
+    }
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Attendance");
+    XLSX.writeFile(wb, `Attendance_Export_${new Date().getTime()}.xlsx`);
+  };
 
   if (loading) {
     return (
@@ -96,7 +131,6 @@ function AdminAttendancePage({ onBack }) {
   return (
     
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-        
         
         {/* Sleek Single-Line Filter Card */}
         <Paper 
@@ -125,7 +159,7 @@ function AdminAttendancePage({ onBack }) {
               sx={{ minWidth: 110, flex: 1, '& .MuiOutlinedInput-root': { borderRadius: 1, bgcolor: 'var(--surface-white)' } }}
             />
           </Box>
-          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexGrow: 1 }}>
             <FormControl size="small" sx={{ minWidth: 110, flex: 1, '& .MuiOutlinedInput-root': { borderRadius: 1, bgcolor: 'var(--surface-white)' } }}>
               <InputLabel>Cell Leader</InputLabel>
               <Select 
@@ -149,6 +183,14 @@ function AdminAttendancePage({ onBack }) {
               </Select>
             </FormControl>
           </Box>
+          <Button 
+            variant="contained" 
+            startIcon={<DownloadIcon />} 
+            onClick={handleExport}
+            sx={{ bgcolor: 'var(--primary-forest)', '&:hover': { bgcolor: '#059669' }, borderRadius: 1 }}
+          >
+            Export Excel
+          </Button>
         </Paper>
 
         {/* Attendance Records */}
@@ -158,29 +200,12 @@ function AdminAttendancePage({ onBack }) {
               const presentCount = rec.attendance?.filter(a => a.status === 'present').length || 0;
               const totalCount = rec.attendance?.length || 0;
               
-              const familyStatus = {};
-              rec.attendance?.forEach(a => {
-                const fid = a.familyId || `single_${a.studentId}`;
-                if (!familyStatus[fid]) {
-                  familyStatus[fid] = false;
-                }
-                if (a.status === 'present') {
-                  familyStatus[fid] = true;
-                }
-              });
-              let familiesPresent = 0;
-              let familiesAbsent = 0;
-              Object.values(familyStatus).forEach(isPresent => {
-                if (isPresent) familiesPresent++;
-                else familiesAbsent++;
-              });
-              
               const leaderObj = leaders.find(l => l.id === rec.cellLeaderId);
               const leaderName = leaderObj ? leaderObj.name : 'Unknown Leader';
 
               return (
-                
                   <Paper 
+                    key={rec.id}
                     elevation={0}
                     sx={{ 
                       p: 2, 
@@ -212,11 +237,6 @@ function AdminAttendancePage({ onBack }) {
                           label={`${presentCount}/${totalCount} Members Present`} 
                           sx={{ bgcolor: presentCount > 0 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', color: presentCount > 0 ? 'var(--color-success)' : 'var(--color-error)', fontWeight: 700 }} 
                         />
-                        {(familiesPresent > 0 || familiesAbsent > 0) && (
-                          <Typography variant="caption" sx={{ color: 'var(--text-secondary)', fontWeight: 600 }}>
-                            {familiesPresent} Families Present • {familiesAbsent} Absent
-                          </Typography>
-                        )}
                       </Box>
                     </Box>
 

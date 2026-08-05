@@ -16,6 +16,10 @@ const translations = {
     'nav.announcements': 'Announcements',
     'nav.leaderAttendance': 'Leader Attendance',
     'nav.approvals': 'Approvals',
+    'nav.submitPrayer': 'Submit Prayer',
+    'nav.viewPrayers': 'View Prayers',
+    'nav.meetingPlace': 'Meeting Place',
+    'nav.testimonies': 'Testimonies',
     'nav.logout': 'Logout',
     
     // Descriptions
@@ -33,6 +37,9 @@ const translations = {
     'desc.sendAlerts': 'Send alerts',
     'desc.leaderAtt': 'Leader attendance',
     'desc.pendingReq': 'Pending requests',
+    'desc.submitPrayer': 'Submit request',
+    'desc.viewPrayers': 'View requests',
+    'desc.testimonies': 'View testimonies',
 
     // Home & Dashboard
     'dash.overview': 'Quick Overview',
@@ -42,6 +49,12 @@ const translations = {
     'dash.active': 'Active',
     'dash.notMarked': 'Not marked',
     'dash.present': 'Present',
+    'dash.tuesdayAtt': "Tuesday's Attendance",
+    'dash.recentPrayers': 'Recent Prayer Requests',
+    'dash.live': 'Live',
+    'dash.totalMembers': 'Total Members',
+    'dash.membersTrend': '+12 this month',
+    'dash.noData': 'No data available',
     
     // Add Member Page
     'add.title': 'Add Member / Family',
@@ -68,6 +81,7 @@ const translations = {
     'att.absentBtn': 'Absent',
     'att.savedAlert': 'Attendance Submitted',
     'att.notMarked': 'Not Marked',
+    'att.tuesdayOnly': 'Attendance can only be taken on Tuesdays. Please select a Tuesday date.',
 
     // Birthdays
     'bday.title': 'Birthdays',
@@ -147,6 +161,10 @@ const translations = {
     'nav.announcements': 'ప్రకటనలు',
     'nav.leaderAttendance': 'నాయకుల హాజరు',
     'nav.approvals': 'ఆమోదాలు',
+    'nav.submitPrayer': 'మనవి సమర్పించండి',
+    'nav.viewPrayers': 'మనవులు చూడండి',
+    'nav.meetingPlace': 'సమావేశ స్థలం',
+    'nav.testimonies': 'సాక్ష్యాలు',
     'nav.logout': 'లాగ్ అవుట్',
     
     // Descriptions
@@ -164,6 +182,9 @@ const translations = {
     'desc.sendAlerts': 'ప్రకటనలు పంపండి',
     'desc.leaderAtt': 'నాయకుల హాజరు',
     'desc.pendingReq': 'పెండింగ్లో ఉన్న మనవులు',
+    'desc.submitPrayer': 'మనవి సమర్పించండి',
+    'desc.viewPrayers': 'మనవులు చూడండి',
+    'desc.testimonies': 'సాక్ష్యాలు చూడండి',
 
     // Home & Dashboard
     'dash.overview': 'సంక్షిప్త వివరాలు',
@@ -173,6 +194,12 @@ const translations = {
     'dash.active': 'సక్రియంగా ఉంది',
     'dash.notMarked': 'ఇంకా నమోదు చేయలేదు',
     'dash.present': 'హాజరు',
+    'dash.tuesdayAtt': 'మంగళవారం హాజరు',
+    'dash.recentPrayers': 'ఇటీవలి ప్రార్థన మనవులు',
+    'dash.live': 'లైవ్',
+    'dash.totalMembers': 'మొత్తం సభ్యులు',
+    'dash.membersTrend': 'ఈ నెల +12',
+    'dash.noData': 'సమాచారం అందుబాటులో లేదు',
     
     // Add Member Page
     'add.title': 'సభ్యుడు / కుటుంబాన్ని చేర్చండి',
@@ -199,6 +226,7 @@ const translations = {
     'att.absentBtn': 'గైర్హాజరు',
     'att.savedAlert': 'హాజరు విజయవంతంగా నమోదు చేయబడింది',
     'att.notMarked': 'ఇంకా నమోదు చేయలేదు',
+    'att.tuesdayOnly': 'హాజరు మంగళవారాల్లో మాత్రమే నమోదు చేయవచ్చు. దయచేసి మంగళవారం తేదీని ఎంచుకోండి.',
 
     // Birthdays
     'bday.title': 'పుట్టినరోజులు',

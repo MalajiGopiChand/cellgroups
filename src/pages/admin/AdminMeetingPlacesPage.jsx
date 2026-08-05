@@ -13,16 +13,20 @@ import { downloadAsImage } from '../../utils/downloadImage';
 
 function AdminMeetingPlacesPage({ onBack }) {
   const [places, setPlaces] = useState([]);
+  const getLocalDate = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+  const [filterDate, setFilterDate] = useState(getLocalDate());
   const [loading, setLoading] = useState(true);
-  const [filterDate, setFilterDate] = useState('');
 
   useEffect(() => {
     const q = query(collection(db, 'meeting_places'));
     const unsub = onSnapshot(q, (snap) => {
       const data = snap.docs.map(doc => {
         const docData = doc.data();
-        let dateStr = '';
-        if (docData.timestamp && docData.timestamp.toDate) {
+        let dateStr = docData.date || '';
+        if (!dateStr && docData.timestamp && docData.timestamp.toDate) {
            dateStr = docData.timestamp.toDate().toLocaleDateString('en-GB').replace(/\//g, '-');
         }
         return { id: doc.id, dateStr, ...docData };
@@ -44,8 +48,8 @@ function AdminMeetingPlacesPage({ onBack }) {
     }
   };
 
-  const filteredPlaces = filterDate 
-    ? places.filter(p => p.dateStr === new Date(filterDate).toLocaleDateString('en-GB').replace(/\//g, '-'))
+  const filteredPlaces = filterDate
+    ? places.filter(p => p.date === filterDate)
     : places;
 
   return (

@@ -43,8 +43,10 @@ import {
   HowToReg as HowToRegIcon,
 } from '@mui/icons-material';
 
-import { collection, onSnapshot } from 'firebase/firestore';
+import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '../firebase/config';
+import { getTuesdayWeekDetails } from '../utils/dateUtils';
+import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
 
 // Cellgroups Components
 import AdminHomePage from './admin/AdminHomePage';
@@ -57,6 +59,7 @@ import AdminSubmitPrayerRequestPage from './admin/AdminSubmitPrayerRequestPage';
 import AdminViewPrayerRequestsPage from './admin/AdminViewPrayerRequestsPage';
 import AdminReportCardPage from './admin/AdminReportCardPage';
 import AdminMeetingPlacesPage from './admin/AdminMeetingPlacesPage';
+import AdminTestimoniesPage from './admin/AdminTestimoniesPage';
 import MobileBottomNav from '../components/MobileBottomNav';
 import BirthdaysView from '../components/BirthdaysView';
 import BirthdayNotificationBar from '../components/BirthdayNotificationBar';
@@ -67,7 +70,9 @@ import {
   VolunteerActivism as PrayerIcon,
   Assessment as ReportIcon,
   LocationOn as LocationIcon,
-  FormatListBulleted as ListIcon
+  FormatListBulleted as ListIcon,
+  Star as StarIcon,
+  Comment as CommentIcon
 } from '@mui/icons-material';
 
 function AdminDashboard({ user, onLogout }) {
@@ -103,11 +108,16 @@ function AdminDashboard({ user, onLogout }) {
   const [stats, setStats] = useState({
     pendingApprovals: 0,
     totalMembers: 0,
-    todayAttendance: 0,
     presentCount: 0,
-    todayCount: 0,
+    markedCount: 0,
     activeAnnouncements: 0
   });
+
+  const [prayers, setPrayers] = useState([]);
+  const [currentPrayerIndex, setCurrentPrayerIndex] = useState(0);
+
+  const [testimonies, setTestimonies] = useState([]);
+  const [currentTestimonyIndex, setCurrentTestimonyIndex] = useState(0);
 
   useEffect(() => {
     sessionStorage.setItem('AdminDashboard_currentTab', currentTab.toString());
@@ -130,22 +140,48 @@ function AdminDashboard({ user, onLogout }) {
       setStats(prev => ({ ...prev, activeAnnouncements: snap.size }));
     });
 
-    const unsubAttendance = onSnapshot(collection(db, 'attendance'), (snap) => {
-      let todayCount = 0;
+    const { tuesdayWeekStartDate } = getTuesdayWeekDetails();
+    const qAtt = query(collection(db, 'memberAttendance'), 
+      where('tuesdayWeekStartDate', '==', tuesdayWeekStartDate)
+    );
+
+    const unsubAttendance = onSnapshot(qAtt, (snap) => {
+      let markedCount = 0;
       let presentCount = 0;
       snap.forEach(doc => {
         const data = doc.data();
-        if (Array.isArray(data.attendance)) {
-          data.attendance.forEach(record => {
-            todayCount++;
-            if (record.status === 'present') {
-              presentCount++;
-            }
-          });
+        markedCount++;
+        if (data.status === 'present') {
+          presentCount++;
         }
       });
-      const attendanceRate = todayCount > 0 ? Math.round((presentCount / todayCount) * 100) : 0;
-      setStats(prev => ({ ...prev, todayAttendance: attendanceRate, presentCount, todayCount }));
+      setStats(prev => ({ ...prev, presentCount, markedCount }));
+    });
+
+    const qPrayers = query(collection(db, 'prayer_requests'));
+    const unsubPrayers = onSnapshot(qPrayers, (snap) => {
+      let data = snap.docs.map(d => d.data());
+      
+      // Filter for past 10 days only
+      const tenDaysAgo = new Date();
+      tenDaysAgo.setDate(tenDaysAgo.getDate() - 10);
+      const tenDaysAgoSeconds = Math.floor(tenDaysAgo.getTime() / 1000);
+      
+      data = data.filter(p => (p.timestamp?.seconds || 0) >= tenDaysAgoSeconds);
+      data.sort((a,b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+      setPrayers(data);
+    });
+
+    const qTestimonies = query(collection(db, 'reports'), where('hasTestimony', '==', true));
+    const unsubTestimonies = onSnapshot(qTestimonies, (snap) => {
+      let data = snap.docs.map(d => d.data());
+      // Filter for past 30 days for testimonies
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const thirtyDaysAgoSeconds = Math.floor(thirtyDaysAgo.getTime() / 1000);
+      data = data.filter(t => (t.timestamp?.seconds || 0) >= thirtyDaysAgoSeconds);
+      data.sort((a,b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+      setTestimonies(data);
     });
 
     return () => {
@@ -153,8 +189,35 @@ function AdminDashboard({ user, onLogout }) {
       unsubStudents();
       unsubAnnouncements();
       unsubAttendance();
+      unsubPrayers();
+      unsubTestimonies();
     };
   }, []);
+
+  useEffect(() => {
+    if (prayers.length === 0) return;
+    const interval = setInterval(() => {
+      setCurrentPrayerIndex(prev => (prev + 1) % prayers.length);
+    }, 15000); // Scroll every 15 seconds
+    return () => clearInterval(interval);
+  }, [prayers]);
+
+  useEffect(() => {
+    if (testimonies.length === 0) return;
+    
+    let intervalId;
+    const timeoutId = setTimeout(() => {
+      setCurrentTestimonyIndex(prev => (prev + 1) % testimonies.length);
+      intervalId = setInterval(() => {
+        setCurrentTestimonyIndex(prev => (prev + 1) % testimonies.length);
+      }, 15000);
+    }, 7500); // 7.5 seconds stagger
+
+    return () => {
+      clearTimeout(timeoutId);
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [testimonies]);
 
   const navButtons = [
     // --- Bottom Nav Items ---
@@ -182,17 +245,16 @@ function AdminDashboard({ user, onLogout }) {
       icon: <PrayerIcon />,
       color: 'var(--text-gold)',
       bgColor: 'var(--surface-gold)',
-      description: 'Submit request',
+      description: t('desc.submitPrayer'),
       isBottomNav: true
     },
     {
       id: 10,
-      label: 'View Prayers',
-      icon: <ListIcon />,
+      label: t('nav.testimonies'),
+      icon: <CommentIcon />,
       color: 'var(--text-gold)',
       bgColor: 'var(--surface-gold)',
-      description: 'View requests',
-      isBottomNav: true
+      description: t('desc.testimonies')
     },
     { 
       id: 2, 
@@ -246,10 +308,10 @@ function AdminDashboard({ user, onLogout }) {
       bgColor: 'rgba(207, 138, 66, 0.1)',
       description: t('desc.birthdays')
     },
-    { 
-      id: 1, 
-      label: t('nav.approvals'), 
-      icon: <ApproveIcon />, 
+    {
+      id: 1,
+      label: t('nav.approvals'),
+      icon: <ApproveIcon />,
       color: 'var(--text-gold)',
       bgColor: 'var(--surface-gold)',
       description: t('desc.pendingReq'),
@@ -270,7 +332,8 @@ function AdminDashboard({ user, onLogout }) {
         case 7: return <AdminSubmitPrayerRequestPage user={user} onBack={() => setCurrentTab(0)} />;
         case 8: return <AdminReportCardPage onBack={() => setCurrentTab(0)} />;
         case 9: return <AdminMeetingPlacesPage onBack={() => setCurrentTab(0)} />;
-        case 10: return <AdminViewPrayerRequestsPage user={user} onBack={() => setCurrentTab(0)} />;
+        case 10: return <AdminTestimoniesPage onBack={() => setCurrentTab(0)} />;
+        case 11: return <AdminViewPrayerRequestsPage user={user} onBack={() => setCurrentTab(0)} />;
         default: return <AdminHomePage />;
       }
     })();
@@ -287,23 +350,23 @@ function AdminDashboard({ user, onLogout }) {
   // Stats cards data
   const statsCards = [
     {
-      title: "Overall Attendance",
-      value: `${stats.todayAttendance}%`,
+      title: t('dash.tuesdayAtt'),
+      value: stats.totalMembers > 0 ? `${Math.round((stats.presentCount / stats.totalMembers) * 100)}%` : '0%',
       icon: <TrendingUpIcon sx={{ fontSize: 28 }} />,
       color: 'var(--surface-white)',
       bgColor: 'rgba(255,255,255,0.2)',
-      trend: stats.todayCount > 0 ? `${stats.presentCount} / ${stats.todayCount} Present` : 'No data available',
+      trend: stats.totalMembers > 0 ? `${stats.presentCount} / ${stats.totalMembers} ${t('dash.present')}` : t('dash.noData'),
       cardBg: 'var(--primary-forest)',
       textColor: 'var(--surface-white)',
       subTextColor: 'rgba(255,255,255,0.8)'
     },
     {
-      title: 'Total Members',
+      title: t('dash.totalMembers'),
       value: stats.totalMembers,
       icon: <PeopleIcon sx={{ fontSize: 28 }} />,
       color: 'var(--text-gold)',
       bgColor: 'var(--surface-gold)',
-      trend: '+12 this month',
+      trend: t('dash.membersTrend'),
       cardBg: 'rgba(255,255,255,0.75)',
       textColor: 'var(--text-deep)',
       subTextColor: 'var(--text-supporting)'
@@ -395,12 +458,9 @@ function AdminDashboard({ user, onLogout }) {
             {currentTab === 0 && (
               
                 <Box sx={{ mb: 4 }}>
-                  <Typography variant="h6" className="font-playfair" sx={{ fontSize: 22, fontWeight: 700, color: 'var(--text-deep)', mb: 2 }}>
-                    Quick Overview
-                  </Typography>
-                  <Grid container spacing={isMobile ? 1.5 : 2}>
+                  <Grid container spacing={isMobile ? 1 : 2}>
                     {statsCards.map((stat, index) => (
-                      <Grid item xs={12} sm={6} md={6} key={index}>
+                      <Grid item xs={6} sm={6} md={6} key={index}>
                         <Card sx={{ 
                           borderRadius: 1, 
                           background: stat.cardBg, 
@@ -408,16 +468,126 @@ function AdminDashboard({ user, onLogout }) {
                           border: stat.cardBg === 'var(--primary-forest)' ? 'none' : '1px solid var(--border-neutral)' 
                         }}>
                           <CardContent sx={{ p: isMobile ? 2 : 2.5, '&:last-child': { pb: isMobile ? 2 : 2.5 } }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: isMobile ? 1.5 : 2 }}>
-                              <Avatar sx={{ bgcolor: stat.bgColor, color: stat.color, width: 48, height: 48, borderRadius: 1 }}>{stat.icon}</Avatar>
-                              {stat.trend && <Chip size="small" label={stat.trend} sx={{ fontSize: '0.65rem', bgcolor: stat.cardBg === 'var(--primary-forest)' ? 'rgba(255,255,255,0.15)' : 'var(--light-sage)', color: stat.cardBg === 'var(--primary-forest)' ? '#fff' : 'var(--text-sage)', height: 22, border: 'none' }} />}
+                            <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 1.5 }}>
+                              <Box>
+                                <Typography variant="h4" sx={{ fontWeight: 800, color: stat.textColor, lineHeight: 1, mb: 0.5, fontSize: isMobile ? '1.5rem' : '2.125rem' }}>
+                                  {stat.value}
+                                </Typography>
+                                <Typography variant="body2" sx={{ color: stat.subTextColor, fontWeight: 600, fontSize: isMobile ? '0.75rem' : '0.875rem', lineHeight: 1.2 }}>
+                                  {stat.title}
+                                </Typography>
+                              </Box>
+                              <Avatar sx={{ bgcolor: stat.bgColor, color: stat.color, width: isMobile ? 40 : 48, height: isMobile ? 40 : 48, borderRadius: 2 }}>
+                                {React.cloneElement(stat.icon, { sx: { fontSize: isMobile ? 22 : 28 } })}
+                              </Avatar>
                             </Box>
-                            <Typography variant="h4" sx={{ fontWeight: 800, color: stat.textColor, mb: 0.5 }}>{stat.value}</Typography>
-                            <Typography variant="body2" sx={{ color: stat.subTextColor, fontWeight: 500 }}>{stat.title}</Typography>
+                            {stat.trend && (
+                              <Box sx={{ mt: 2 }}>
+                                <Chip size="small" label={stat.trend} sx={{ fontSize: isMobile ? '0.65rem' : '0.75rem', fontWeight: 600, bgcolor: stat.cardBg === 'var(--primary-forest)' ? 'rgba(255,255,255,0.15)' : 'var(--light-sage)', color: stat.cardBg === 'var(--primary-forest)' ? '#fff' : 'var(--text-sage)', height: 24, borderRadius: 1, border: 'none' }} />
+                              </Box>
+                            )}
                           </CardContent>
                         </Card>
                       </Grid>
                     ))}
+                  </Grid>
+
+                  {/* Bottom Dash Widgets (Ticker) */}
+                  <Grid container spacing={isMobile ? 1 : 2} sx={{ mt: 0 }}>
+
+                    {prayers.length > 0 && (
+                      <Grid item xs={12}>
+                        <Card 
+                          onClick={() => setCurrentTab(11)}
+                          sx={{ 
+                            borderRadius: 1, 
+                            border: '1px solid var(--border-neutral)', 
+                            background: 'rgba(255,255,255,0.75)', 
+                            backdropFilter: 'blur(12px)',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            transition: 'all 0.2s',
+                            '&:hover': {
+                              background: 'rgba(255,255,255,0.95)',
+                              borderColor: 'var(--text-gold)'
+                            }
+                          }}
+                        >
+                          <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
+                              <Avatar sx={{ bgcolor: 'var(--surface-gold)', color: 'var(--text-gold)', width: isMobile ? 32 : 36, height: isMobile ? 32 : 36, borderRadius: 1 }}>
+                                <PrayerIcon sx={{ fontSize: isMobile ? 18 : 20 }} />
+                              </Avatar>
+                              <Typography variant={isMobile ? "subtitle1" : "h6"} className="font-playfair" sx={{ fontWeight: 700, color: 'var(--text-deep)' }}>
+                                {t('dash.recentPrayers')}
+                              </Typography>
+                              <Chip className="live-badge-glow" size="small" label={t('dash.live')} sx={{ ml: 'auto', bgcolor: 'rgba(239,68,68,0.1)', color: '#ef4444', fontWeight: 700, height: 20, fontSize: '0.65rem', border: 'none' }} />
+                            </Box>
+
+                            <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                              <Fade in={true} key={currentPrayerIndex} timeout={800}>
+                                <Box sx={{ width: '100%', textAlign: 'center', px: 1 }}>
+                                  <Typography variant="body1" sx={{ color: 'var(--text-primary)', fontStyle: 'italic', mb: 1, fontSize: '1.05rem', lineHeight: 1.5 }}>
+                                    "{prayers[currentPrayerIndex].description}"
+                                  </Typography>
+                                  <Typography variant="subtitle2" sx={{ color: 'var(--text-gold)', fontWeight: 800 }}>
+                                    — {prayers[currentPrayerIndex].personName}
+                                  </Typography>
+                                </Box>
+                              </Fade>
+                            </Box>
+                          </CardContent>
+                        </Card>
+                      </Grid>
+                    )}
+
+                    {testimonies.length > 0 && (
+                      <Grid item xs={12}>
+                        <Card 
+                          onClick={() => setCurrentTab(10)}
+                          sx={{ 
+                            borderRadius: 1, 
+                            border: '1px solid var(--border-neutral)', 
+                            background: 'rgba(255,255,255,0.75)', 
+                            backdropFilter: 'blur(12px)',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            transition: 'all 0.2s',
+                            '&:hover': {
+                              background: 'rgba(255,255,255,0.95)',
+                              borderColor: 'var(--primary-forest)'
+                            }
+                          }}
+                        >
+                          <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
+                              <Avatar sx={{ bgcolor: 'var(--surface-sage)', color: 'var(--primary-forest)', width: isMobile ? 32 : 36, height: isMobile ? 32 : 36, borderRadius: 1 }}>
+                                <CommentIcon sx={{ fontSize: isMobile ? 18 : 20 }} />
+                              </Avatar>
+                              <Typography variant={isMobile ? "subtitle1" : "h6"} className="font-playfair" sx={{ fontWeight: 700, color: 'var(--text-deep)' }}>
+                                {t('nav.testimonies')}
+                              </Typography>
+                              <Chip className="live-badge-glow" size="small" label={t('dash.live')} sx={{ ml: 'auto', bgcolor: 'rgba(239,68,68,0.1)', color: '#ef4444', fontWeight: 700, height: 20, fontSize: '0.65rem', border: 'none' }} />
+                            </Box>
+
+                            <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                              <Fade in={true} key={currentTestimonyIndex} timeout={800}>
+                                <Box sx={{ width: '100%', textAlign: 'center', px: 1 }}>
+                                  <Typography variant="body1" sx={{ color: 'var(--text-primary)', fontStyle: 'italic', mb: 1, fontSize: '1.05rem', lineHeight: 1.5 }}>
+                                    "{testimonies[currentTestimonyIndex].testimonyDetails}"
+                                  </Typography>
+                                  <Typography variant="subtitle2" sx={{ color: 'var(--primary-forest)', fontWeight: 800 }}>
+                                    — {testimonies[currentTestimonyIndex].testimonyName}
+                                  </Typography>
+                                </Box>
+                              </Fade>
+                            </Box>
+                          </CardContent>
+                        </Card>
+                      </Grid>
+                    )}
                   </Grid>
                 </Box>
               
@@ -429,10 +599,11 @@ function AdminDashboard({ user, onLogout }) {
                 <Typography variant="h6" className="font-playfair" sx={{ fontSize: 22, fontWeight: 700, color: 'var(--text-deep)', mb: 2 }}>
                   Quick Actions
                 </Typography>
-                <Grid container spacing={isMobile ? 1.5 : 2}>
-                  {navButtons.filter(b => b.id !== 0).map((button) => (
-                    <Grid item xs={6} sm={4} md={2.4} key={button.id}>
+                <Grid container spacing={isMobile ? 1 : 2}>
+                  {navButtons.filter(b => b.id !== 0 && (!isMobile || !b.isBottomNav)).map((button) => (
+                    <Grid item xs={4} sm={4} md={2.4} key={button.id}>
                       <Card
+                        className="glass-gradient-card"
                         sx={{
                           cursor: 'pointer',
                           borderRadius: 1,
@@ -448,9 +619,9 @@ function AdminDashboard({ user, onLogout }) {
                       >
                         <CardContent sx={{ 
                           textAlign: 'center', 
-                          p: isMobile ? 1.5 : 2.5,
+                          p: isMobile ? 1 : 2.5,
                           position: 'relative',
-                          '&:last-child': { pb: isMobile ? 1.5 : 2.5 }
+                          '&:last-child': { pb: isMobile ? 1 : 2.5 }
                         }}>
                           {button.badge > 0 && (
                             <Badge
@@ -458,12 +629,12 @@ function AdminDashboard({ user, onLogout }) {
                               color="error"
                               sx={{
                                 position: 'absolute',
-                                top: 8,
-                                right: 8,
+                                top: 4,
+                                right: 4,
                                 '& .MuiBadge-badge': {
-                                  fontSize: '0.65rem',
-                                  height: 18,
-                                  minWidth: 18,
+                                  fontSize: '0.6rem',
+                                  height: 16,
+                                  minWidth: 16,
                                 }
                               }}
                             />
@@ -476,21 +647,23 @@ function AdminDashboard({ user, onLogout }) {
                               color: currentTab === button.id 
                                 ? '#fff'
                                 : button.color,
-                              width: 56,
-                              height: 56,
+                              width: isMobile ? 36 : 56,
+                              height: isMobile ? 36 : 56,
                               margin: '0 auto',
-                              mb: 1.5,
+                              mb: isMobile ? 0.5 : 1.5,
                               transition: 'all 0.3s ease',
                             }}
                           >
-                            {button.icon}
+                            {React.cloneElement(button.icon, { sx: { fontSize: isMobile ? 20 : 24 } })}
                           </Avatar>
                           <Typography 
                             variant="body1" 
                             sx={{ 
                               fontWeight: 700, 
                               color: currentTab === button.id ? '#fff' : 'var(--text-primary)',
-                              mb: 0.5
+                              mb: isMobile ? 0 : 0.5,
+                              fontSize: isMobile ? '0.7rem' : '1rem',
+                              lineHeight: 1.2
                             }}
                           >
                             {button.label}

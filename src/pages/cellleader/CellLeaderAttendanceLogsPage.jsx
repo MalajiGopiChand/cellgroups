@@ -22,13 +22,29 @@ function CellLeaderAttendanceLogsPage({ user, onBack }) {
     const fetchLogs = async () => {
       if (!user?.id) return;
       try {
-        const q = query(collection(db, 'attendance'), where('cellLeaderId', '==', user.id));
+        const q = query(collection(db, 'memberAttendance'), where('leaderId', '==', user.id));
         const snap = await getDocs(q);
         
-        const logs = snap.docs
-          .map(d => ({ id: d.id, ...d.data() }))
-          .filter(rec => rec.attendance && rec.attendance.length > 0);
-          
+        const grouped = {};
+        snap.docs.forEach(d => {
+          const data = d.data();
+          if (!grouped[data.date]) {
+            grouped[data.date] = {
+              id: data.date,
+              date: data.date,
+              place: data.cellId || user?.place,
+              attendance: []
+            };
+          }
+          grouped[data.date].attendance.push({
+            id: d.id, // the doc ID in memberAttendance
+            studentId: data.memberId,
+            name: data.memberName,
+            status: data.status,
+          });
+        });
+
+        const logs = Object.values(grouped);
         // Sort by date descending
         logs.sort((a, b) => new Date(b.date) - new Date(a.date));
         setAttendanceLogs(logs);
@@ -39,22 +55,23 @@ function CellLeaderAttendanceLogsPage({ user, onBack }) {
       }
     };
     fetchLogs();
-  }, [user?.id]);
+  }, [user?.id, user?.place]);
 
   const handleToggleStatus = async (recordId, currentArray, studentObj) => {
     try {
+      const newStatus = studentObj.status === 'present' ? 'absent' : 'present';
+      await updateDoc(doc(db, 'memberAttendance', studentObj.id), { 
+        status: newStatus,
+        updatedAt: new Date()
+      });
+      
       const updatedArray = currentArray.map(a => {
-        const match = (a.studentId && studentObj.studentId) 
-          ? a.studentId === studentObj.studentId 
-          : a.name === studentObj.name;
-        
-        if (match) {
-          return { ...a, status: a.status === 'present' ? 'absent' : 'present' };
+        if (a.id === studentObj.id) {
+          return { ...a, status: newStatus };
         }
         return a;
       });
 
-      await updateDoc(doc(db, 'attendance', recordId), { attendance: updatedArray });
       setAttendanceLogs(prev => prev.map(rec => rec.id === recordId ? { ...rec, attendance: updatedArray } : rec));
     } catch (error) {
       console.error('Error toggling status:', error);

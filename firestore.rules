@@ -17,6 +17,12 @@ service cloud.firestore {
     match /attendance/{document} {
       allow read, write: if true;
     }
+    match /memberAttendance/{document} {
+      allow read, write: if true;
+    }
+    match /leaderAttendance/{document} {
+      allow read, write: if true;
+    }
     match /leader_attendance/{document} {
       allow read, write: if true;
     }
