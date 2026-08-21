@@ -1,6 +1,6 @@
 import PageHeader from '../../components/PageHeader';
 import React, { useState, useEffect, useRef } from 'react';
-import { Box, Typography, Paper, Fade, Button, IconButton, Snackbar, Alert, Avatar, Collapse } from '@mui/material';
+import { Box, Typography, Paper, Fade, Button, IconButton, Snackbar, Alert, Avatar, Collapse, Skeleton } from '@mui/material';
 import { collection, getDocs, query, where, doc, setDoc, getDoc, writeBatch } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { ArrowBack as ArrowBackIcon, Download as DownloadIcon, CheckCircle as CheckCircleIcon, Cancel as CancelIcon, ChevronRight as ChevronRightIcon } from '@mui/icons-material';
@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import html2canvas from 'html2canvas';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { getTuesdayWeekDetails } from '../../utils/dateUtils';
+import { triggerHaptic } from '../../utils/haptics';
 
 function CellLeaderAttendancePage({ user, onBack }) {
   const { t } = useLanguage();
@@ -16,12 +17,13 @@ function CellLeaderAttendancePage({ user, onBack }) {
   const [attendance, setAttendance] = useState([]);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
   const getLocalDate = () => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   };
-  const [selectedDate, setSelectedDate] = useState(getLocalDate());
-  const isTuesday = new Date(selectedDate).getDay() === 2;
+  const selectedDay = new Date(selectedDate).getDay();
+  const isAllowedDay = selectedDay === 0 || selectedDay === 1 || selectedDay === 2;
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [expandedFamilies, setExpandedFamilies] = useState({});
   const printRef = useRef(null);
@@ -52,9 +54,13 @@ function CellLeaderAttendancePage({ user, onBack }) {
   useEffect(() => {
     const fetch = async () => {
       if (!user?.id) return;
-      const q = query(collection(db, 'students'), where('cellLeaderId', '==', user.id));
-      const snap = await getDocs(q);
-      setMembers(snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(m => m.place === user?.place));
+      try {
+        const q = query(collection(db, 'students'), where('cellLeaderId', '==', user.id));
+        const snap = await getDocs(q);
+        setMembers(snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(m => m.place === user?.place));
+      } finally {
+        setLoading(false);
+      }
     };
     fetch();
   }, [user?.id, user?.place]);
@@ -87,11 +93,13 @@ function CellLeaderAttendancePage({ user, onBack }) {
   }, [user?.id, user?.place, selectedDate]);
 
   const handleMark = async (memberId, memberName, status, familyId) => {
-    if (!isTuesday) {
-      alert("Attendance can only be taken on Tuesdays.");
+    if (!isAllowedDay) {
+      triggerHaptic('error');
+      alert("Attendance can only be taken on Sunday, Monday, or Tuesday.");
       return;
     }
     if (isSubmitted) return;
+    triggerHaptic('light');
     const current = attendance.find(a => a.studentId === memberId);
     let newAttendance;
     if (current) {
@@ -106,10 +114,12 @@ function CellLeaderAttendancePage({ user, onBack }) {
 
   const handleSave = async () => {
     if (attendance.length === 0) {
+      triggerHaptic('error');
       alert(t('att.addFirst') || "Please mark attendance before saving.");
       return;
     }
     
+    triggerHaptic('medium');
     setIsSaving(true);
     try {
       // Check for duplicates
@@ -154,9 +164,10 @@ function CellLeaderAttendancePage({ user, onBack }) {
       
       setIsSubmitted(true);
       setSnackbarOpen(true);
-      alert("✅ Attendance Saved Successfully");
+      triggerHaptic('success');
     } catch (error) {
       console.error("Failed to save attendance:", error);
+      triggerHaptic('error');
       alert("Failed to save attendance.\nPlease try again.");
     } finally {
       setIsSaving(false);
@@ -246,17 +257,25 @@ function CellLeaderAttendancePage({ user, onBack }) {
           </Button>
         </Paper>
 
-        {!isTuesday && (
+        {!isAllowedDay && (
           <Alert severity="warning" sx={{ mb: 3, borderRadius: 1, fontWeight: 600 }}>
-            {t('att.tuesdayOnly')}
+            {t('att.tuesdayOnly') || 'Attendance can only be taken on Sunday, Monday, or Tuesday.'}
           </Alert>
         )}
 
-        {isSubmitted && isTuesday && (
+        {isSubmitted && isAllowedDay && (
           <Alert severity="info" sx={{ mb: 3, borderRadius: 1, fontWeight: 600 }}>
             Attendance for this date has already been submitted.
           </Alert>
-        )}        {members.length === 0 ? (
+        )}        
+
+        {loading ? (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} variant="rectangular" width="100%" height={80} sx={{ borderRadius: 1 }} />
+            ))}
+          </Box>
+        ) : members.length === 0 ? (
           <Paper elevation={0} sx={{ p: 4, textAlign: 'center', bgcolor: 'var(--bg-glass-strong)', borderRadius: 1, border: '1px dashed var(--border-light)' }}>
             <Typography color="var(--text-tertiary)">{t('att.addFirst')}</Typography>
           </Paper>
@@ -336,13 +355,13 @@ function CellLeaderAttendancePage({ user, onBack }) {
                                 sx={{
                                   width: 32, height: 32, borderRadius: 1,
                                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                  cursor: (!isTuesday || isSubmitted) ? 'default' : 'pointer',
-                                  opacity: (!isTuesday || (isSubmitted && mRec?.status !== 'present')) ? 0.4 : 1,
+                                  cursor: (!isAllowedDay || isSubmitted) ? 'default' : 'pointer',
+                                  opacity: (!isAllowedDay || (isSubmitted && mRec?.status !== 'present')) ? 0.4 : 1,
                                   bgcolor: mRec?.status === 'present' ? '#4E7D58' : 'var(--surface-white)',
                                   border: mRec?.status === 'present' ? 'none' : '1px solid var(--border-neutral)',
                                   color: mRec?.status === 'present' ? '#fff' : 'var(--text-secondary)',
                                   transition: 'all 0.2s',
-                                  '&:hover': (!isTuesday || isSubmitted) ? {} : { bgcolor: mRec?.status === 'present' ? '#4E7D58' : 'var(--surface-sage)', borderColor: 'transparent' }
+                                  '&:hover': (!isAllowedDay || isSubmitted) ? {} : { bgcolor: mRec?.status === 'present' ? '#4E7D58' : 'var(--surface-sage)', borderColor: 'transparent' }
                                 }}
                               >
                                 <Typography sx={{ fontWeight: 800, fontSize: 16 }}>P</Typography>
@@ -352,13 +371,13 @@ function CellLeaderAttendancePage({ user, onBack }) {
                                 sx={{
                                   width: 32, height: 32, borderRadius: 1,
                                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                  cursor: (!isTuesday || isSubmitted) ? 'default' : 'pointer',
-                                  opacity: (!isTuesday || (isSubmitted && mRec?.status !== 'absent')) ? 0.4 : 1,
+                                  cursor: (!isAllowedDay || isSubmitted) ? 'default' : 'pointer',
+                                  opacity: (!isAllowedDay || (isSubmitted && mRec?.status !== 'absent')) ? 0.4 : 1,
                                   bgcolor: mRec?.status === 'absent' ? '#ef4444' : 'var(--surface-white)',
                                   border: mRec?.status === 'absent' ? 'none' : '1px solid var(--border-neutral)',
                                   color: mRec?.status === 'absent' ? '#fff' : 'var(--text-secondary)',
                                   transition: 'all 0.2s',
-                                  '&:hover': (!isTuesday || isSubmitted) ? {} : { bgcolor: mRec?.status === 'absent' ? '#ef4444' : 'var(--app-bg)', borderColor: 'transparent' }
+                                  '&:hover': (!isAllowedDay || isSubmitted) ? {} : { bgcolor: mRec?.status === 'absent' ? '#ef4444' : 'var(--app-bg)', borderColor: 'transparent' }
                                 }}
                               >
                                 <Typography sx={{ fontWeight: 800, fontSize: 16 }}>A</Typography>
@@ -374,7 +393,7 @@ function CellLeaderAttendancePage({ user, onBack }) {
             ))}
 
             {/* Submit Button */}
-            {attendance.length > 0 && !isSubmitted && isTuesday && (
+            {attendance.length > 0 && !isSubmitted && isAllowedDay && (
               <Button 
                 variant="contained"
                 fullWidth

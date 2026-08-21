@@ -14,6 +14,8 @@ function AdminLeaderAttendancePage({ onBack }) {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   };
   const [selectedDate, setSelectedDate] = useState(getLocalDate());
+  const selectedDay = new Date(selectedDate).getDay();
+  const isAllowedDay = selectedDay === 0 || selectedDay === 1 || selectedDay === 2;
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [showSnackbar, setShowSnackbar] = useState(false);
@@ -75,6 +77,10 @@ function AdminLeaderAttendancePage({ onBack }) {
   }, [selectedDate]);
 
   const handleMark = async (leaderId, leaderName, leaderPlace, status) => {
+    if (!isAllowedDay) {
+      alert("Leader Attendance can only be taken on Sunday, Monday, or Tuesday.");
+      return;
+    }
     const current = attendance.find(a => a.leaderId === leaderId);
     let newAttendance;
     if (current) {
@@ -140,10 +146,12 @@ function AdminLeaderAttendancePage({ onBack }) {
       color: isSelected ? '#fff' : 'var(--text-secondary)',
       border: isSelected ? '1px solid transparent' : '1px solid var(--border-light)',
       boxShadow: isSelected ? `0 4px 12px ${type === 'present' ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}` : 'none',
-      '&:hover': { 
+      cursor: isAllowedDay ? 'pointer' : 'default',
+      opacity: isAllowedDay ? 1 : 0.5,
+      '&:hover': isAllowedDay ? { 
         bgcolor: isSelected ? (type === 'present' ? '#059669' : '#dc2626') : hoverBg, 
         color: isSelected ? '#fff' : baseColor 
-      }
+      } : {}
     };
   };
 
@@ -204,6 +212,12 @@ function AdminLeaderAttendancePage({ onBack }) {
             Download Image
           </Button>
         </Paper>
+
+        {!isAllowedDay && (
+          <Alert severity="warning" sx={{ mb: 3, borderRadius: 1, fontWeight: 600 }}>
+            Leader Attendance can only be taken on Sunday, Monday, or Tuesday.
+          </Alert>
+        )}
 
         {leaders.length > 0 ? (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -279,7 +293,7 @@ function AdminLeaderAttendancePage({ onBack }) {
             </Paper>
 
             {/* Submit Button */}
-            {attendance.length > 0 && (
+            {attendance.length > 0 && isAllowedDay && (
               <Button 
                 variant="contained"
                 fullWidth

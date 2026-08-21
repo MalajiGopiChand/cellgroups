@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
+import { db } from '../firebase/config';
 import './Auth.css';
 
 function AdminLogin({ onLogin }) {
@@ -14,14 +16,56 @@ function AdminLogin({ onLogin }) {
     setError('');
     setLoading(true);
 
-    // Fixed admin credentials
-    if (email.trim().toLowerCase() === 'bethel@gmail.com' && password === '123456') {
-      onLogin({ role: 'admin', email });
-      navigate('/admin/dashboard');
-    } else {
-      setError('Invalid email or password');
+    try {
+      // First check Firebase for admin credentials
+      const q = query(
+        collection(db, 'admins'), 
+        where('email', '==', email.trim().toLowerCase()),
+        where('password', '==', password)
+      );
+      const snap = await getDocs(q);
+
+      if (!snap.empty) {
+        try {
+          await addDoc(collection(db, 'login_history'), {
+            email: email.trim().toLowerCase(),
+            role: 'admin',
+            loginTime: new Date()
+          });
+        } catch (logErr) {
+          console.error("Failed to save login history: ", logErr);
+        }
+        
+        onLogin({ role: 'admin', email: email.trim().toLowerCase() });
+        navigate('/admin/dashboard');
+      } else if (email.trim().toLowerCase() === 'bethel@gmail.com' && password === '123456') {
+        try {
+          await addDoc(collection(db, 'login_history'), {
+            email: email.trim().toLowerCase(),
+            role: 'admin',
+            loginTime: new Date()
+          });
+        } catch (logErr) {
+          console.error("Failed to save login history: ", logErr);
+        }
+        // Fallback for initial setup
+        onLogin({ role: 'admin', email: email.trim().toLowerCase() });
+        navigate('/admin/dashboard');
+      } else {
+        setError('Invalid email or password');
+      }
+    } catch (err) {
+      console.error('Error logging in admin:', err);
+      // Fallback if network or permissions fail
+      if (email.trim().toLowerCase() === 'bethel@gmail.com' && password === '123456') {
+        onLogin({ role: 'admin', email: email.trim().toLowerCase() });
+        navigate('/admin/dashboard');
+      } else {
+        setError('Login failed. Please try again.');
+      }
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (

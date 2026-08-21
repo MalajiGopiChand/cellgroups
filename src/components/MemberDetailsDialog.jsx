@@ -1,6 +1,6 @@
 import React from 'react';
 import { 
-  Dialog, 
+  Drawer, 
   DialogTitle, 
   DialogContent, 
   DialogActions, 
@@ -49,21 +49,26 @@ function MemberDetailsDialog({ open, onClose, member, familyMembers = [] }) {
     .sort((a, b) => getRelationOrder(a.relation) - getRelationOrder(b.relation));
 
   return (
-    <Dialog 
+    <Drawer 
+      anchor="bottom"
       open={open} 
       onClose={onClose}
-      fullWidth
-      maxWidth="sm"
       PaperProps={{
         sx: {
-          borderRadius: 1,
+          borderTopLeftRadius: 16,
+          borderTopRightRadius: 16,
           bgcolor: 'var(--bg-glass-strong)',
           backdropFilter: 'blur(22px)',
-          border: '1px solid var(--border-light)',
+          borderTop: '1px solid var(--border-light)',
           boxShadow: 'var(--shadow-lg)',
-          }
+          maxHeight: '90vh'
+        }
       }}
     >
+      {/* Pull indicator for mobile */}
+      <Box sx={{ display: 'flex', justifyContent: 'center', pt: 1.5, pb: 0.5, bgcolor: 'rgba(99, 102, 241, 0.04)' }}>
+        <Box sx={{ width: 40, height: 5, bgcolor: 'var(--border-light)', borderRadius: 2 }} />
+      </Box>
       {/* Dialog Header */}
       <DialogTitle sx={{ m: 0, p: 2.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', bgcolor: 'rgba(99, 102, 241, 0.04)' }}>
         <Typography variant="h6" component="div" sx={{ fontWeight: 800, color: 'var(--text-primary)' }}>
@@ -269,7 +274,7 @@ function MemberDetailsDialog({ open, onClose, member, familyMembers = [] }) {
           Close
         </Button>
       </DialogActions>
-    </Dialog>
+    </Drawer>
   );
 }
 

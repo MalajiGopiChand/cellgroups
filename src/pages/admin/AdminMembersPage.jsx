@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Paper, IconButton, Select, MenuItem, FormControl, InputLabel, Fade, Chip, CircularProgress } from '@mui/material';
+import { Box, Typography, Paper, IconButton, Select, MenuItem, FormControl, InputLabel, Fade, Chip, Skeleton, Grid } from '@mui/material';
 import { DeleteOutline as DeleteIcon, FilterList as FilterIcon, PersonOutline as PersonIcon, ArrowBack as ArrowBackIcon, FamilyRestroom as FamilyIcon } from '@mui/icons-material';
 import { collection, getDocs, doc, deleteDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
@@ -128,8 +128,20 @@ function AdminMembersPage({ onBack }) {
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-        <CircularProgress sx={{ color: 'var(--color-primary)' }} />
+      <Box sx={{ p: 2 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+          <Box>
+            <Skeleton variant="text" width={150} height={40} />
+            <Skeleton variant="text" width={250} height={20} />
+          </Box>
+          <Skeleton variant="rectangular" width={80} height={32} sx={{ borderRadius: 1 }} />
+        </Box>
+        <Skeleton variant="rectangular" width="100%" height={60} sx={{ borderRadius: 1, mb: 3 }} />
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} variant="rectangular" width="100%" height={90} sx={{ borderRadius: 1 }} />
+          ))}
+        </Box>
       </Box>
     );
   }

@@ -7,12 +7,16 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      injectRegister: 'auto',
+      devOptions: {
+        enabled: true
+      },
       workbox: { globPatterns: ['**/*.{js,css,html,ico,png,svg}'] },
       manifest: {
         name: 'Bethel Cell Leaders',
         short_name: 'Cell Groups',
         description: 'Helps Cell Leaders guide families in spiritual growth. Supports weekly Thursday prayer meetings, encourages punctuality, and maintains unity within the group.',
-        theme_color: '#6366f1',
+        theme_color: '#4E7D58',
         background_color: '#f8fafc',
         display: 'standalone',
         start_url: '/',
