@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import html2canvas from 'html2canvas';
 import { Box, Typography, Paper, Fade, Button, IconButton, Chip, CircularProgress, Snackbar, Alert } from '@mui/material';
 import { ArrowBack as ArrowBackIcon, PersonOutline as PersonIcon } from '@mui/icons-material';
-import { collection, getDocs, doc, setDoc, getDoc, query, where, writeBatch } from 'firebase/firestore';
+import { collection, getDocs, doc, setDoc, getDoc, query, where, writeBatch, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { getTuesdayWeekDetails } from '../../utils/dateUtils';
 
@@ -36,44 +36,39 @@ function AdminLeaderAttendancePage({ onBack }) {
   };
 
   useEffect(() => {
-    const fetchLeaders = async () => {
-      try {
-        const q = query(collection(db, 'cellleaders'), where('approved', '==', true));
-        const snap = await getDocs(q);
-        setLeaders(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-      } catch (error) {
-        console.error('Error fetching leaders:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchLeaders();
+    const q = query(collection(db, 'cellleaders'), where('approved', '==', true));
+    const unsubscribe = onSnapshot(q, (snap) => {
+      setLeaders(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      setLoading(false);
+    }, (error) => {
+      console.error('Error fetching leaders:', error);
+      setLoading(false);
+    });
+    return () => unsubscribe();
   }, []);
 
   useEffect(() => {
-    const fetchAttendance = async () => {
-      setAttendance([]); // Clear data instantly when date changes
-      try {
-        const q = query(collection(db, 'leaderAttendance'), where('date', '==', selectedDate));
-        const snap = await getDocs(q);
-        
-        if (!snap.empty) {
-          const records = snap.docs.map(d => {
-            const data = d.data();
-            return {
-              leaderId: data.leaderId,
-              name: data.leaderName,
-              place: data.place,
-              status: data.status
-            };
-          });
-          setAttendance(records);
-        }
-      } catch (error) {
-        console.error('Error fetching leader attendance:', error);
+    setAttendance([]); // Clear data instantly when date changes
+    const q = query(collection(db, 'leaderAttendance'), where('date', '==', selectedDate));
+    const unsubscribe = onSnapshot(q, (snap) => {
+      if (!snap.empty) {
+        const records = snap.docs.map(d => {
+          const data = d.data();
+          return {
+            leaderId: data.leaderId,
+            name: data.leaderName,
+            place: data.place,
+            status: data.status
+          };
+        });
+        setAttendance(records);
+      } else {
+        setAttendance([]);
       }
-    };
-    fetchAttendance();
+    }, (error) => {
+      console.error('Error fetching leader attendance:', error);
+    });
+    return () => unsubscribe();
   }, [selectedDate]);
 
   const handleMark = async (leaderId, leaderName, leaderPlace, status) => {

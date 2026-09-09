@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, Paper, Button, TextField, FormControl, InputLabel, Select, MenuItem, Fade, Collapse, CircularProgress, IconButton } from '@mui/material';
-import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { AddAlert as AddAlertIcon, Send as SendIcon, CheckCircle as CheckIcon, DeleteOutline as DeleteIcon, EditOutlined as EditIcon } from '@mui/icons-material';
 
@@ -13,29 +13,48 @@ function AdminAnnouncementsPage({ onBack }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    let currentAnnSnap = null;
+    let currentLeadersSnap = null;
 
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      const [annSnap, leadersSnap] = await Promise.all([
-        getDocs(collection(db, 'announcements')),
-        getDocs(collection(db, 'cellleaders'))
-      ]);
-      setAnnouncements(annSnap.docs.map(d => ({ id: d.id, ...d.data() }))
-        .sort((a, b) => {
-          const da = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
-          const db_ = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
-          return db_ - da;
-        }));
-      setLeaders(leadersSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-    } catch (error) {
+    const processData = () => {
+      if (!currentAnnSnap || !currentLeadersSnap) return;
+      try {
+        setAnnouncements(currentAnnSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+          .sort((a, b) => {
+            const da = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+            const db_ = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+            return db_ - da;
+          }));
+        setLeaders(currentLeadersSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+      } catch (error) {
+        console.error("Error processing announcements:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    setLoading(true);
+    const unsubAnn = onSnapshot(collection(db, 'announcements'), (snap) => {
+      currentAnnSnap = snap;
+      processData();
+    }, (error) => {
       console.error("Error fetching announcements:", error);
-    } finally {
       setLoading(false);
-    }
-  };
+    });
+
+    const unsubLeaders = onSnapshot(collection(db, 'cellleaders'), (snap) => {
+      currentLeadersSnap = snap;
+      processData();
+    }, (error) => {
+      console.error("Error fetching leaders:", error);
+      setLoading(false);
+    });
+
+    return () => {
+      unsubAnn();
+      unsubLeaders();
+    };
+  }, []);
 
   const handleSend = async (e) => {
     e.preventDefault();
@@ -47,7 +66,6 @@ function AdminAnnouncementsPage({ onBack }) {
       cellLeaderId: fd.get('recipientType') === 'specific' ? fd.get('cellLeaderId') : null,
       createdAt: new Date()
     });
-    fetchData();
     setShowForm(false);
     e.target.reset();
   };
@@ -59,14 +77,12 @@ function AdminAnnouncementsPage({ onBack }) {
       title: fd.get('title'),
       message: fd.get('message')
     });
-    fetchData();
     setEditing(null);
   };
 
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this announcement?')) return;
     await deleteDoc(doc(db, 'announcements', id));
-    fetchData();
     setEditing(null);
   };
 

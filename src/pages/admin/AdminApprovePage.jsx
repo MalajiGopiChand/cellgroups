@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, Paper, Button, IconButton, Fade, Chip, CircularProgress } from '@mui/material';
 import { DeleteOutline as DeleteIcon, ThumbUpOutlined as ApproveIcon, PersonOutline as PersonIcon } from '@mui/icons-material';
-import { collection, getDocs, doc, updateDoc, deleteDoc, query, where } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, deleteDoc, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 
 function AdminApprovePage({ onBack }) {
@@ -9,17 +9,20 @@ function AdminApprovePage({ onBack }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetch = async () => {
+    const unsubscribe = onSnapshot(collection(db, 'cellleaders'), (snap) => {
       try {
-        const snap = await getDocs(collection(db, 'cellleaders'));
         setLeaders(snap.docs.map(d => ({ id: d.id, ...d.data() })));
       } catch (error) {
-        console.error('Error fetching leaders:', error);
+        console.error('Error processing leaders:', error);
       } finally {
         setLoading(false);
       }
-    };
-    fetch();
+    }, (error) => {
+      console.error('Error fetching leaders:', error);
+      setLoading(false);
+    });
+    
+    return () => unsubscribe();
   }, []);
 
   const handleApprove = async (id) => {

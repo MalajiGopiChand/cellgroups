@@ -1,7 +1,7 @@
 import PageHeader from '../../components/PageHeader';
 import React, { useState, useEffect, useRef } from 'react';
 import { Box, Typography, Paper, Fade, Button, IconButton, Snackbar, Alert, Avatar, Collapse, Skeleton } from '@mui/material';
-import { collection, getDocs, query, where, doc, setDoc, getDoc, writeBatch } from 'firebase/firestore';
+import { collection, getDocs, query, where, doc, setDoc, getDoc, writeBatch, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { ArrowBack as ArrowBackIcon, Download as DownloadIcon, CheckCircle as CheckCircleIcon, Cancel as CancelIcon, ChevronRight as ChevronRightIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
@@ -53,30 +53,24 @@ function CellLeaderAttendancePage({ user, onBack }) {
   const handleCloseSnackbar = () => setSnackbarOpen(false);
 
   useEffect(() => {
-    const fetch = async () => {
-      if (!user?.id) return;
-      try {
-        const q = query(collection(db, 'students'), where('cellLeaderId', '==', user.id));
-        const snap = await getDocs(q);
-        setMembers(snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(m => m.place === user?.place));
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetch();
+    if (!user?.id) return;
+    const q = query(collection(db, 'students'), where('cellLeaderId', '==', user.id));
+    const unsubscribe = onSnapshot(q, (snap) => {
+      setMembers(snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(m => m.place === user?.place));
+      setLoading(false);
+    });
+    return () => unsubscribe();
   }, [user?.id, user?.place]);
 
   useEffect(() => {
-    const fetch = async () => {
-      setAttendance([]); 
-      setIsSubmitted(false);
-      if (!user?.id) return;
-      const q = query(collection(db, 'memberAttendance'), 
-        where('leaderId', '==', user.id), 
-        where('date', '==', selectedDate)
-      );
-      const snap = await getDocs(q);
-      
+    setAttendance([]); 
+    setIsSubmitted(false);
+    if (!user?.id) return;
+    const q = query(collection(db, 'memberAttendance'), 
+      where('leaderId', '==', user.id), 
+      where('date', '==', selectedDate)
+    );
+    const unsubscribe = onSnapshot(q, (snap) => {
       if (!snap.empty) {
         // Map back to the expected format
         const fetchedAtt = snap.docs.map(d => {
@@ -89,8 +83,8 @@ function CellLeaderAttendancePage({ user, onBack }) {
         setAttendance([]);
         setIsSubmitted(false);
       }
-    };
-    fetch();
+    });
+    return () => unsubscribe();
   }, [user?.id, user?.place, selectedDate]);
 
   const handleMark = async (memberId, memberName, status, familyId) => {

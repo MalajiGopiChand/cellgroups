@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, Paper, CircularProgress, Divider, Avatar } from '@mui/material';
 import { Star as StarIcon, FormatQuote as QuoteIcon } from '@mui/icons-material';
-import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
+import { collection, query, where, orderBy, getDocs, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 
 function AdminTestimoniesPage({ onBack }) {
@@ -9,49 +9,45 @@ function AdminTestimoniesPage({ onBack }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchTestimonies = async () => {
-      try {
-        const q = query(
-          collection(db, 'reports'),
-          where('hasTestimony', '==', true)
-        );
-        const snap = await getDocs(q);
-        
-        const data = snap.docs.map(doc => {
-          const docData = doc.data();
-          let dateObj = null;
-          let dateStr = 'Unknown Date';
-          if (docData.timestamp && docData.timestamp.toDate) {
-            dateObj = docData.timestamp.toDate();
-            dateStr = dateObj.toLocaleDateString('en-GB').replace(/\//g, '-');
-          }
-          return {
-            id: doc.id,
-            dateObj,
-            dateStr,
-            testimonyName: docData.testimonyName,
-            testimonyDetails: docData.testimonyDetails,
-            leaderName: docData.leaderName
-          };
-        });
+    const q = query(
+      collection(db, 'reports'),
+      where('hasTestimony', '==', true)
+    );
+    const unsubscribe = onSnapshot(q, (snap) => {
+      const data = snap.docs.map(doc => {
+        const docData = doc.data();
+        let dateObj = null;
+        let dateStr = 'Unknown Date';
+        if (docData.timestamp && docData.timestamp.toDate) {
+          dateObj = docData.timestamp.toDate();
+          dateStr = dateObj.toLocaleDateString('en-GB').replace(/\//g, '-');
+        }
+        return {
+          id: doc.id,
+          dateObj,
+          dateStr,
+          testimonyName: docData.testimonyName,
+          testimonyDetails: docData.testimonyDetails,
+          leaderName: docData.leaderName
+        };
+      });
 
-        // Sort manually by date descending (newest on top) 
-        // since we queried with where clause and might not have composite index
-        data.sort((a, b) => {
-          const timeA = a.dateObj ? a.dateObj.getTime() : 0;
-          const timeB = b.dateObj ? b.dateObj.getTime() : 0;
-          return timeB - timeA;
-        });
+      // Sort manually by date descending (newest on top) 
+      // since we queried with where clause and might not have composite index
+      data.sort((a, b) => {
+        const timeA = a.dateObj ? a.dateObj.getTime() : 0;
+        const timeB = b.dateObj ? b.dateObj.getTime() : 0;
+        return timeB - timeA;
+      });
 
-        setTestimonies(data);
-      } catch (err) {
-        console.error('Error fetching testimonies:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
+      setTestimonies(data);
+      setLoading(false);
+    }, (err) => {
+      console.error('Error fetching testimonies:', err);
+      setLoading(false);
+    });
     
-    fetchTestimonies();
+    return () => unsubscribe();
   }, []);
 
   if (loading) {

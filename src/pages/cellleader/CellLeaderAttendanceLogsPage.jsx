@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import PageHeader from '../../components/PageHeader';
 import { Box, Typography, Paper, Fade, Chip, CircularProgress, Divider, IconButton } from '@mui/material';
 import { EventAvailable as EventIcon, ArrowBack as ArrowBackIcon, Edit as EditIcon } from '@mui/icons-material';
-import { collection, getDocs, query, where, doc, updateDoc } from 'firebase/firestore';
+import { collection, getDocs, query, where, doc, updateDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -19,12 +19,10 @@ function CellLeaderAttendanceLogsPage({ user, onBack }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchLogs = async () => {
-      if (!user?.id) return;
+    if (!user?.id) return;
+    const q = query(collection(db, 'memberAttendance'), where('leaderId', '==', user.id));
+    const unsubscribe = onSnapshot(q, (snap) => {
       try {
-        const q = query(collection(db, 'memberAttendance'), where('leaderId', '==', user.id));
-        const snap = await getDocs(q);
-        
         const grouped = {};
         snap.docs.forEach(d => {
           const data = d.data();
@@ -53,8 +51,8 @@ function CellLeaderAttendanceLogsPage({ user, onBack }) {
       } finally {
         setLoading(false);
       }
-    };
-    fetchLogs();
+    });
+    return () => unsubscribe();
   }, [user?.id, user?.place]);
 
   const handleToggleStatus = async (recordId, currentArray, studentObj) => {

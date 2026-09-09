@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, Paper, IconButton, Select, MenuItem, FormControl, InputLabel, Fade, Chip, Skeleton, Grid } from '@mui/material';
 import { DeleteOutline as DeleteIcon, FilterList as FilterIcon, PersonOutline as PersonIcon, ArrowBack as ArrowBackIcon, FamilyRestroom as FamilyIcon } from '@mui/icons-material';
-import { collection, getDocs, doc, deleteDoc, updateDoc, setDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, deleteDoc, updateDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import MemberDetailsDialog from '../../components/MemberDetailsDialog';
 import EditMemberDialog from '../../components/EditMemberDialog';
@@ -32,21 +32,39 @@ function AdminMembersPage({ onBack }) {
   useHardwareBack(editDialogOpen, () => setEditDialogOpen(false));
 
   useEffect(() => {
-    const fetch = async () => {
-      try {
-        const [membersSnap, leadersSnap] = await Promise.all([
-          getDocs(collection(db, 'students')),
-          getDocs(collection(db, 'cellleaders'))
-        ]);
-        setMembers(membersSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-        setLeaders(leadersSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-      } catch (error) {
-        console.error('Error fetching members:', error);
-      } finally {
+    let membersLoading = true;
+    let leadersLoading = true;
+
+    const checkLoading = () => {
+      if (!membersLoading && !leadersLoading) {
         setLoading(false);
       }
     };
-    fetch();
+
+    const unsubMembers = onSnapshot(collection(db, 'students'), (snap) => {
+      setMembers(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      membersLoading = false;
+      checkLoading();
+    }, (error) => {
+      console.error('Error fetching members:', error);
+      membersLoading = false;
+      checkLoading();
+    });
+
+    const unsubLeaders = onSnapshot(collection(db, 'cellleaders'), (snap) => {
+      setLeaders(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      leadersLoading = false;
+      checkLoading();
+    }, (error) => {
+      console.error('Error fetching leaders:', error);
+      leadersLoading = false;
+      checkLoading();
+    });
+
+    return () => {
+      unsubMembers();
+      unsubLeaders();
+    };
   }, []);
 
   const handleDelete = async (id, name) => {

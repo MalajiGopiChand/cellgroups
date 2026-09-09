@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, Paper, Fade, CircularProgress, Chip } from '@mui/material';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 
 function AdminHomePage() {
@@ -8,22 +8,19 @@ function AdminHomePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetch = async () => {
-      try {
-        const snap = await getDocs(collection(db, 'announcements'));
-        setAnnouncements(snap.docs.map(d => ({ id: d.id, ...d.data() }))
-          .sort((a, b) => {
-            const da = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
-            const db_ = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
-            return db_ - da;
-          }));
-      } catch (error) {
-        console.error('Error fetching announcements:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetch();
+    const unsubscribe = onSnapshot(collection(db, 'announcements'), (snap) => {
+      setAnnouncements(snap.docs.map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => {
+          const da = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+          const db_ = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+          return db_ - da;
+        }));
+      setLoading(false);
+    }, (error) => {
+      console.error('Error fetching announcements:', error);
+      setLoading(false);
+    });
+    return () => unsubscribe();
   }, []);
 
   return (

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, Paper, CircularProgress, Divider, Avatar } from '@mui/material';
 import { Star as StarIcon, FormatQuote as QuoteIcon } from '@mui/icons-material';
-import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
+import { collection, query, where, orderBy, getDocs, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 
 function CellLeaderTestimoniesPage({ onBack }) {
@@ -9,14 +9,12 @@ function CellLeaderTestimoniesPage({ onBack }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchTestimonies = async () => {
+    const q = query(
+      collection(db, 'reports'),
+      where('hasTestimony', '==', true)
+    );
+    const unsubscribe = onSnapshot(q, (snap) => {
       try {
-        const q = query(
-          collection(db, 'reports'),
-          where('hasTestimony', '==', true)
-        );
-        const snap = await getDocs(q);
-        
         const data = snap.docs.map(doc => {
           const docData = doc.data();
           let dateObj = null;
@@ -49,9 +47,9 @@ function CellLeaderTestimoniesPage({ onBack }) {
       } finally {
         setLoading(false);
       }
-    };
+    });
     
-    fetchTestimonies();
+    return () => unsubscribe();
   }, []);
 
   if (loading) {

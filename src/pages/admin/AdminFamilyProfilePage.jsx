@@ -8,7 +8,7 @@ import {
   VolunteerActivism as PrayerIcon, Star as StarIcon, 
   Phone as PhoneIcon, LocationOn as LocationIcon 
 } from '@mui/icons-material';
-import { collection, query, getDocs, orderBy } from 'firebase/firestore';
+import { collection, query, getDocs, orderBy, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 
 function AdminFamilyProfilePage({ family, onBack }) {
@@ -18,69 +18,71 @@ function AdminFamilyProfilePage({ family, onBack }) {
   const [testimonies, setTestimonies] = useState([]);
 
   useEffect(() => {
-    const fetchFamilyData = async () => {
-      try {
-        const familyNames = new Set(family.members.map(m => m.name.toLowerCase().trim()));
-        
-        // 1. Fetch Attendance
-        const attSnap = await getDocs(collection(db, 'attendance'));
-        const fAtt = [];
-        attSnap.forEach(docSnap => {
-          const data = docSnap.data();
-          if (data.attendance) {
-            const familyRecords = data.attendance.filter(a => familyNames.has(a.name.toLowerCase().trim()));
-            if (familyRecords.length > 0) {
-              fAtt.push({ ...data, id: docSnap.id, familyRecords });
-            }
-          }
-        });
-        fAtt.sort((a, b) => new Date(b.date) - new Date(a.date));
-        setAttendanceLogs(fAtt);
+    if (!family) return;
 
-        // 2. Fetch Prayer Requests
-        const prQ = query(collection(db, 'prayer_requests'), orderBy('timestamp', 'desc'));
-        const prSnap = await getDocs(prQ);
-        const fPr = [];
-        prSnap.forEach(docSnap => {
-          const data = docSnap.data();
-          if (familyNames.has((data.personName || '').toLowerCase().trim())) {
-            fPr.push({ id: docSnap.id, ...data });
-          }
-        });
-        setPrayerRequests(fPr);
-
-        // 3. Fetch Testimonies / Visitor Records from Reports
-        const rQ = query(collection(db, 'reports'), orderBy('timestamp', 'desc'));
-        const rSnap = await getDocs(rQ);
-        const fTestimonies = [];
-        rSnap.forEach(docSnap => {
-          const data = docSnap.data();
-          let isMatch = false;
-          let matchType = '';
-          if (data.hasTestimony && familyNames.has((data.testimonyName || '').toLowerCase().trim())) {
-            isMatch = true;
-            matchType = 'Testimony';
-          }
-          if (data.hasVisitor && familyNames.has((data.visitorName || '').toLowerCase().trim())) {
-            isMatch = true;
-            matchType = 'Visitor';
-          }
-          if (isMatch) {
-            fTestimonies.push({ id: docSnap.id, matchType, ...data });
-          }
-        });
-        setTestimonies(fTestimonies);
-
-      } catch (err) {
-        console.error("Error fetching family profile data:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+    const familyNames = new Set(family.members.map(m => m.name.toLowerCase().trim()));
     
-    if (family) {
-      fetchFamilyData();
-    }
+    // 1. Fetch Attendance
+    const unsubAtt = onSnapshot(collection(db, 'attendance'), (attSnap) => {
+      const fAtt = [];
+      attSnap.forEach(docSnap => {
+        const data = docSnap.data();
+        if (data.attendance) {
+          const familyRecords = data.attendance.filter(a => familyNames.has(a.name.toLowerCase().trim()));
+          if (familyRecords.length > 0) {
+            fAtt.push({ ...data, id: docSnap.id, familyRecords });
+          }
+        }
+      });
+      fAtt.sort((a, b) => new Date(b.date) - new Date(a.date));
+      setAttendanceLogs(fAtt);
+    }, (err) => console.error("Error fetching attendance:", err));
+
+    // 2. Fetch Prayer Requests
+    const prQ = query(collection(db, 'prayer_requests'), orderBy('timestamp', 'desc'));
+    const unsubPr = onSnapshot(prQ, (prSnap) => {
+      const fPr = [];
+      prSnap.forEach(docSnap => {
+        const data = docSnap.data();
+        if (familyNames.has((data.personName || '').toLowerCase().trim())) {
+          fPr.push({ id: docSnap.id, ...data });
+        }
+      });
+      setPrayerRequests(fPr);
+    }, (err) => console.error("Error fetching prayer requests:", err));
+
+    // 3. Fetch Testimonies / Visitor Records from Reports
+    const rQ = query(collection(db, 'reports'), orderBy('timestamp', 'desc'));
+    const unsubR = onSnapshot(rQ, (rSnap) => {
+      const fTestimonies = [];
+      rSnap.forEach(docSnap => {
+        const data = docSnap.data();
+        let isMatch = false;
+        let matchType = '';
+        if (data.hasTestimony && familyNames.has((data.testimonyName || '').toLowerCase().trim())) {
+          isMatch = true;
+          matchType = 'Testimony';
+        }
+        if (data.hasVisitor && familyNames.has((data.visitorName || '').toLowerCase().trim())) {
+          isMatch = true;
+          matchType = 'Visitor';
+        }
+        if (isMatch) {
+          fTestimonies.push({ id: docSnap.id, matchType, ...data });
+        }
+      });
+      setTestimonies(fTestimonies);
+      setLoading(false);
+    }, (err) => {
+      console.error("Error fetching reports:", err);
+      setLoading(false);
+    });
+
+    return () => {
+      unsubAtt();
+      unsubPr();
+      unsubR();
+    };
   }, [family]);
 
   if (!family) return null;

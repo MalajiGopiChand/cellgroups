@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, Paper, FormControl, InputLabel, Select, MenuItem, Fade, Chip, CircularProgress, Divider, IconButton, TextField, Button } from '@mui/material';
 import { EventAvailable as EventIcon, FilterList as FilterIcon, ArrowBack as ArrowBackIcon, Download as DownloadIcon } from '@mui/icons-material';
-import { collection, getDocs, doc, updateDoc, query, orderBy } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { DeleteOutline as DeleteIcon, Edit as EditIcon } from '@mui/icons-material';
 import * as XLSX from 'xlsx';
@@ -19,19 +19,18 @@ function AdminAttendancePage({ onBack }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetch = async () => {
+    let currentAttSnap = null;
+    let currentLeadersSnap = null;
+
+    const processData = () => {
+      if (!currentAttSnap || !currentLeadersSnap) return;
       try {
-        const [attSnap, leadersSnap] = await Promise.all([
-          getDocs(collection(db, 'memberAttendance')),
-          getDocs(collection(db, 'cellleaders'))
-        ]);
-        
-        const leadersData = leadersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        const leadersData = currentLeadersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
         
         // Group by leader and date
         const grouped = {};
         
-        attSnap.docs.forEach(d => {
+        currentAttSnap.docs.forEach(d => {
           const data = d.data();
           const key = `${data.leaderId}_${data.date}`;
           if (!grouped[key]) {
@@ -57,12 +56,32 @@ function AdminAttendancePage({ onBack }) {
         setAttendance(logs);
         setLeaders(leadersData);
       } catch (error) {
-        console.error('Error fetching attendance logs:', error);
+        console.error('Error processing attendance logs:', error);
       } finally {
         setLoading(false);
       }
     };
-    fetch();
+
+    const unsubAtt = onSnapshot(collection(db, 'memberAttendance'), (snap) => {
+      currentAttSnap = snap;
+      processData();
+    }, (error) => {
+      console.error('Error fetching attendance logs:', error);
+      setLoading(false);
+    });
+
+    const unsubLeaders = onSnapshot(collection(db, 'cellleaders'), (snap) => {
+      currentLeadersSnap = snap;
+      processData();
+    }, (error) => {
+      console.error('Error fetching leaders:', error);
+      setLoading(false);
+    });
+
+    return () => {
+      unsubAtt();
+      unsubLeaders();
+    };
   }, []);
 
   const handleToggleStatus = async (recordId, currentArray, studentObj) => {
