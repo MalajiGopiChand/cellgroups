@@ -22,6 +22,7 @@ function CellLeaderAttendancePage({ user, onBack }) {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   };
+  const [selectedDate, setSelectedDate] = useState(getLocalDate());
   const selectedDay = new Date(selectedDate).getDay();
   const isAllowedDay = selectedDay === 0 || selectedDay === 1 || selectedDay === 2;
   const [snackbarOpen, setSnackbarOpen] = useState(false);
