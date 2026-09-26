@@ -3,20 +3,22 @@ import { Box, Typography, Paper, Fade, CircularProgress, Chip, Dialog, DialogTit
 import { Close as CloseIcon, Person as PersonIcon } from '@mui/icons-material';
 import { collection, getDocs, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '../../firebase/config';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
+import { Card, CardContent, Grid, Button } from '@mui/material';
+import { Assessment as AssessmentIcon } from '@mui/icons-material';
 import { getTuesdayWeekDetails } from '../../utils/dateUtils';
 
 function AdminHomePage() {
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [chartData, setChartData] = useState([]);
+  const [leadersData, setLeadersData] = useState([]);
   const [selectedLeader, setSelectedLeader] = useState(null);
   const [selectedStatus, setSelectedStatus] = useState(null);
+  const [leaderHistory, setLeaderHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
 
   useEffect(() => {
     let unsubAnnouncements;
     let unsubLeaders;
-    let unsubAttendance;
 
     const fetchData = async () => {
       unsubAnnouncements = onSnapshot(collection(db, 'announcements'), (snap) => {
@@ -26,35 +28,12 @@ function AdminHomePage() {
             const db_ = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
             return db_ - da;
           }));
-      }, (error) => {
-        console.error('Error fetching announcements:', error);
       });
 
       unsubLeaders = onSnapshot(collection(db, 'cellleaders'), (leaderSnap) => {
         const leaders = leaderSnap.docs.map(d => ({ id: d.id, name: d.data().name }));
-        
-        const { tuesdayWeekStartDate } = getTuesdayWeekDetails();
-        const qAtt = query(collection(db, 'memberAttendance'), where('tuesdayWeekStartDate', '==', tuesdayWeekStartDate));
-        
-        unsubAttendance = onSnapshot(qAtt, (attSnap) => {
-          const attendance = attSnap.docs.map(d => d.data());
-          const data = leaders.map(leader => {
-            const leaderAtts = attendance.filter(a => a.leaderId === leader.id);
-            const presents = leaderAtts.filter(a => a.status === 'present');
-            const absents = leaderAtts.filter(a => a.status === 'absent');
-            return {
-              id: leader.id,
-              name: leader.name,
-              Present: presents.length,
-              Absent: absents.length,
-              members: leaderAtts
-            };
-          });
-          setChartData(data.filter(d => d.Present > 0 || d.Absent > 0));
-          setLoading(false);
-        });
-      }, (error) => {
-        console.error('Error fetching leaders:', error);
+        setLeadersData(leaders);
+        setLoading(false);
       });
     };
 
@@ -63,91 +42,152 @@ function AdminHomePage() {
     return () => {
       if (unsubAnnouncements) unsubAnnouncements();
       if (unsubLeaders) unsubLeaders();
-      if (unsubAttendance) unsubAttendance();
     };
   }, []);
 
-  const handleBarClick = (data, status) => {
-    if (!data) return;
-    const leaderData = chartData.find(d => d.id === data.id || d.name === data.name);
-    if (leaderData) {
-      setSelectedLeader(leaderData);
-      setSelectedStatus(status);
+  const handleOpenProfile = async (leader) => {
+    setSelectedLeader(leader);
+    setHistoryLoading(true);
+    try {
+      const q = query(collection(db, 'memberAttendance'), where('leaderId', '==', leader.id));
+      const snap = await getDocs(q);
+      const history = snap.docs.map(d => d.data());
+      history.sort((a,b) => new Date(b.date) - new Date(a.date));
+      setLeaderHistory(history);
+    } catch(e) {
+      console.error(e);
+    } finally {
+      setHistoryLoading(false);
     }
   };
 
   const handleCloseDialog = () => {
     setSelectedLeader(null);
     setSelectedStatus(null);
+    setLeaderHistory([]);
   };
 
   return (
     
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
 
-
-        {/* Cell Leader Attendance Graph */}
-        {!loading && chartData.length > 0 && (
-          <Paper sx={{ p: 3, bgcolor: 'var(--bg-glass-strong)', backdropFilter: 'blur(12px)', borderRadius: 1, border: '1px solid var(--border-light)', boxShadow: 'var(--shadow-sm)', mb: 1 }}>
-            <Typography variant="h6" sx={{ fontWeight: 800, color: 'var(--text-primary)', mb: 3 }}>
-              Member Attendance (Current Week)
+        {/* Cell Leaders List (Replaces Graph) */}
+        {!loading && leadersData.length > 0 && (
+          <Box sx={{ mb: 4 }}>
+            <Typography variant="h6" sx={{ fontWeight: 800, color: 'var(--text-primary)', mb: 2 }}>
+              Cell Leader Profiles
             </Typography>
-            <Box sx={{ width: '100%', height: 300 }}>
-              <ResponsiveContainer>
-                <BarChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.1)" />
-                  <XAxis dataKey="name" tick={{ fontSize: 12, fill: 'var(--text-secondary)' }} />
-                  <YAxis tick={{ fontSize: 12, fill: 'var(--text-secondary)' }} allowDecimals={false} />
-                  <RechartsTooltip 
-                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                  />
-                  <Legend wrapperStyle={{ paddingTop: '10px' }} />
-                  <Bar dataKey="Present" fill="#10b981" radius={[4, 4, 0, 0]} barSize={30} onClick={(data) => handleBarClick(data, 'present')} style={{ cursor: 'pointer' }} />
-                  <Bar dataKey="Absent" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={30} onClick={(data) => handleBarClick(data, 'absent')} style={{ cursor: 'pointer' }} />
-                </BarChart>
-              </ResponsiveContainer>
-            </Box>
-          </Paper>
+            <Grid container spacing={2}>
+              {leadersData.map((leader, idx) => (
+                <Grid item xs={12} sm={6} md={4} key={idx}>
+                  <Card 
+                    onClick={() => handleOpenProfile(leader)}
+                    sx={{ 
+                      cursor: 'pointer', borderRadius: 2, border: '1px solid var(--border-neutral)', 
+                      bgcolor: 'var(--bg-glass-strong)', transition: 'all 0.2s',
+                      '&:hover': { borderColor: 'var(--primary-forest)', boxShadow: 'var(--shadow-md)' }
+                    }}
+                  >
+                    <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2, p: '16px !important' }}>
+                      <Avatar sx={{ bgcolor: 'var(--light-sage)', color: 'var(--primary-forest)' }}>
+                        <PersonIcon />
+                      </Avatar>
+                      <Box sx={{ flex: 1 }}>
+                        <Typography variant="subtitle1" fontWeight={700} color="var(--text-deep)">{leader.name}</Typography>
+                        <Typography variant="caption" color="text.secondary">View Performance Dashboard</Typography>
+                      </Box>
+                      <AssessmentIcon sx={{ color: 'var(--text-secondary)' }} />
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          </Box>
         )}
 
-        {/* Leader Details Dialog */}
-        <Dialog open={!!selectedLeader} onClose={handleCloseDialog} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 2 } }}>
+        {/* Leader Dashboard Dialog */}
+        <Dialog open={!!selectedLeader} onClose={handleCloseDialog} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: 2, height: '80vh' } }}>
           {selectedLeader && (
             <>
               <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}>
                 <Box>
-                  <Typography variant="h6" sx={{ fontWeight: 800 }}>{selectedLeader.name}'s Members</Typography>
+                  <Typography variant="h5" sx={{ fontWeight: 800, color: 'var(--primary-forest)' }}>{selectedLeader.name}'s Dashboard</Typography>
                   <Typography variant="body2" color="text.secondary">
-                    {selectedStatus === 'absent' ? 'Showing Absents' : selectedStatus === 'present' ? 'Showing Presents' : 'All Members'}
+                    All-time Performance & Attendance Records
                   </Typography>
                 </Box>
                 <IconButton onClick={handleCloseDialog} size="small" sx={{ bgcolor: 'rgba(0,0,0,0.05)' }}>
                   <CloseIcon />
                 </IconButton>
               </DialogTitle>
-              <DialogContent dividers>
-                <List sx={{ pt: 0 }}>
-                  {selectedLeader.members
-                    .filter(m => !selectedStatus || m.status === selectedStatus)
-                    .map((m, i) => (
-                    <ListItem key={i} sx={{ borderBottom: '1px solid var(--border-light)', '&:last-child': { borderBottom: 'none' } }}>
-                      <ListItemAvatar>
-                        <Avatar sx={{ bgcolor: m.status === 'present' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', color: m.status === 'present' ? '#10b981' : '#ef4444' }}>
-                          <PersonIcon />
-                        </Avatar>
-                      </ListItemAvatar>
-                      <ListItemText 
-                        primary={<Typography fontWeight={600}>{m.memberName || m.name || m.studentName || 'Unknown Member'}</Typography>}
-                        secondary={<Chip size="small" label={m.status === 'present' ? 'Present' : 'Absent'} sx={{ mt: 0.5, height: 20, fontSize: '0.65rem', fontWeight: 600, bgcolor: m.status === 'present' ? '#10b981' : '#ef4444', color: '#fff' }} />}
-                      />
-                    </ListItem>
-                  ))}
-                  {selectedLeader.members.filter(m => !selectedStatus || m.status === selectedStatus).length === 0 && (
-                    <Typography color="text.secondary" sx={{ textAlign: 'center', py: 3 }}>
-                      No {selectedStatus} members found.
-                    </Typography>
-                  )}
-                </List>
+              <DialogContent dividers sx={{ p: 0 }}>
+                {historyLoading ? (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', p: 5 }}><CircularProgress /></Box>
+                ) : (
+                  <Box sx={{ p: 3, bgcolor: 'var(--bg-main)', minHeight: '100%' }}>
+                    
+                    {/* Stats Summary */}
+                    <Grid container spacing={2} sx={{ mb: 4 }}>
+                      <Grid item xs={12} sm={4}>
+                        <Paper sx={{ p: 3, textAlign: 'center', borderRadius: 2, bgcolor: '#fff', border: '1px solid var(--border-light)' }}>
+                          <Typography variant="h3" sx={{ fontWeight: 800, color: 'var(--text-deep)' }}>{leaderHistory.length}</Typography>
+                          <Typography variant="subtitle2" sx={{ color: 'text.secondary', fontWeight: 600 }}>Total Records</Typography>
+                        </Paper>
+                      </Grid>
+                      <Grid item xs={6} sm={4}>
+                        <Paper sx={{ p: 3, textAlign: 'center', borderRadius: 2, bgcolor: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}>
+                          <Typography variant="h3" sx={{ fontWeight: 800, color: '#10b981' }}>{leaderHistory.filter(h => h.status === 'present').length}</Typography>
+                          <Typography variant="subtitle2" sx={{ color: '#10b981', fontWeight: 600 }}>Total Presents</Typography>
+                        </Paper>
+                      </Grid>
+                      <Grid item xs={6} sm={4}>
+                        <Paper sx={{ p: 3, textAlign: 'center', borderRadius: 2, bgcolor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}>
+                          <Typography variant="h3" sx={{ fontWeight: 800, color: '#ef4444' }}>{leaderHistory.filter(h => h.status === 'absent').length}</Typography>
+                          <Typography variant="subtitle2" sx={{ color: '#ef4444', fontWeight: 600 }}>Total Absents</Typography>
+                        </Paper>
+                      </Grid>
+                    </Grid>
+
+                    {/* Filters */}
+                    <Box sx={{ display: 'flex', gap: 1, mb: 3 }}>
+                      <Chip label="All Records" onClick={() => setSelectedStatus(null)} sx={{ fontWeight: 600, bgcolor: !selectedStatus ? 'var(--text-deep)' : 'var(--border-neutral)', color: !selectedStatus ? '#fff' : 'inherit' }} />
+                      <Chip label="Presents Only" onClick={() => setSelectedStatus('present')} sx={{ fontWeight: 600, bgcolor: selectedStatus === 'present' ? '#10b981' : 'var(--border-neutral)', color: selectedStatus === 'present' ? '#fff' : 'inherit' }} />
+                      <Chip label="Absents Only" onClick={() => setSelectedStatus('absent')} sx={{ fontWeight: 600, bgcolor: selectedStatus === 'absent' ? '#ef4444' : 'var(--border-neutral)', color: selectedStatus === 'absent' ? '#fff' : 'inherit' }} />
+                    </Box>
+
+                    {/* Detailed List */}
+                    <Paper sx={{ borderRadius: 2, overflow: 'hidden', border: '1px solid var(--border-light)' }}>
+                      <List sx={{ p: 0 }}>
+                        {leaderHistory
+                          .filter(h => !selectedStatus || h.status === selectedStatus)
+                          .map((h, i) => (
+                          <ListItem key={i} sx={{ borderBottom: '1px solid var(--border-light)', bgcolor: '#fff', '&:last-child': { borderBottom: 'none' } }}>
+                            <ListItemAvatar>
+                              <Avatar sx={{ bgcolor: h.status === 'present' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', color: h.status === 'present' ? '#10b981' : '#ef4444' }}>
+                                <PersonIcon />
+                              </Avatar>
+                            </ListItemAvatar>
+                            <ListItemText 
+                              primary={<Typography fontWeight={700} color="var(--text-deep)">{h.name || h.studentName || h.memberName || 'Member'}</Typography>}
+                              secondary={
+                                <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5, color: 'text.secondary', fontWeight: 600 }}>
+                                  {h.date} {h.tuesdayWeekStartDate ? `(Week: ${h.tuesdayWeekStartDate})` : ''}
+                                </Typography>
+                              }
+                            />
+                            <Chip size="small" label={h.status === 'present' ? 'Present' : 'Absent'} sx={{ height: 24, fontWeight: 700, bgcolor: h.status === 'present' ? '#10b981' : '#ef4444', color: '#fff' }} />
+                          </ListItem>
+                        ))}
+                        {leaderHistory.filter(h => !selectedStatus || h.status === selectedStatus).length === 0 && (
+                          <Typography color="text.secondary" sx={{ textAlign: 'center', py: 4, bgcolor: '#fff' }}>
+                            No {selectedStatus || ''} records found.
+                          </Typography>
+                        )}
+                      </List>
+                    </Paper>
+
+                  </Box>
+                )}
               </DialogContent>
             </>
           )}

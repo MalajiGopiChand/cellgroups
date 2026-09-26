@@ -1,9 +1,9 @@
 import PageHeader from '../../components/PageHeader';
 import React, { useState, useEffect, useRef } from 'react';
-import { Box, Typography, Paper, Fade, Button, IconButton, Snackbar, Alert, Avatar, Collapse, Skeleton } from '@mui/material';
+import { Box, Typography, Paper, Fade, Button, IconButton, Snackbar, Alert, Avatar, Collapse, Skeleton, Dialog, DialogTitle, DialogContent, List, ListItem, ListItemText, ListItemAvatar, CircularProgress } from '@mui/material';
 import { collection, getDocs, query, where, doc, setDoc, getDoc, writeBatch, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebase/config';
-import { ArrowBack as ArrowBackIcon, Download as DownloadIcon, CheckCircle as CheckCircleIcon, Cancel as CancelIcon, ChevronRight as ChevronRightIcon } from '@mui/icons-material';
+import { ArrowBack as ArrowBackIcon, Download as DownloadIcon, CheckCircle as CheckCircleIcon, Cancel as CancelIcon, ChevronRight as ChevronRightIcon, Close as CloseIcon, CalendarMonth as CalendarIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import html2canvas from 'html2canvas';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -28,6 +28,31 @@ function CellLeaderAttendancePage({ user, onBack }) {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [expandedFamilies, setExpandedFamilies] = useState({});
   const printRef = useRef(null);
+
+  const [selectedMemberProfile, setSelectedMemberProfile] = useState(null);
+  const [memberHistory, setMemberHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  const handleOpenProfile = async (member) => {
+    setSelectedMemberProfile(member);
+    setHistoryLoading(true);
+    try {
+      const q = query(collection(db, 'memberAttendance'), where('studentId', '==', member.id));
+      const snap = await getDocs(q);
+      const history = snap.docs.map(d => d.data());
+      history.sort((a,b) => new Date(b.date) - new Date(a.date));
+      setMemberHistory(history);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  const handleCloseProfile = () => {
+    setSelectedMemberProfile(null);
+    setMemberHistory([]);
+  };
 
   const toggleFamily = (familyId) => {
     setExpandedFamilies(prev => ({
@@ -343,7 +368,7 @@ function CellLeaderAttendancePage({ user, onBack }) {
                       return (
                         
                           <Box key={m.id} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Typography sx={{ fontWeight: 700, color: 'var(--text-deep)' }}>{m.name}</Typography>
+                            <Typography onClick={() => handleOpenProfile(m)} sx={{ fontWeight: 700, color: 'var(--primary-forest)', cursor: 'pointer', textDecoration: 'underline' }}>{m.name}</Typography>
                             <Box sx={{ display: 'flex', gap: 1 }}>
                               <Box 
                                 onClick={() => handleMark(m.id, m.name, 'present', family.headId)}
@@ -453,3 +478,4 @@ function CellLeaderAttendancePage({ user, onBack }) {
 }
 
 export default CellLeaderAttendancePage;
+
