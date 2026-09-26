@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Paper, Fade, CircularProgress, Chip } from '@mui/material';
+import { Box, Typography, Paper, Fade, CircularProgress, Chip, Dialog, DialogTitle, DialogContent, IconButton, List, ListItem, ListItemText, ListItemAvatar, Avatar } from '@mui/material';
+import { Close as CloseIcon, Person as PersonIcon } from '@mui/icons-material';
 import { collection, getDocs, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -9,6 +10,8 @@ function AdminHomePage() {
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [chartData, setChartData] = useState([]);
+  const [selectedLeader, setSelectedLeader] = useState(null);
+  const [selectedStatus, setSelectedStatus] = useState(null);
 
   useEffect(() => {
     let unsubAnnouncements;
@@ -37,12 +40,14 @@ function AdminHomePage() {
           const attendance = attSnap.docs.map(d => d.data());
           const data = leaders.map(leader => {
             const leaderAtts = attendance.filter(a => a.leaderId === leader.id);
-            const presents = leaderAtts.filter(a => a.status === 'present').length;
-            const absents = leaderAtts.filter(a => a.status === 'absent').length;
+            const presents = leaderAtts.filter(a => a.status === 'present');
+            const absents = leaderAtts.filter(a => a.status === 'absent');
             return {
+              id: leader.id,
               name: leader.name,
-              Present: presents,
-              Absent: absents
+              Present: presents.length,
+              Absent: absents.length,
+              members: leaderAtts
             };
           });
           setChartData(data.filter(d => d.Present > 0 || d.Absent > 0));
@@ -61,6 +66,20 @@ function AdminHomePage() {
       if (unsubAttendance) unsubAttendance();
     };
   }, []);
+
+  const handleBarClick = (data, status) => {
+    if (!data) return;
+    const leaderData = chartData.find(d => d.id === data.id || d.name === data.name);
+    if (leaderData) {
+      setSelectedLeader(leaderData);
+      setSelectedStatus(status);
+    }
+  };
+
+  const handleCloseDialog = () => {
+    setSelectedLeader(null);
+    setSelectedStatus(null);
+  };
 
   return (
     
@@ -83,13 +102,56 @@ function AdminHomePage() {
                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                   />
                   <Legend wrapperStyle={{ paddingTop: '10px' }} />
-                  <Bar dataKey="Present" fill="#10b981" radius={[4, 4, 0, 0]} barSize={30} />
-                  <Bar dataKey="Absent" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={30} />
+                  <Bar dataKey="Present" fill="#10b981" radius={[4, 4, 0, 0]} barSize={30} onClick={(data) => handleBarClick(data, 'present')} style={{ cursor: 'pointer' }} />
+                  <Bar dataKey="Absent" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={30} onClick={(data) => handleBarClick(data, 'absent')} style={{ cursor: 'pointer' }} />
                 </BarChart>
               </ResponsiveContainer>
             </Box>
           </Paper>
         )}
+
+        {/* Leader Details Dialog */}
+        <Dialog open={!!selectedLeader} onClose={handleCloseDialog} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 2 } }}>
+          {selectedLeader && (
+            <>
+              <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}>
+                <Box>
+                  <Typography variant="h6" sx={{ fontWeight: 800 }}>{selectedLeader.name}'s Members</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {selectedStatus === 'absent' ? 'Showing Absents' : selectedStatus === 'present' ? 'Showing Presents' : 'All Members'}
+                  </Typography>
+                </Box>
+                <IconButton onClick={handleCloseDialog} size="small" sx={{ bgcolor: 'rgba(0,0,0,0.05)' }}>
+                  <CloseIcon />
+                </IconButton>
+              </DialogTitle>
+              <DialogContent dividers>
+                <List sx={{ pt: 0 }}>
+                  {selectedLeader.members
+                    .filter(m => !selectedStatus || m.status === selectedStatus)
+                    .map((m, i) => (
+                    <ListItem key={i} sx={{ borderBottom: '1px solid var(--border-light)', '&:last-child': { borderBottom: 'none' } }}>
+                      <ListItemAvatar>
+                        <Avatar sx={{ bgcolor: m.status === 'present' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', color: m.status === 'present' ? '#10b981' : '#ef4444' }}>
+                          <PersonIcon />
+                        </Avatar>
+                      </ListItemAvatar>
+                      <ListItemText 
+                        primary={<Typography fontWeight={600}>{m.memberName || m.name || m.studentName || 'Unknown Member'}</Typography>}
+                        secondary={<Chip size="small" label={m.status === 'present' ? 'Present' : 'Absent'} sx={{ mt: 0.5, height: 20, fontSize: '0.65rem', fontWeight: 600, bgcolor: m.status === 'present' ? '#10b981' : '#ef4444', color: '#fff' }} />}
+                      />
+                    </ListItem>
+                  ))}
+                  {selectedLeader.members.filter(m => !selectedStatus || m.status === selectedStatus).length === 0 && (
+                    <Typography color="text.secondary" sx={{ textAlign: 'center', py: 3 }}>
+                      No {selectedStatus} members found.
+                    </Typography>
+                  )}
+                </List>
+              </DialogContent>
+            </>
+          )}
+        </Dialog>
 
         {/* Announcements Feed */}
         <Box>
