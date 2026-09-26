@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Paper, Grid, Chip, Avatar, CircularProgress, IconButton, FormControl, InputLabel, Select, MenuItem, Divider } from '@mui/material';
+import { Box, Typography, Paper, Grid, Chip, Avatar, CircularProgress, Divider } from '@mui/material';
 import { Person as PersonIcon, ArrowBack as ArrowBackIcon, Event as EventIcon, BarChart as BarChartIcon, LocationOn as LocationIcon, Star as StarIcon } from '@mui/icons-material';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 import { getTuesdayWeekDetails } from '../../utils/dateUtils';
 import AdminMemberProfilePage from './AdminMemberProfilePage';
+import AnimatedButton from '../../components/ui/AnimatedButton';
+import SplitText from '../../components/ui/SplitText';
+import HeadlessWeekSelector from '../../components/ui/HeadlessWeekSelector';
 
 function AdminLeaderProfilePage({ leader, onBack }) {
   const [leaderOwnHistory, setLeaderOwnHistory] = useState([]);
@@ -102,12 +105,21 @@ function AdminLeaderProfilePage({ leader, onBack }) {
         gap: 2 
       }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <IconButton onClick={onBack} size="small" sx={{ bgcolor: 'var(--bg-glass-strong)', border: '1px solid var(--border-neutral)' }}>
+          <AnimatedButton 
+            onClick={onBack} 
+            sx={{ 
+              minWidth: 'auto', 
+              p: 1, 
+              bgcolor: 'var(--surface-white)', 
+              color: 'var(--text-deep)', 
+              border: '1px solid var(--border-neutral)' 
+            }}
+          >
             <ArrowBackIcon />
-          </IconButton>
+          </AnimatedButton>
           <Box>
             <Typography variant="h6" sx={{ fontWeight: 800, color: 'var(--primary-forest)', lineHeight: 1.2 }}>
-              {leader.name}'s Dashboard
+              <SplitText text={`${leader.name}'s Dashboard`} delay={0.1} />
             </Typography>
             <Typography variant="caption" sx={{ color: 'var(--text-secondary)' }}>
               Weekly Overview
@@ -115,21 +127,15 @@ function AdminLeaderProfilePage({ leader, onBack }) {
           </Box>
         </Box>
         
-        <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 200 }, bgcolor: 'var(--surface-white)', borderRadius: 1 }}>
-          <InputLabel>Select Week</InputLabel>
-          <Select
-            value={selectedWeek}
-            label="Select Week"
-            onChange={(e) => setSelectedWeek(e.target.value)}
-          >
-            {allWeeks.map(week => (
-              <MenuItem key={week} value={week}>
-                {new Date(week).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                {week === currentWeek ? ' (Current)' : ''}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+        {/* New HeadlessUI Menu Integration */}
+        <Box sx={{ alignSelf: { xs: 'stretch', sm: 'center' }, display: 'flex', justifyContent: 'flex-end' }}>
+          <HeadlessWeekSelector 
+            weeks={allWeeks} 
+            selectedWeek={selectedWeek} 
+            onSelect={setSelectedWeek} 
+            currentWeek={currentWeek} 
+          />
+        </Box>
       </Box>
 
       {loading ? (
@@ -140,9 +146,9 @@ function AdminLeaderProfilePage({ leader, onBack }) {
           <Grid container spacing={{ xs: 2, sm: 3 }}>
             
             <Grid item xs={12} md={5}>
-              <Paper sx={{ p: { xs: 2, sm: 3 }, bgcolor: '#fff', borderRadius: 2, border: '1px solid var(--border-light)', height: '100%' }}>
+              <Paper sx={{ p: { xs: 2, sm: 3 }, bgcolor: '#fff', borderRadius: 2, border: '1px solid var(--border-light)', height: '100%', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
                 <Typography variant="subtitle1" sx={{ fontWeight: 800, color: 'var(--text-deep)', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <EventIcon fontSize="small" /> Leader's Attendance
+                  <EventIcon fontSize="small" sx={{ color: 'var(--primary-forest)' }} /> Leader's Attendance
                 </Typography>
                 
                 {weekLeaderRecords.length > 0 ? (
@@ -178,7 +184,7 @@ function AdminLeaderProfilePage({ leader, onBack }) {
                 <Divider sx={{ my: 2 }} />
 
                 <Typography variant="subtitle1" sx={{ fontWeight: 800, color: 'var(--text-deep)', mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <LocationIcon fontSize="small" /> Meeting Place
+                  <LocationIcon fontSize="small" sx={{ color: 'var(--primary-forest)' }} /> Meeting Place
                 </Typography>
                 <Paper sx={{ p: 1.5, bgcolor: 'var(--bg-main)', borderRadius: 1, border: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', gap: 1.5, boxShadow: 'none' }}>
                   <Avatar sx={{ bgcolor: 'var(--primary-forest)', width: 28, height: 28 }}>
@@ -193,9 +199,9 @@ function AdminLeaderProfilePage({ leader, onBack }) {
 
             
             <Grid item xs={12} md={7}>
-              <Paper sx={{ p: { xs: 2, sm: 3 }, bgcolor: '#fff', borderRadius: 2, border: '1px solid var(--border-light)', height: '100%' }}>
+              <Paper sx={{ p: { xs: 2, sm: 3 }, bgcolor: '#fff', borderRadius: 2, border: '1px solid var(--border-light)', height: '100%', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
                 <Typography variant="subtitle1" sx={{ fontWeight: 800, color: 'var(--text-deep)', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <BarChartIcon fontSize="small" /> Group Attendance Report
+                  <BarChartIcon fontSize="small" sx={{ color: 'var(--primary-forest)' }} /> Group Attendance Report
                 </Typography>
                 
                 {weekGroupRecords.length === 0 ? (
@@ -220,11 +226,11 @@ function AdminLeaderProfilePage({ leader, onBack }) {
                     </Grid>
                     <Grid item xs={12} sm={6}>
                       <Box sx={{ display: 'flex', flexDirection: { xs: 'row', sm: 'column' }, gap: 1.5 }}>
-                        <Paper sx={{ flex: 1, p: 1.5, bgcolor: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', boxShadow: 'none' }}>
+                        <Paper sx={{ flex: 1, p: 1.5, bgcolor: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', boxShadow: 'none', transition: 'all 0.2s', '&:hover': { transform: 'scale(1.02)' } }}>
                           <Typography variant="h5" sx={{ color: '#10b981', fontWeight: 800 }}>{presentCount}</Typography>
                           <Typography variant="caption" sx={{ color: '#10b981', fontWeight: 600 }}>Present</Typography>
                         </Paper>
-                        <Paper sx={{ flex: 1, p: 1.5, bgcolor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', boxShadow: 'none' }}>
+                        <Paper sx={{ flex: 1, p: 1.5, bgcolor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', boxShadow: 'none', transition: 'all 0.2s', '&:hover': { transform: 'scale(1.02)' } }}>
                           <Typography variant="h5" sx={{ color: '#ef4444', fontWeight: 800 }}>{absentCount}</Typography>
                           <Typography variant="caption" sx={{ color: '#ef4444', fontWeight: 600 }}>Absent</Typography>
                         </Paper>
@@ -239,15 +245,15 @@ function AdminLeaderProfilePage({ leader, onBack }) {
           <Grid container spacing={{ xs: 2, sm: 3 }}>
             
             <Grid item xs={12} md={7}>
-              <Paper sx={{ p: { xs: 2, sm: 3 }, bgcolor: '#fff', borderRadius: 2, border: '1px solid var(--border-light)', height: '100%' }}>
+              <Paper sx={{ p: { xs: 2, sm: 3 }, bgcolor: '#fff', borderRadius: 2, border: '1px solid var(--border-light)', height: '100%', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
                   <Box sx={{ pr: 1 }}>
                     <Typography variant="subtitle1" sx={{ fontWeight: 800, color: 'var(--text-deep)', display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <PersonIcon fontSize="small" /> Member Status
+                      <PersonIcon fontSize="small" sx={{ color: 'var(--primary-forest)' }} /> Member Status
                     </Typography>
                     <Typography variant="caption" color="text.secondary">Tap member for history</Typography>
                   </Box>
-                  <Chip size="small" label={`${members.length} Total`} sx={{ fontWeight: 700, flexShrink: 0 }} />
+                  <Chip size="small" label={`${members.length} Total`} sx={{ fontWeight: 700, flexShrink: 0, bgcolor: 'var(--bg-glass-strong)' }} />
                 </Box>
 
                 {members.length > 0 ? (
@@ -269,6 +275,12 @@ function AdminLeaderProfilePage({ leader, onBack }) {
                             borderRadius: 1, 
                             border: '1px solid var(--border-light)',
                             cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            '&:hover': {
+                              transform: 'translateX(4px)',
+                              borderColor: 'var(--primary-forest)',
+                              bgcolor: 'var(--surface-white)'
+                            },
                             '&:active': { bgcolor: 'var(--border-neutral)' }
                           }}
                         >
@@ -298,9 +310,9 @@ function AdminLeaderProfilePage({ leader, onBack }) {
 
             
             <Grid item xs={12} md={5}>
-              <Paper sx={{ p: { xs: 2, sm: 3 }, bgcolor: '#fff', borderRadius: 2, border: '1px solid var(--border-light)', height: '100%' }}>
+              <Paper sx={{ p: { xs: 2, sm: 3 }, bgcolor: '#fff', borderRadius: 2, border: '1px solid var(--border-light)', height: '100%', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
                 <Typography variant="subtitle1" sx={{ fontWeight: 800, color: 'var(--text-deep)', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <StarIcon fontSize="small" /> Weekly Activity Report
+                  <StarIcon fontSize="small" sx={{ color: 'var(--primary-forest)' }} /> Weekly Activity Report
                 </Typography>
                 
                 {weekReports.length > 0 ? (
