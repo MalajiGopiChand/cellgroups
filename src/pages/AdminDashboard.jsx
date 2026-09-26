@@ -270,6 +270,14 @@ function AdminDashboard({ user, onLogout }) {
 
     // --- Quick Actions ---
     { 
+      id: 12, 
+      label: 'Leader Profiles', 
+      icon: <PersonIcon />, 
+      color: 'var(--primary-forest)',
+      bgColor: 'var(--light-sage)',
+      description: 'View performance'
+    },
+    { 
       id: 3, 
       label: t('nav.logs'), 
       icon: <AttendanceIcon />, 
