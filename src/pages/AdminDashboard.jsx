@@ -57,6 +57,7 @@ import AdminAnnouncementsPage from './admin/AdminAnnouncementsPage';
 import AdminLeaderAttendancePage from './admin/AdminLeaderAttendancePage';
 import AdminSubmitPrayerRequestPage from './admin/AdminSubmitPrayerRequestPage';
 import AdminViewPrayerRequestsPage from './admin/AdminViewPrayerRequestsPage';
+import AdminLeaderProfilesListPage from './admin/AdminLeaderProfilesListPage';
 import AdminReportCardPage from './admin/AdminReportCardPage';
 import AdminMeetingPlacesPage from './admin/AdminMeetingPlacesPage';
 import AdminTestimoniesPage from './admin/AdminTestimoniesPage';
@@ -334,6 +335,7 @@ function AdminDashboard({ user, onLogout }) {
         case 9: return <AdminMeetingPlacesPage onBack={() => setCurrentTab(0)} />;
         case 10: return <AdminTestimoniesPage onBack={() => setCurrentTab(0)} />;
         case 11: return <AdminViewPrayerRequestsPage user={user} onBack={() => setCurrentTab(0)} />;
+          case 12: return <AdminLeaderProfilesListPage onBack={() => setCurrentTab(0)} />;
         default: return <AdminHomePage />;
       }
     })();
