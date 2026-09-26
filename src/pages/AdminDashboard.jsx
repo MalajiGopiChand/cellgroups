@@ -41,6 +41,7 @@ import {
   Pending as PendingIcon,
   Cake as CakeIcon,
   HowToReg as HowToRegIcon,
+  Person as PersonIcon,
 } from '@mui/icons-material';
 
 import { collection, onSnapshot, query, where } from 'firebase/firestore';

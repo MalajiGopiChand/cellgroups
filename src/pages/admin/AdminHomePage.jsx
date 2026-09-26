@@ -50,20 +50,6 @@ function AdminHomePage() {
     };
   }, []);
 
-  const handleOpenProfile = (leader) => {
-    setSelectedLeader(leader);
-  };
-
-  const handleCloseDialog = () => {
-    setSelectedLeader(null);
-    setSelectedStatus(null);
-    setLeaderHistory([]);
-  };
-
-  if (selectedLeader) {
-    return <AdminLeaderProfilePage leader={selectedLeader} onBack={() => setSelectedLeader(null)} />;
-  }
-
   return (
     
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
