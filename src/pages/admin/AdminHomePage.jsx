@@ -1,19 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Paper, CircularProgress, Chip, Grid, Card, CardContent, Avatar } from '@mui/material';
-import { Person as PersonIcon, Assessment as AssessmentIcon } from '@mui/icons-material';
+import { Box, Typography, Paper, CircularProgress, Chip } from '@mui/material';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebase/config';
-import AdminLeaderProfilePage from './AdminLeaderProfilePage';
 
 function AdminHomePage() {
   const [announcements, setAnnouncements] = useState([]);
-  const [leadersData, setLeadersData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedLeader, setSelectedLeader] = useState(null);
 
   useEffect(() => {
     let unsubAnnouncements;
-    let unsubLeaders;
 
     const fetchData = async () => {
       unsubAnnouncements = onSnapshot(collection(db, 'announcements'), (snap) => {
@@ -23,11 +18,6 @@ function AdminHomePage() {
             const db_ = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
             return db_ - da;
           }));
-      });
-
-      unsubLeaders = onSnapshot(collection(db, 'cellleaders'), (leaderSnap) => {
-        const leaders = leaderSnap.docs.map(d => ({ id: d.id, name: d.data().name }));
-        setLeadersData(leaders);
         setLoading(false);
       });
     };
@@ -36,50 +26,11 @@ function AdminHomePage() {
 
     return () => {
       if (unsubAnnouncements) unsubAnnouncements();
-      if (unsubLeaders) unsubLeaders();
     };
   }, []);
 
-  if (selectedLeader) {
-    return <AdminLeaderProfilePage leader={selectedLeader} onBack={() => setSelectedLeader(null)} />;
-  }
-
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-      {/* Cell Leaders List */}
-      {!loading && leadersData.length > 0 && (
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h6" sx={{ fontWeight: 800, color: 'var(--text-primary)', mb: 3 }}>
-            Cell Leader Profiles
-          </Typography>
-          <Grid container spacing={2}>
-            {leadersData.map((leader, idx) => (
-              <Grid item xs={12} sm={6} md={4} key={idx}>
-                <Card 
-                  onClick={() => setSelectedLeader(leader)}
-                  sx={{ 
-                    cursor: 'pointer', borderRadius: 2, border: '1px solid var(--border-neutral)', 
-                    bgcolor: 'var(--bg-glass-strong)', transition: 'all 0.2s',
-                    '&:hover': { borderColor: 'var(--primary-forest)', boxShadow: 'var(--shadow-md)' }
-                  }}
-                >
-                  <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2, p: '16px !important' }}>
-                    <Avatar sx={{ bgcolor: 'var(--light-sage)', color: 'var(--primary-forest)' }}>
-                      <PersonIcon />
-                    </Avatar>
-                    <Box sx={{ flex: 1 }}>
-                      <Typography variant="subtitle1" fontWeight={700} color="var(--text-deep)">{leader.name}</Typography>
-                      <Typography variant="caption" color="text.secondary">View Performance Dashboard</Typography>
-                    </Box>
-                    <AssessmentIcon sx={{ color: 'var(--text-secondary)' }} />
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
-        </Box>
-      )}
-
       {/* Announcements Feed */}
       <Box>
         {loading ? (
@@ -88,6 +39,9 @@ function AdminHomePage() {
           </Box>
         ) : announcements.length > 0 ? (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Typography variant="h6" sx={{ fontWeight: 800, color: 'var(--text-primary)', mb: 1 }}>
+              Recent Announcements
+            </Typography>
             {announcements.map((a, index) => (
               <Paper
                 key={index}
@@ -125,7 +79,11 @@ function AdminHomePage() {
               </Paper>
             ))}
           </Box>
-        ) : null}
+        ) : (
+          <Typography color="text.secondary" sx={{ textAlign: 'center', p: 4 }}>
+            No announcements found.
+          </Typography>
+        )}
       </Box>
     </Box>
   );
