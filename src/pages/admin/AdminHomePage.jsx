@@ -6,6 +6,7 @@ import { db } from '../../firebase/config';
 import { Card, CardContent, Grid, Button } from '@mui/material';
 import { Assessment as AssessmentIcon } from '@mui/icons-material';
 import { getTuesdayWeekDetails } from '../../utils/dateUtils';
+import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 
 function AdminHomePage() {
   const [announcements, setAnnouncements] = useState([]);
@@ -126,7 +127,61 @@ function AdminHomePage() {
                 ) : (
                   <Box sx={{ p: 3, bgcolor: 'var(--bg-main)', minHeight: '100%' }}>
                     
-                    {/* Stats Summary */}
+                    {/* Current Week Graph */}
+                    <Box sx={{ mb: 4, p: 3, bgcolor: '#fff', borderRadius: 2, border: '1px solid var(--border-light)' }}>
+                      <Typography variant="h6" sx={{ fontWeight: 800, color: 'var(--text-deep)', mb: 2 }}>
+                        Current Week Attendance
+                      </Typography>
+                      {(() => {
+                        const { tuesdayWeekStartDate } = getTuesdayWeekDetails();
+                        const currentWeekRecords = leaderHistory.filter(h => h.tuesdayWeekStartDate === tuesdayWeekStartDate);
+                        const presentCount = currentWeekRecords.filter(h => h.status === 'present').length;
+                        const absentCount = currentWeekRecords.filter(h => h.status === 'absent').length;
+                        
+                        if (currentWeekRecords.length === 0) {
+                          return <Typography color="text.secondary">No attendance taken yet this week.</Typography>;
+                        }
+
+                        const data = [
+                          { name: 'Present', value: presentCount, color: '#10b981' },
+                          { name: 'Absent', value: absentCount, color: '#ef4444' }
+                        ];
+
+                        return (
+                          <Grid container spacing={3} alignItems="center">
+                            <Grid item xs={12} sm={6}>
+                              <Box sx={{ height: 200 }}>
+                                <ResponsiveContainer width="100%" height="100%">
+                                  <PieChart>
+                                    <Pie data={data} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
+                                      {data.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={entry.color} />
+                                      ))}
+                                    </Pie>
+                                    <RechartsTooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                                  </PieChart>
+                                </ResponsiveContainer>
+                              </Box>
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                <Paper sx={{ p: 2, bgcolor: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}>
+                                  <Typography variant="h5" sx={{ color: '#10b981', fontWeight: 800 }}>{presentCount}</Typography>
+                                  <Typography variant="body2" sx={{ color: '#10b981', fontWeight: 600 }}>Present this week</Typography>
+                                </Paper>
+                                <Paper sx={{ p: 2, bgcolor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}>
+                                  <Typography variant="h5" sx={{ color: '#ef4444', fontWeight: 800 }}>{absentCount}</Typography>
+                                  <Typography variant="body2" sx={{ color: '#ef4444', fontWeight: 600 }}>Absent this week</Typography>
+                                </Paper>
+                              </Box>
+                            </Grid>
+                          </Grid>
+                        );
+                      })()}
+                    </Box>
+
+                    {/* Stats Summary (All Time) */}
+                    <Typography variant="h6" sx={{ fontWeight: 800, color: 'var(--text-deep)', mb: 2 }}>All-Time Summary</Typography>
                     <Grid container spacing={2} sx={{ mb: 4 }}>
                       <Grid item xs={12} sm={4}>
                         <Paper sx={{ p: 3, textAlign: 'center', borderRadius: 2, bgcolor: '#fff', border: '1px solid var(--border-light)' }}>

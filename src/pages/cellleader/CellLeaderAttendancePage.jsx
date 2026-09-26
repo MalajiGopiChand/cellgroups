@@ -1,6 +1,6 @@
 import PageHeader from '../../components/PageHeader';
 import React, { useState, useEffect, useRef } from 'react';
-import { Box, Typography, Paper, Fade, Button, IconButton, Snackbar, Alert, Avatar, Collapse, Skeleton, Dialog, DialogTitle, DialogContent, List, ListItem, ListItemText, ListItemAvatar, CircularProgress } from '@mui/material';
+import { Box, Typography, Paper, Fade, Button, IconButton, Snackbar, Alert, Avatar, Collapse, Skeleton, Dialog, DialogTitle, DialogContent, List, ListItem, ListItemText, ListItemAvatar, CircularProgress, Select, MenuItem, FormControl } from '@mui/material';
 import { collection, getDocs, query, where, doc, setDoc, getDoc, writeBatch, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { ArrowBack as ArrowBackIcon, Download as DownloadIcon, CheckCircle as CheckCircleIcon, Cancel as CancelIcon, ChevronRight as ChevronRightIcon, Close as CloseIcon, CalendarMonth as CalendarIcon } from '@mui/icons-material';
@@ -32,6 +32,7 @@ function CellLeaderAttendancePage({ user, onBack }) {
   const [selectedMemberProfile, setSelectedMemberProfile] = useState(null);
   const [memberHistory, setMemberHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [selectedWeek, setSelectedWeek] = useState('');
 
   const handleOpenProfile = async (member) => {
     setSelectedMemberProfile(member);
@@ -52,6 +53,7 @@ function CellLeaderAttendancePage({ user, onBack }) {
   const handleCloseProfile = () => {
     setSelectedMemberProfile(null);
     setMemberHistory([]);
+    setSelectedWeek('');
   };
 
   const toggleFamily = (familyId) => {
@@ -478,4 +480,6 @@ function CellLeaderAttendancePage({ user, onBack }) {
 }
 
 export default CellLeaderAttendancePage;
+
+
 
