@@ -10,12 +10,16 @@ import {
 } from '@mui/icons-material';
 import { collection, query, getDocs, orderBy, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebase/config';
+import AdminMemberProfilePage from './AdminMemberProfilePage';
 
 function AdminFamilyProfilePage({ family, onBack }) {
   const [loading, setLoading] = useState(true);
   const [attendanceLogs, setAttendanceLogs] = useState([]);
   const [prayerRequests, setPrayerRequests] = useState([]);
   const [testimonies, setTestimonies] = useState([]);
+  
+  // NEW: State for opening individual member profile
+  const [selectedMember, setSelectedMember] = useState(null);
 
   useEffect(() => {
     if (!family) return;
@@ -87,6 +91,10 @@ function AdminFamilyProfilePage({ family, onBack }) {
 
   if (!family) return null;
 
+  if (selectedMember) {
+    return <AdminMemberProfilePage member={selectedMember} onBack={() => setSelectedMember(null)} />;
+  }
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, pt: 1 }}>
 
@@ -108,9 +116,29 @@ function AdminFamilyProfilePage({ family, onBack }) {
             
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
               {family.members.map(m => (
-                <Box key={m.id} sx={{ display: 'flex', justifyContent: 'space-between', p: 1.5, bgcolor: 'rgba(255,255,255,0.6)', borderRadius: 1 }}>
+                <Box 
+                  key={m.id} 
+                  onClick={() => setSelectedMember(m)}
+                  sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    p: 1.5, 
+                    bgcolor: 'rgba(255,255,255,0.6)', 
+                    borderRadius: 1,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    border: '1px solid transparent',
+                    '&:hover': {
+                      borderColor: 'var(--primary-forest)',
+                      bgcolor: 'rgba(255,255,255,0.9)'
+                    }
+                  }}
+                >
                   <Typography sx={{ fontWeight: 700, color: 'var(--text-deep)' }}>{m.name}</Typography>
-                  <Chip size="small" label={m.relation || 'Head'} sx={{ height: 20, fontSize: '0.65rem', fontWeight: 700, bgcolor: 'rgba(99,102,241,0.1)', color: 'var(--color-primary)' }} />
+                  <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                    <Chip size="small" label={m.relation || 'Head'} sx={{ height: 20, fontSize: '0.65rem', fontWeight: 700, bgcolor: 'rgba(99,102,241,0.1)', color: 'var(--color-primary)' }} />
+                    <PersonIcon sx={{ fontSize: 16, color: 'var(--text-secondary)' }} />
+                  </Box>
                 </Box>
               ))}
             </Box>
