@@ -7,6 +7,7 @@ import { Card, CardContent, Grid, Button } from '@mui/material';
 import { Assessment as AssessmentIcon } from '@mui/icons-material';
 import { getTuesdayWeekDetails } from '../../utils/dateUtils';
 import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
+import AdminLeaderProfilePage from './AdminLeaderProfilePage';
 
 function AdminHomePage() {
   const [announcements, setAnnouncements] = useState([]);
@@ -46,20 +47,8 @@ function AdminHomePage() {
     };
   }, []);
 
-  const handleOpenProfile = async (leader) => {
+  const handleOpenProfile = (leader) => {
     setSelectedLeader(leader);
-    setHistoryLoading(true);
-    try {
-      const q = query(collection(db, 'memberAttendance'), where('leaderId', '==', leader.id));
-      const snap = await getDocs(q);
-      const history = snap.docs.map(d => d.data());
-      history.sort((a,b) => new Date(b.date) - new Date(a.date));
-      setLeaderHistory(history);
-    } catch(e) {
-      console.error(e);
-    } finally {
-      setHistoryLoading(false);
-    }
   };
 
   const handleCloseDialog = () => {
@@ -68,11 +57,15 @@ function AdminHomePage() {
     setLeaderHistory([]);
   };
 
+  if (selectedLeader) {
+    return <AdminLeaderProfilePage leader={selectedLeader} onBack={() => setSelectedLeader(null)} />;
+  }
+
   return (
     
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
 
-        {/* Cell Leaders List (Replaces Graph) */}
+        {/* Cell Leaders List */}
         {!loading && leadersData.length > 0 && (
           <Box sx={{ mb: 4 }}>
             <Typography variant="h6" sx={{ fontWeight: 800, color: 'var(--text-primary)', mb: 2 }}>
@@ -105,148 +98,6 @@ function AdminHomePage() {
             </Grid>
           </Box>
         )}
-
-        {/* Leader Dashboard Dialog */}
-        <Dialog open={!!selectedLeader} onClose={handleCloseDialog} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: 2, height: '80vh' } }}>
-          {selectedLeader && (
-            <>
-              <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}>
-                <Box>
-                  <Typography variant="h5" sx={{ fontWeight: 800, color: 'var(--primary-forest)' }}>{selectedLeader.name}'s Dashboard</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    All-time Performance & Attendance Records
-                  </Typography>
-                </Box>
-                <IconButton onClick={handleCloseDialog} size="small" sx={{ bgcolor: 'rgba(0,0,0,0.05)' }}>
-                  <CloseIcon />
-                </IconButton>
-              </DialogTitle>
-              <DialogContent dividers sx={{ p: 0 }}>
-                {historyLoading ? (
-                  <Box sx={{ display: 'flex', justifyContent: 'center', p: 5 }}><CircularProgress /></Box>
-                ) : (
-                  <Box sx={{ p: 3, bgcolor: 'var(--bg-main)', minHeight: '100%' }}>
-                    
-                    {/* Current Week Graph */}
-                    <Box sx={{ mb: 4, p: 3, bgcolor: '#fff', borderRadius: 2, border: '1px solid var(--border-light)' }}>
-                      <Typography variant="h6" sx={{ fontWeight: 800, color: 'var(--text-deep)', mb: 2 }}>
-                        Current Week Attendance
-                      </Typography>
-                      {(() => {
-                        const { tuesdayWeekStartDate } = getTuesdayWeekDetails();
-                        const currentWeekRecords = leaderHistory.filter(h => h.tuesdayWeekStartDate === tuesdayWeekStartDate);
-                        const presentCount = currentWeekRecords.filter(h => h.status === 'present').length;
-                        const absentCount = currentWeekRecords.filter(h => h.status === 'absent').length;
-                        
-                        if (currentWeekRecords.length === 0) {
-                          return <Typography color="text.secondary">No attendance taken yet this week.</Typography>;
-                        }
-
-                        const data = [
-                          { name: 'Present', value: presentCount, color: '#10b981' },
-                          { name: 'Absent', value: absentCount, color: '#ef4444' }
-                        ];
-
-                        return (
-                          <Grid container spacing={3} alignItems="center">
-                            <Grid item xs={12} sm={6}>
-                              <Box sx={{ height: 200 }}>
-                                <ResponsiveContainer width="100%" height="100%">
-                                  <PieChart>
-                                    <Pie data={data} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
-                                      {data.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={entry.color} />
-                                      ))}
-                                    </Pie>
-                                    <RechartsTooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
-                                  </PieChart>
-                                </ResponsiveContainer>
-                              </Box>
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
-                              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                                <Paper sx={{ p: 2, bgcolor: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}>
-                                  <Typography variant="h5" sx={{ color: '#10b981', fontWeight: 800 }}>{presentCount}</Typography>
-                                  <Typography variant="body2" sx={{ color: '#10b981', fontWeight: 600 }}>Present this week</Typography>
-                                </Paper>
-                                <Paper sx={{ p: 2, bgcolor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}>
-                                  <Typography variant="h5" sx={{ color: '#ef4444', fontWeight: 800 }}>{absentCount}</Typography>
-                                  <Typography variant="body2" sx={{ color: '#ef4444', fontWeight: 600 }}>Absent this week</Typography>
-                                </Paper>
-                              </Box>
-                            </Grid>
-                          </Grid>
-                        );
-                      })()}
-                    </Box>
-
-                    {/* Stats Summary (All Time) */}
-                    <Typography variant="h6" sx={{ fontWeight: 800, color: 'var(--text-deep)', mb: 2 }}>All-Time Summary</Typography>
-                    <Grid container spacing={2} sx={{ mb: 4 }}>
-                      <Grid item xs={12} sm={4}>
-                        <Paper sx={{ p: 3, textAlign: 'center', borderRadius: 2, bgcolor: '#fff', border: '1px solid var(--border-light)' }}>
-                          <Typography variant="h3" sx={{ fontWeight: 800, color: 'var(--text-deep)' }}>{leaderHistory.length}</Typography>
-                          <Typography variant="subtitle2" sx={{ color: 'text.secondary', fontWeight: 600 }}>Total Records</Typography>
-                        </Paper>
-                      </Grid>
-                      <Grid item xs={6} sm={4}>
-                        <Paper sx={{ p: 3, textAlign: 'center', borderRadius: 2, bgcolor: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}>
-                          <Typography variant="h3" sx={{ fontWeight: 800, color: '#10b981' }}>{leaderHistory.filter(h => h.status === 'present').length}</Typography>
-                          <Typography variant="subtitle2" sx={{ color: '#10b981', fontWeight: 600 }}>Total Presents</Typography>
-                        </Paper>
-                      </Grid>
-                      <Grid item xs={6} sm={4}>
-                        <Paper sx={{ p: 3, textAlign: 'center', borderRadius: 2, bgcolor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}>
-                          <Typography variant="h3" sx={{ fontWeight: 800, color: '#ef4444' }}>{leaderHistory.filter(h => h.status === 'absent').length}</Typography>
-                          <Typography variant="subtitle2" sx={{ color: '#ef4444', fontWeight: 600 }}>Total Absents</Typography>
-                        </Paper>
-                      </Grid>
-                    </Grid>
-
-                    {/* Filters */}
-                    <Box sx={{ display: 'flex', gap: 1, mb: 3 }}>
-                      <Chip label="All Records" onClick={() => setSelectedStatus(null)} sx={{ fontWeight: 600, bgcolor: !selectedStatus ? 'var(--text-deep)' : 'var(--border-neutral)', color: !selectedStatus ? '#fff' : 'inherit' }} />
-                      <Chip label="Presents Only" onClick={() => setSelectedStatus('present')} sx={{ fontWeight: 600, bgcolor: selectedStatus === 'present' ? '#10b981' : 'var(--border-neutral)', color: selectedStatus === 'present' ? '#fff' : 'inherit' }} />
-                      <Chip label="Absents Only" onClick={() => setSelectedStatus('absent')} sx={{ fontWeight: 600, bgcolor: selectedStatus === 'absent' ? '#ef4444' : 'var(--border-neutral)', color: selectedStatus === 'absent' ? '#fff' : 'inherit' }} />
-                    </Box>
-
-                    {/* Detailed List */}
-                    <Paper sx={{ borderRadius: 2, overflow: 'hidden', border: '1px solid var(--border-light)' }}>
-                      <List sx={{ p: 0 }}>
-                        {leaderHistory
-                          .filter(h => !selectedStatus || h.status === selectedStatus)
-                          .map((h, i) => (
-                          <ListItem key={i} sx={{ borderBottom: '1px solid var(--border-light)', bgcolor: '#fff', '&:last-child': { borderBottom: 'none' } }}>
-                            <ListItemAvatar>
-                              <Avatar sx={{ bgcolor: h.status === 'present' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', color: h.status === 'present' ? '#10b981' : '#ef4444' }}>
-                                <PersonIcon />
-                              </Avatar>
-                            </ListItemAvatar>
-                            <ListItemText 
-                              primary={<Typography fontWeight={700} color="var(--text-deep)">{h.name || h.studentName || h.memberName || 'Member'}</Typography>}
-                              secondary={
-                                <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5, color: 'text.secondary', fontWeight: 600 }}>
-                                  {h.date} {h.tuesdayWeekStartDate ? `(Week: ${h.tuesdayWeekStartDate})` : ''}
-                                </Typography>
-                              }
-                            />
-                            <Chip size="small" label={h.status === 'present' ? 'Present' : 'Absent'} sx={{ height: 24, fontWeight: 700, bgcolor: h.status === 'present' ? '#10b981' : '#ef4444', color: '#fff' }} />
-                          </ListItem>
-                        ))}
-                        {leaderHistory.filter(h => !selectedStatus || h.status === selectedStatus).length === 0 && (
-                          <Typography color="text.secondary" sx={{ textAlign: 'center', py: 4, bgcolor: '#fff' }}>
-                            No {selectedStatus || ''} records found.
-                          </Typography>
-                        )}
-                      </List>
-                    </Paper>
-
-                  </Box>
-                )}
-              </DialogContent>
-            </>
-          )}
-        </Dialog>
 
         {/* Announcements Feed */}
         <Box>
@@ -305,3 +156,4 @@ function AdminHomePage() {
 }
 
 export default AdminHomePage;
+
