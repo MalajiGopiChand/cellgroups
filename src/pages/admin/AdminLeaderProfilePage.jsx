@@ -259,7 +259,7 @@ function AdminLeaderProfilePage({ leader, onBack }) {
                 {members.length > 0 ? (
                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                     {members.map(m => {
-                      const rec = weekGroupRecords.find(r => r.memberId === m.id || r.name.toLowerCase() === m.name.toLowerCase());
+                      const rec = weekGroupRecords.find(r => r.memberId === m.id || (r.name && m.name && r.name.toLowerCase() === m.name.toLowerCase()));
                       const status = rec ? rec.status : 'unrecorded';
                       
                       return (

@@ -1,6 +1,6 @@
 import React, { Fragment } from 'react';
 import { Menu, MenuButton, MenuItem, MenuItems, Transition } from '@headlessui/react';
-import { ChevronDown as ChevronDownIcon, CalendarToday as CalendarIcon } from '@mui/icons-material';
+import { ExpandMore as ChevronDownIcon, CalendarToday as CalendarIcon } from '@mui/icons-material';
 import { Box } from '@mui/material';
 
 export default function HeadlessWeekSelector({ weeks, selectedWeek, onSelect, currentWeek }) {
@@ -28,7 +28,7 @@ export default function HeadlessWeekSelector({ weeks, selectedWeek, onSelect, cu
               }}
             >
               <CalendarIcon sx={{ fontSize: 16, color: 'var(--primary-forest)' }} />
-              {new Date(selectedWeek).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              {selectedWeek ? new Date(selectedWeek).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Select Week'}
               {selectedWeek === currentWeek ? ' (Current)' : ''}
               <ChevronDownIcon sx={{ fontSize: 18, color: 'var(--text-secondary)' }} />
             </button>
