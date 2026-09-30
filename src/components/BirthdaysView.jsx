@@ -65,6 +65,11 @@ function BirthdaysView({ user, isAdmin, onBack }) {
             <Typography variant="h6" sx={{ fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.2 }}>
               {member.name}
             </Typography>
+            {member.familyName && (
+              <Typography variant="caption" sx={{ color: 'var(--text-secondary)', display: 'block', mt: 0.2 }}>
+                {member.familyName}
+              </Typography>
+            )}
             <Typography variant="body2" sx={{ color: 'var(--text-secondary)', mt: 0.5, fontWeight: 500 }}>
               {formatDate(member.dob)}
             </Typography>

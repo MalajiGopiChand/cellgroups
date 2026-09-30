@@ -25,6 +25,21 @@ export function useBirthdays(user, isAdmin) {
         const snap = await getDocs(q);
         const mems = snap.docs.map(d => ({ id: d.id, ...d.data() }));
         const filtered = isAdmin ? mems : mems.filter(m => m.place === user?.place);
+        
+        const familyGroups = {};
+        filtered.forEach(m => {
+          const fid = m.familyId || `single_${m.id}`;
+          if (!familyGroups[fid]) familyGroups[fid] = [];
+          familyGroups[fid].push(m);
+        });
+
+        filtered.forEach(m => {
+          const fid = m.familyId || `single_${m.id}`;
+          const group = familyGroups[fid];
+          const head = group.find(x => x.isHead) || group[0];
+          m.familyName = head ? head.name + " Family" : "";
+        });
+
         setMembers(filtered);
       } catch (error) {
         console.error("Error fetching members for birthdays:", error);

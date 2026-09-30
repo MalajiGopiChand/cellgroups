@@ -83,7 +83,14 @@ function BirthdayNotificationBar({ user, isAdmin, onNavigateToBirthdays }) {
                     </Avatar>
                   </ListItemAvatar>
                   <ListItemText 
-                    primary={<Typography variant="body2" sx={{ fontWeight: 700, color: 'var(--text-primary)' }}>{m.name}</Typography>}
+                    primary={
+                      <Box>
+                        <Typography variant="body2" sx={{ fontWeight: 700, color: 'var(--text-primary)' }}>{m.name}</Typography>
+                        {m.familyName && (
+                          <Typography variant="caption" sx={{ color: 'var(--text-tertiary)', display: 'block' }}>{m.familyName}</Typography>
+                        )}
+                      </Box>
+                    }
                     secondary={
                       <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: m.diffDays === 0 ? '#ec489a' : (m.diffDays < 0 ? '#6b7280' : '#f59e0b'), fontWeight: 600, mt: 0.5 }}>
                         <EventIcon sx={{ fontSize: 14 }} />
