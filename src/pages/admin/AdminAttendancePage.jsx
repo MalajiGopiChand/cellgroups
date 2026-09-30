@@ -79,7 +79,7 @@ function AdminAttendancePage({ onBack }) {
       setLoading(false);
     });
 
-    const unsubLeaders = onSnapshot(collection(db, 'cellleaders'), (snap) => {
+        const unsubLeaders = onSnapshot(collection(db, 'cellleaders'), (snap) => {
       currentLeadersSnap = snap;
       processData();
     }, (error) => {
@@ -87,9 +87,17 @@ function AdminAttendancePage({ onBack }) {
       setLoading(false);
     });
 
+    const unsubStudents = onSnapshot(collection(db, 'students'), (snap) => {
+      currentStudentsSnap = snap;
+      processData();
+    }, (error) => {
+      console.error('Error fetching students:', error);
+    });
+
     return () => {
       unsubAtt();
       unsubLeaders();
+      unsubStudents();
     };
   }, []);
 
