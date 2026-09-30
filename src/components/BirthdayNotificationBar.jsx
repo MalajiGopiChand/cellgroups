@@ -89,6 +89,9 @@ function BirthdayNotificationBar({ user, isAdmin, onNavigateToBirthdays }) {
                         {m.familyName && (
                           <Typography variant="caption" sx={{ color: 'var(--text-tertiary)', display: 'block' }}>{m.familyName}</Typography>
                         )}
+                        {m.cellLeaderName && (
+                          <Typography variant="caption" sx={{ color: 'var(--color-primary)', display: 'block', fontWeight: 600 }}>Leader: {m.cellLeaderName}</Typography>
+                        )}
                       </Box>
                     }
                     secondary={

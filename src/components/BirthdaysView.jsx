@@ -70,6 +70,11 @@ function BirthdaysView({ user, isAdmin, onBack }) {
                 {member.familyName}
               </Typography>
             )}
+            {member.cellLeaderName && (
+              <Typography variant="caption" sx={{ color: 'var(--color-primary)', display: 'block', mt: 0.2, fontWeight: 600 }}>
+                Leader: {member.cellLeaderName}
+              </Typography>
+            )}
             <Typography variant="body2" sx={{ color: 'var(--text-secondary)', mt: 0.5, fontWeight: 500 }}>
               {formatDate(member.dob)}
             </Typography>
