@@ -49,7 +49,18 @@ function AdminMeetingPlacesPage({ onBack }) {
   };
 
   const filteredPlaces = filterDate
-    ? places.filter(p => p.date === filterDate)
+    ? places.filter(p => {
+        if (p.date === filterDate) return true;
+        if (p.timestamp && p.timestamp.toDate) {
+            // Compare local date strings
+            const d = p.timestamp.toDate();
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}` === filterDate;
+        }
+        return false;
+      })
     : places;
 
   return (
