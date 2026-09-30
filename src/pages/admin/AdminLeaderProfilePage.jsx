@@ -94,6 +94,24 @@ function AdminLeaderProfilePage({ leader, onBack }) {
     meetingPlace = weekLeaderRecords[0].place;
   }
 
+
+  // Group members by family
+  const familyGroups = {};
+  members.forEach(m => {
+    const fid = m.familyId || `single_${m.id}`;
+    if (!familyGroups[fid]) familyGroups[fid] = [];
+    familyGroups[fid].push(m);
+  });
+
+  const families = Object.values(familyGroups).map(group => {
+    const head = group.find(m => m.isHead) || group[0];
+    return {
+      head,
+      members: group,
+      familyId: head.familyId || `single_${head.id}`,
+    };
+  });
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 2, sm: 3 }, animation: 'fadeIn 0.3s', pb: 4 }}>
       
