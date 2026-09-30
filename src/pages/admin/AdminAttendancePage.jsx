@@ -11,6 +11,7 @@ import { useRef } from 'react';
 function AdminAttendancePage({ onBack }) {
   const [attendance, setAttendance] = useState([]);
   const [leaders, setLeaders] = useState([]);
+  const [students, setStudents] = useState([]);
   const [filterLeader, setFilterLeader] = useState('');
   const [filterPlace, setFilterPlace] = useState('');
   const getLocalDate = () => {
@@ -23,11 +24,17 @@ function AdminAttendancePage({ onBack }) {
   useEffect(() => {
     let currentAttSnap = null;
     let currentLeadersSnap = null;
+      let currentStudentsSnap = null;
 
     const processData = () => {
-      if (!currentAttSnap || !currentLeadersSnap) return;
+      if (!currentAttSnap || !currentLeadersSnap || !currentStudentsSnap) return;
       try {
         const leadersData = currentLeadersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+          const studentsData = currentStudentsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+          const studentsMap = {};
+          studentsData.forEach(s => { studentsMap[s.id] = s; });
+          // Map by name fallback
+          studentsData.forEach(s => { if (s.name) studentsMap[s.name.toLowerCase()] = s; });
         
         // Group by leader and date
         const grouped = {};
@@ -289,39 +296,61 @@ function AdminAttendancePage({ onBack }) {
                     <Divider sx={{ my: 1.5, borderColor: 'var(--border-light)' }} />
 
                     {/* Students List */}
-                    {totalCount > 0 ? (
-                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                        {rec.attendance.map((a, j) => (
-                          <Box key={j} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 1, borderRadius: 1, '&:hover': { bgcolor: 'rgba(99, 102, 241, 0.04)' } }}>
-                            <Typography variant="body2" sx={{ fontWeight: 600, color: 'var(--text-secondary)' }}>
-                              {a.name}
-                            </Typography>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <Chip 
-                                size="small" 
-                                label={a.status} 
-                                sx={{ 
-                                  height: 22, 
-                                  fontSize: '0.65rem', 
-                                  fontWeight: 700, 
-                                  textTransform: 'uppercase',
-                                  bgcolor: a.status === 'present' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                                  color: a.status === 'present' ? 'var(--color-success)' : 'var(--color-error)'
-                                }} 
-                              />
-                              <IconButton
-                                size="small"
-                                onClick={() => handleToggleStatus(rec.id, rec.attendance, a)}
-                                sx={{ color: 'var(--color-primary)', bgcolor: 'rgba(99,102,241,0.05)', '&:hover': { bgcolor: 'rgba(99,102,241,0.1)' } }}
-                                title="Toggle Status"
-                              >
-                                <EditIcon sx={{ fontSize: 16 }} />
-                              </IconButton>
-                            </Box>
-                          </Box>
-                        ))}
-                      </Box>
-                    ) : (
+                                          {totalCount > 0 ? (
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                          {(() => {
+                            // Group by family
+                            const families = {};
+                            rec.attendance.forEach(a => {
+                              const fid = a.familyId || `single_${a.id}`;
+                              if (!families[fid]) families[fid] = [];
+                              families[fid].push(a);
+                            });
+                            
+                            return Object.values(families).map((fam, fIdx) => {
+                              const head = fam.find(m => m.isHead) || fam[0];
+                              return (
+                                <Box key={fIdx} sx={{ mb: 1 }}>
+                                  <Typography variant="caption" sx={{ fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', mb: 0.5, display: 'block', pl: 1 }}>
+                                    {head.name} Family
+                                  </Typography>
+                                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                                    {fam.map((a, j) => (
+                                      <Box key={j} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 1, borderRadius: 1, '&:hover': { bgcolor: 'rgba(99, 102, 241, 0.04)' } }}>
+                                        <Typography variant="body2" sx={{ fontWeight: 600, color: 'var(--text-secondary)' }}>
+                                          {a.name}
+                                        </Typography>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                          <Chip 
+                                            size="small" 
+                                            label={a.status} 
+                                            sx={{ 
+                                              height: 22, 
+                                              fontSize: '0.65rem', 
+                                              fontWeight: 700, 
+                                              textTransform: 'uppercase',
+                                              bgcolor: a.status === 'present' ? 'rgba(16, 185, 129, 0.1)' : (a.status === 'out' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(239, 68, 68, 0.1)'),
+                                              color: a.status === 'present' ? 'var(--color-success)' : (a.status === 'out' ? '#f59e0b' : 'var(--color-error)')
+                                            }} 
+                                          />
+                                          <IconButton
+                                            size="small"
+                                            onClick={() => handleToggleStatus(rec.id, rec.attendance, a)}
+                                            sx={{ color: 'var(--color-primary)', bgcolor: 'rgba(99,102,241,0.05)', '&:hover': { bgcolor: 'rgba(99,102,241,0.1)' } }}
+                                            title="Toggle Status"
+                                          >
+                                            <EditIcon sx={{ fontSize: 16 }} />
+                                          </IconButton>
+                                        </Box>
+                                      </Box>
+                                    ))}
+                                  </Box>
+                                </Box>
+                              );
+                            });
+                          })()}
+                        </Box>
+                      ) : (
                       <Typography variant="body2" sx={{ color: 'var(--text-tertiary)', textAlign: 'center', py: 2 }}>
                         No attendance data recorded.
                       </Typography>
