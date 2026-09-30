@@ -6,6 +6,7 @@ import { db } from '../../firebase/config';
 import { DeleteOutline as DeleteIcon, Edit as EditIcon } from '@mui/icons-material';
 import * as XLSX from 'xlsx';
 import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 import { useRef } from 'react';
 
 function AdminAttendancePage({ onBack }) {
@@ -129,17 +130,42 @@ function AdminAttendancePage({ onBack }) {
   });
 
   const listRef = useRef(null);
-  const handleExportImage = async () => {
+  const handleExportPDF = async () => {
     if (!listRef.current) return;
     try {
       const canvas = await html2canvas(listRef.current, { scale: 2, backgroundColor: '#f8fafc' });
-      const link = document.createElement('a');
-      link.download = `Attendance_${new Date().toISOString().split('T')[0]}.png`;
-      link.href = canvas.toDataURL('image/png');
-      link.click();
+      const imgData = canvas.toDataURL('image/png');
+      
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'px',
+        format: 'a4'
+      });
+      
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      
+      const imgProps = pdf.getImageProperties(imgData);
+      const imgWidth = pdfWidth;
+      const imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      
+      let heightLeft = imgHeight;
+      let position = 0;
+      
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pdfHeight;
+      
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pdfHeight;
+      }
+      
+      pdf.save(`Attendance_${new Date().toISOString().split('T')[0]}.pdf`);
     } catch (err) {
-      console.error('Failed to export image', err);
-      alert('Failed to export image');
+      console.error('Failed to export PDF', err);
+      alert('Failed to export PDF');
     }
   };
 
@@ -238,10 +264,10 @@ function AdminAttendancePage({ onBack }) {
             <Button 
               variant="outlined" 
               startIcon={<DownloadIcon />} 
-              onClick={handleExportImage}
+              onClick={handleExportPDF}
               sx={{ color: 'var(--primary-forest)', borderColor: 'var(--primary-forest)', '&:hover': { bgcolor: 'rgba(16,185,129,0.1)', borderColor: 'var(--primary-forest)' }, borderRadius: 1 }}
             >
-              Export Image
+              Export PDF
             </Button>
             <Button 
               variant="contained" 
