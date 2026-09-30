@@ -45,6 +45,9 @@ service cloud.firestore {
     match /approvals/{document} {
       allow read, write: if true;
     }
+    match /login_history/{document} {
+      allow read, write: if true;
+    }
     
     // Catch-all
     match /{document=**} {
