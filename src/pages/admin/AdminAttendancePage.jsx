@@ -5,6 +5,8 @@ import { collection, getDocs, doc, updateDoc, query, orderBy, onSnapshot } from 
 import { db } from '../../firebase/config';
 import { DeleteOutline as DeleteIcon, Edit as EditIcon } from '@mui/icons-material';
 import * as XLSX from 'xlsx';
+import html2canvas from 'html2canvas';
+import { useRef } from 'react';
 
 function AdminAttendancePage({ onBack }) {
   const [attendance, setAttendance] = useState([]);
@@ -111,6 +113,21 @@ function AdminAttendancePage({ onBack }) {
     return true;
   });
 
+  const listRef = useRef(null);
+  const handleExportImage = async () => {
+    if (!listRef.current) return;
+    try {
+      const canvas = await html2canvas(listRef.current, { scale: 2, backgroundColor: '#f8fafc' });
+      const link = document.createElement('a');
+      link.download = `Attendance_${new Date().toISOString().split('T')[0]}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    } catch (err) {
+      console.error('Failed to export image', err);
+      alert('Failed to export image');
+    }
+  };
+
   const handleExport = () => {
     const exportData = [];
     filtered.forEach(rec => {
@@ -202,19 +219,29 @@ function AdminAttendancePage({ onBack }) {
               </Select>
             </FormControl>
           </Box>
-          <Button 
-            variant="contained" 
-            startIcon={<DownloadIcon />} 
-            onClick={handleExport}
-            sx={{ bgcolor: 'var(--primary-forest)', '&:hover': { bgcolor: '#059669' }, borderRadius: 1 }}
-          >
-            Export Excel
-          </Button>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button 
+              variant="outlined" 
+              startIcon={<DownloadIcon />} 
+              onClick={handleExportImage}
+              sx={{ color: 'var(--primary-forest)', borderColor: 'var(--primary-forest)', '&:hover': { bgcolor: 'rgba(16,185,129,0.1)', borderColor: 'var(--primary-forest)' }, borderRadius: 1 }}
+            >
+              Export Image
+            </Button>
+            <Button 
+              variant="contained" 
+              startIcon={<DownloadIcon />} 
+              onClick={handleExport}
+              sx={{ bgcolor: 'var(--primary-forest)', '&:hover': { bgcolor: '#059669' }, borderRadius: 1 }}
+            >
+              Export Excel
+            </Button>
+          </Box>
         </Paper>
 
         {/* Attendance Records */}
         {filtered.length > 0 ? (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <Box ref={listRef} sx={{ display: 'flex', flexDirection: 'column', gap: 2, p: 2, bgcolor: 'transparent' }}>
             {filtered.map((rec, i) => {
               const presentCount = rec.attendance?.filter(a => a.status === 'present').length || 0;
               const totalCount = rec.attendance?.length || 0;
