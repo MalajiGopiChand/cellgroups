@@ -5,7 +5,7 @@ import { db } from '../../firebase/config';
 import { getTuesdayWeekDetails } from '../../utils/dateUtils';
 import { Close as CloseIcon, CheckCircle as CheckCircleIcon, Cancel as CancelIcon } from '@mui/icons-material';
 import HeadlessWeekSelector from '../../components/ui/HeadlessWeekSelector';
-import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Legend, CartesianGrid } from 'recharts';
 
 function AdminHomePage() {
   const [announcements, setAnnouncements] = useState([]);
@@ -99,18 +99,18 @@ function AdminHomePage() {
           {graphData.length > 0 ? (
             <Box sx={{ height: 350, mt: 2 }}>
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={graphData} margin={{ top: 20, right: 30, left: -20, bottom: 60 }} onClick={handleBarClick} style={{ cursor: 'pointer' }}>
-                  <XAxis dataKey="name" angle={-45} textAnchor="end" height={60} tick={{ fontSize: 12 }} />
-                  <YAxis allowDecimals={false} />
+                <LineChart data={graphData} margin={{ top: 20, right: 30, left: -20, bottom: 60 }} onClick={handleBarClick} style={{ cursor: 'pointer' }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                  <XAxis dataKey="name" angle={-45} textAnchor="end" height={60} tick={{ fontSize: 12, fill: '#6b7280' }} axisLine={{ stroke: '#e5e7eb' }} tickLine={{ stroke: '#e5e7eb' }} />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: '#6b7280' }} axisLine={{ stroke: '#e5e7eb' }} tickLine={{ stroke: '#e5e7eb' }} />
                   <RechartsTooltip 
                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                    cursor={{ fill: 'rgba(0,0,0,0.05)' }}
                   />
                   <Legend verticalAlign="top" height={36} />
-                  <Bar dataKey="Present" fill="#10b981" radius={[6, 6, 0, 0]} />
-                  <Bar dataKey="Absent" fill="#ef4444" radius={[6, 6, 0, 0]} />
-                  <Bar dataKey="Out" fill="#f59e0b" radius={[6, 6, 0, 0]} />
-                </BarChart>
+                  <Line type="monotone" dataKey="Present" stroke="#10b981" strokeWidth={3} activeDot={{ r: 8 }} dot={{ r: 4, strokeWidth: 2, fill: '#fff' }} />
+                  <Line type="monotone" dataKey="Absent" stroke="#ef4444" strokeWidth={3} activeDot={{ r: 8 }} dot={{ r: 4, strokeWidth: 2, fill: '#fff' }} />
+                  <Line type="monotone" dataKey="Out" stroke="#f59e0b" strokeWidth={3} activeDot={{ r: 8 }} dot={{ r: 4, strokeWidth: 2, fill: '#fff' }} />
+                </LineChart>
               </ResponsiveContainer>
             </Box>
           ) : (
