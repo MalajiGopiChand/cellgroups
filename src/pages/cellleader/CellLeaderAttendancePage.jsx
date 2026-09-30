@@ -355,7 +355,9 @@ function CellLeaderAttendancePage({ user, onBack }) {
                     </Box>
                     <Box sx={{ ml: 1 }}>
                       <Typography sx={{ fontWeight: 700, color: 'var(--text-deep)', fontSize: 16 }}>{family.head.name} family</Typography>
-                      <Typography sx={{ color: 'var(--text-supporting)', fontSize: 13, fontWeight: 500 }}>{family.members.length} members</Typography>
+                      <Typography sx={{ color: 'var(--text-supporting)', fontSize: 13, fontWeight: 500 }}>
+                        {family.members.length} Members &middot; {family.members.filter(m => attendance.find(a => a.studentId === m.id)?.status === 'present').length} Present &middot; {family.members.filter(m => attendance.find(a => a.studentId === m.id)?.status === 'absent').length} Absent &middot; {family.members.filter(m => attendance.find(a => a.studentId === m.id)?.status === 'out').length} Out
+                      </Typography>
                     </Box>
                   </Box>
                   <ChevronRightIcon sx={{ color: 'var(--text-supporting)', transform: expandedFamilies[family.familyId] ? 'rotate(90deg)' : 'none', transition: '0.3s' }} />
@@ -367,23 +369,28 @@ function CellLeaderAttendancePage({ user, onBack }) {
                       const mRec = attendance.find(a => a.studentId === m.id);
                       const isPresent = mRec?.status === 'present';
                       const isAbsent = mRec?.status === 'absent';
+                      const isOut = mRec?.status === 'out';
                       return (
                         
-                          <Box key={m.id} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Typography onClick={() => handleOpenProfile(m)} sx={{ fontWeight: 700, color: 'var(--primary-forest)', cursor: 'pointer', textDecoration: 'underline' }}>{m.name}</Typography>
+                          <Box key={m.id} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 1, borderRadius: 1, borderBottom: '1px solid var(--border-neutral)' }}>
+                            <Box>
+                              <Typography onClick={() => handleOpenProfile(m)} sx={{ fontWeight: 700, color: 'var(--primary-forest)', cursor: 'pointer', textDecoration: 'underline' }}>{m.name}</Typography>
+                              <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>{family.head.name} Family</Typography>
+                              <Typography variant="caption" sx={{ color: 'text.secondary' }}>{m.mobile || 'No Mobile'}</Typography>
+                            </Box>
                             <Box sx={{ display: 'flex', gap: 1 }}>
                               <Box 
                                 onClick={() => handleMark(m.id, m.name, 'present', family.headId)}
                                 sx={{
-                                  width: 32, height: 32, borderRadius: 1,
+                                  width: 40, height: 40, borderRadius: 1,
                                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                                   cursor: (!isAllowedDay || isSubmitted) ? 'default' : 'pointer',
                                   opacity: (!isAllowedDay || (isSubmitted && mRec?.status !== 'present')) ? 0.4 : 1,
-                                  bgcolor: mRec?.status === 'present' ? '#4E7D58' : 'var(--surface-white)',
+                                  bgcolor: mRec?.status === 'present' ? '#10b981' : 'var(--surface-white)',
                                   border: mRec?.status === 'present' ? 'none' : '1px solid var(--border-neutral)',
                                   color: mRec?.status === 'present' ? '#fff' : 'var(--text-secondary)',
                                   transition: 'all 0.2s',
-                                  '&:hover': (!isAllowedDay || isSubmitted) ? {} : { bgcolor: mRec?.status === 'present' ? '#4E7D58' : 'var(--surface-sage)', borderColor: 'transparent' }
+                                  '&:hover': (!isAllowedDay || isSubmitted) ? {} : { bgcolor: mRec?.status === 'present' ? '#10b981' : 'rgba(16, 185, 129, 0.1)', borderColor: 'transparent' }
                                 }}
                               >
                                 <Typography sx={{ fontWeight: 800, fontSize: 16 }}>P</Typography>
@@ -391,7 +398,7 @@ function CellLeaderAttendancePage({ user, onBack }) {
                               <Box 
                                 onClick={() => handleMark(m.id, m.name, 'absent', family.headId)}
                                 sx={{
-                                  width: 32, height: 32, borderRadius: 1,
+                                  width: 40, height: 40, borderRadius: 1,
                                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                                   cursor: (!isAllowedDay || isSubmitted) ? 'default' : 'pointer',
                                   opacity: (!isAllowedDay || (isSubmitted && mRec?.status !== 'absent')) ? 0.4 : 1,
@@ -399,10 +406,26 @@ function CellLeaderAttendancePage({ user, onBack }) {
                                   border: mRec?.status === 'absent' ? 'none' : '1px solid var(--border-neutral)',
                                   color: mRec?.status === 'absent' ? '#fff' : 'var(--text-secondary)',
                                   transition: 'all 0.2s',
-                                  '&:hover': (!isAllowedDay || isSubmitted) ? {} : { bgcolor: mRec?.status === 'absent' ? '#ef4444' : 'var(--app-bg)', borderColor: 'transparent' }
+                                  '&:hover': (!isAllowedDay || isSubmitted) ? {} : { bgcolor: mRec?.status === 'absent' ? '#ef4444' : 'rgba(239, 68, 68, 0.1)', borderColor: 'transparent' }
                                 }}
                               >
                                 <Typography sx={{ fontWeight: 800, fontSize: 16 }}>A</Typography>
+                              </Box>
+                              <Box 
+                                onClick={() => handleMark(m.id, m.name, 'out', family.headId)}
+                                sx={{
+                                  width: 40, height: 40, borderRadius: 1,
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  cursor: (!isAllowedDay || isSubmitted) ? 'default' : 'pointer',
+                                  opacity: (!isAllowedDay || (isSubmitted && mRec?.status !== 'out')) ? 0.4 : 1,
+                                  bgcolor: mRec?.status === 'out' ? '#f59e0b' : 'var(--surface-white)',
+                                  border: mRec?.status === 'out' ? 'none' : '1px solid var(--border-neutral)',
+                                  color: mRec?.status === 'out' ? '#fff' : 'var(--text-secondary)',
+                                  transition: 'all 0.2s',
+                                  '&:hover': (!isAllowedDay || isSubmitted) ? {} : { bgcolor: mRec?.status === 'out' ? '#f59e0b' : 'rgba(245, 158, 11, 0.1)', borderColor: 'transparent' }
+                                }}
+                              >
+                                <Typography sx={{ fontWeight: 800, fontSize: 16 }}>O</Typography>
                               </Box>
                             </Box>
                           </Box>
@@ -446,7 +469,7 @@ function CellLeaderAttendancePage({ user, onBack }) {
                     {family.members.map((member, mIndex) => {
                       const mRec = attendance.find(a => a.studentId === member.id);
                       const mStatus = mRec?.status || 'Not Marked';
-                      const statusColor = mStatus === 'present' ? '#10b981' : (mStatus === 'absent' ? '#ef4444' : '#6b7280');
+                      const statusColor = mStatus === 'present' ? '#10b981' : (mStatus === 'absent' ? '#ef4444' : (mStatus === 'out' ? '#f59e0b' : '#6b7280'));
                       const displayName = (member.firstName || '') + ' ' + (member.lastName || '') || member.name;
                       const globalIndex = families.slice(0, fIndex).reduce((acc, f) => acc + f.members.length, 0) + mIndex + 1;
                       return (

@@ -297,6 +297,7 @@ function AdminLeaderProfilePage({ leader, onBack }) {
                           
                           {status === 'present' && <Chip size="small" label="Present" sx={{ flexShrink: 0, height: 20, fontSize: '0.65rem', fontWeight: 700, bgcolor: 'rgba(16,185,129,0.1)', color: '#10b981' }} />}
                           {status === 'absent' && <Chip size="small" label="Absent" sx={{ flexShrink: 0, height: 20, fontSize: '0.65rem', fontWeight: 700, bgcolor: 'rgba(239,68,68,0.1)', color: '#ef4444' }} />}
+                          {status === 'out' && <Chip size="small" label="Out" sx={{ flexShrink: 0, height: 20, fontSize: '0.65rem', fontWeight: 700, bgcolor: 'rgba(245,158,11,0.1)', color: '#f59e0b' }} />}
                           {status === 'unrecorded' && <Chip size="small" label="No Record" sx={{ flexShrink: 0, height: 20, fontSize: '0.65rem', fontWeight: 600, bgcolor: 'var(--border-neutral)', color: 'var(--text-secondary)' }} />}
                         </Paper>
                       );

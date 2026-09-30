@@ -61,8 +61,9 @@ function AdminHomePage() {
       name: leader.name || 'Unknown',
       Present: leaderRecords.filter(r => r.status === 'present').length,
       Absent: leaderRecords.filter(r => r.status === 'absent').length,
+      Out: leaderRecords.filter(r => r.status === 'out').length,
     };
-  }).filter(data => data.Present > 0 || data.Absent > 0);
+  }).filter(data => data.Present > 0 || data.Absent > 0 || data.Out > 0);
 
   const [selectedLeaderForDetails, setSelectedLeaderForDetails] = useState(null);
 
@@ -106,8 +107,9 @@ function AdminHomePage() {
                     cursor={{ fill: 'rgba(0,0,0,0.05)' }}
                   />
                   <Legend verticalAlign="top" height={36} />
-                  <Bar dataKey="Present" fill="#10b981" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="Absent" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="Present" fill="#10b981" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="Absent" fill="#ef4444" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="Out" fill="#f59e0b" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </Box>
@@ -199,12 +201,12 @@ function AdminHomePage() {
                 {leaderRecords.map((record, index) => (
                   <ListItem key={index} sx={{ bgcolor: 'var(--bg-main)', mb: 1, borderRadius: 1, border: '1px solid var(--border-light)' }}>
                     <ListItemIcon>
-                      {record.status === 'present' ? <CheckCircleIcon sx={{ color: '#10b981' }} /> : <CancelIcon sx={{ color: '#ef4444' }} />}
+                      {record.status === 'present' ? <CheckCircleIcon sx={{ color: '#10b981' }} /> : record.status === 'absent' ? <CancelIcon sx={{ color: '#ef4444' }} /> : <Typography sx={{ color: '#f59e0b', fontWeight: 800, fontSize: '1.2rem', pl: 0.5 }}>O</Typography>}
                     </ListItemIcon>
                     <ListItemText 
                       primary={<Typography sx={{ fontWeight: 700 }}>{record.name || 'Unknown Member'}</Typography>}
-                      secondary={record.status === 'present' ? 'Present' : 'Absent'}
-                      secondaryTypographyProps={{ color: record.status === 'present' ? '#10b981' : '#ef4444', fontWeight: 600 }}
+                      secondary={record.status === 'present' ? 'Present' : record.status === 'absent' ? 'Absent' : 'Out'}
+                      secondaryTypographyProps={{ color: record.status === 'present' ? '#10b981' : record.status === 'absent' ? '#ef4444' : '#f59e0b', fontWeight: 600 }}
                     />
                   </ListItem>
                 ))}
