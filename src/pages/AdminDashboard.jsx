@@ -62,6 +62,7 @@ import AdminLeaderProfilesListPage from './admin/AdminLeaderProfilesListPage';
 import AdminReportCardPage from './admin/AdminReportCardPage';
 import AdminMeetingPlacesPage from './admin/AdminMeetingPlacesPage';
 import AdminTestimoniesPage from './admin/AdminTestimoniesPage';
+import AdminDownloadsPage from './admin/AdminDownloadsPage';
 import MobileBottomNav from '../components/MobileBottomNav';
 import BirthdaysView from '../components/BirthdaysView';
 import BirthdayNotificationBar from '../components/BirthdayNotificationBar';
@@ -332,7 +333,7 @@ function AdminDashboard({ user, onLogout }) {
   const renderTabContent = () => {
     const content = (() => {
       switch (currentTab) {
-        case 0: return <AdminHomePage />;
+        case 0: return <AdminHomePage onNavigate={(tab) => setCurrentTab(tab)} />;
         case 1: return <AdminApprovePage onBack={() => setCurrentTab(0)} />;
         case 2: return <AdminMembersPage onBack={() => setCurrentTab(0)} />;
         case 3: return <AdminAttendancePage onBack={() => setCurrentTab(0)} />;
@@ -345,7 +346,8 @@ function AdminDashboard({ user, onLogout }) {
         case 10: return <AdminTestimoniesPage onBack={() => setCurrentTab(0)} />;
         case 11: return <AdminViewPrayerRequestsPage user={user} onBack={() => setCurrentTab(0)} />;
           case 12: return <AdminLeaderProfilesListPage onBack={() => setCurrentTab(0)} />;
-        default: return <AdminHomePage />;
+        case 13: return <AdminDownloadsPage onBack={() => setCurrentTab(0)} />;
+        default: return <AdminHomePage onNavigate={(tab) => setCurrentTab(tab)} />;
       }
     })();
 

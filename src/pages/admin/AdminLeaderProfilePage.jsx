@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Box, Typography, Paper, Grid, Chip, Avatar, CircularProgress, Divider, Button } from '@mui/material';
 import { Person as PersonIcon, ArrowBack as ArrowBackIcon, Event as EventIcon, BarChart as BarChartIcon, LocationOn as LocationIcon, Star as StarIcon } from '@mui/icons-material';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { useHardwareBack } from '../../hooks/useHardwareBack';
 import { db } from '../../firebase/config';
 import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 import * as XLSX from 'xlsx';
@@ -22,6 +23,8 @@ function AdminLeaderProfilePage({ leader, onBack }) {
   
   const { tuesdayWeekStartDate: currentWeek } = getTuesdayWeekDetails();
   const [selectedWeek, setSelectedWeek] = useState(currentWeek);
+
+    useHardwareBack(!!selectedMember, () => setSelectedMember(null));
 
   useEffect(() => {
     if (!leader) return;

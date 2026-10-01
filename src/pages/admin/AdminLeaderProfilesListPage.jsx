@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Box, Typography, Paper, Grid, Card, CardContent, Avatar, CircularProgress, IconButton, Chip } from '@mui/material';
 import { Person as PersonIcon, Assessment as AssessmentIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 import { collection, onSnapshot } from 'firebase/firestore';
+import { useHardwareBack } from '../../hooks/useHardwareBack';
 import { db } from '../../firebase/config';
 import AdminLeaderProfilePage from './AdminLeaderProfilePage';
 
@@ -9,6 +10,8 @@ function AdminLeaderProfilesListPage({ onBack }) {
   const [leadersData, setLeadersData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedLeader, setSelectedLeader] = useState(null);
+
+    useHardwareBack(!!selectedLeader, () => setSelectedLeader(null));
 
   useEffect(() => {
     const unsubLeaders = onSnapshot(collection(db, 'cellleaders'), (leaderSnap) => {

@@ -9,6 +9,7 @@ import {
   Phone as PhoneIcon, LocationOn as LocationIcon, DeleteOutline as DeleteIcon 
 } from '@mui/icons-material';
 import { collection, query, getDocs, orderBy, onSnapshot } from 'firebase/firestore';
+import { useHardwareBack } from '../../hooks/useHardwareBack';
 import { db } from '../../firebase/config';
 import AdminMemberProfilePage from './AdminMemberProfilePage';
 
@@ -20,6 +21,8 @@ function AdminFamilyProfilePage({ family, onBack, onDeleteMember }) {
   
   // NEW: State for opening individual member profile
   const [selectedMember, setSelectedMember] = useState(null);
+
+    useHardwareBack(!!selectedMember, () => setSelectedMember(null));
 
   useEffect(() => {
     if (!family) return;
