@@ -3,7 +3,7 @@ import { Box, Typography, Paper, CircularProgress, Chip, Dialog, DialogTitle, Di
 import { collection, onSnapshot, getDocs } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { getTuesdayWeekDetails } from '../../utils/dateUtils';
-import { Close as CloseIcon, CheckCircle as CheckCircleIcon, Cancel as CancelIcon } , Download as DownloadIcon } from '@mui/icons-material';
+import { Close as CloseIcon, CheckCircle as CheckCircleIcon, Cancel as CancelIcon } from '@mui/icons-material';
 import HeadlessWeekSelector from '../../components/ui/HeadlessWeekSelector';
 import { LineChart, Line, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Legend, CartesianGrid } from 'recharts';
 
