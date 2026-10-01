@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Paper, Grid, Chip, Avatar, CircularProgress, Divider } from '@mui/material';
+import { Box, Typography, Paper, Grid, Chip, Avatar, CircularProgress, Divider, Button } from '@mui/material';
 import { Person as PersonIcon, ArrowBack as ArrowBackIcon, Event as EventIcon, BarChart as BarChartIcon, LocationOn as LocationIcon, Star as StarIcon } from '@mui/icons-material';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
+import * as XLSX from 'xlsx';
+import { Download as DownloadIcon } from '@mui/icons-material';
 import { getTuesdayWeekDetails } from '../../utils/dateUtils';
 import AdminMemberProfilePage from './AdminMemberProfilePage';
 import AnimatedButton from '../../components/ui/AnimatedButton';
@@ -112,6 +114,29 @@ function AdminLeaderProfilePage({ leader, onBack }) {
     };
   });
 
+  const handleExport = () => {
+    if (members.length === 0) {
+      alert("No members found for this leader.");
+      return;
+    }
+    const exportData = members.map(m => ({
+      'Family Group': m.familyId ? m.familyId : `Single_${m.id}`,
+      Name: m.name || 'Unknown',
+      Relation: m.relation || (m.isHead ? 'Head' : 'Member'),
+      Phone: m.phone || 'N/A',
+      Place: m.place || leader.place || 'N/A',
+      'Leader Name': leader.name || 'Unknown'
+    }));
+    
+    exportData.sort((a, b) => a['Family Group'].localeCompare(b['Family Group']));
+    
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Members");
+    const fileName = (leader.name || 'Leader').replace(/\s+/g, '_') + '_Members_Export.xlsx';
+    XLSX.writeFile(wb, fileName);
+  };
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 2, sm: 3 }, animation: 'fadeIn 0.3s', pb: 4 }}>
       
@@ -144,6 +169,14 @@ function AdminLeaderProfilePage({ leader, onBack }) {
             </Typography>
           </Box>
         </Box>
+        <Button 
+          variant="contained" 
+          startIcon={<DownloadIcon />} 
+          onClick={handleExport}
+          sx={{ bgcolor: 'var(--primary-forest)', '&:hover': { bgcolor: '#059669' }, borderRadius: 1 }}
+        >
+          Export Members
+        </Button>
         
         {/* New HeadlessUI Menu Integration */}
         <Box sx={{ alignSelf: { xs: 'stretch', sm: 'center' }, display: 'flex', justifyContent: 'flex-end' }}>
