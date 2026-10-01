@@ -3,17 +3,6 @@
 with open("src/pages/admin/AdminHomePage.jsx", "r") as f:
     code = f.read()
 
-# 1. Update function signature
-if "function AdminHomePage({ onNavigate })" not in code:
-    code = code.replace("function AdminHomePage() {", "function AdminHomePage({ onNavigate }) {")
-
-# 2. Add imports if needed
-if "DownloadIcon" not in code:
-    code = code.replace("from '@mui/icons-material';", ", Download as DownloadIcon } from '@mui/icons-material';")
-if "Button" not in code.split("from '@mui/material'")[0]:
-    code = code.replace("List, ListItem, ListItemText, ListItemIcon } from '@mui/material';", "List, ListItem, ListItemText, ListItemIcon, Button, Grid } from '@mui/material';")
-
-# 3. Add the Downloads Card
 downloads_card = """      {/* Quick Actions */}
       <Box sx={{ mb: 2 }}>
         <Grid container spacing={2}>
@@ -34,12 +23,9 @@ downloads_card = """      {/* Quick Actions */}
             </Paper>
           </Grid>
         </Grid>
-      </Box>
+      </Box>"""
 
-      {/* Announcements Feed */}"""
-
-if "{/* Quick Actions */}" not in code:
-    code = code.replace("{/* Announcements Feed */}", downloads_card)
+code = code.replace(downloads_card, "")
 
 with open("src/pages/admin/AdminHomePage.jsx", "w") as f:
     f.write(code)

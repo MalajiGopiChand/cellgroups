@@ -75,7 +75,8 @@ import {
   LocationOn as LocationIcon,
   FormatListBulleted as ListIcon,
   Star as StarIcon,
-  Comment as CommentIcon
+  Comment as CommentIcon,
+  Download as DownloadIcon
 } from '@mui/icons-material';
 
 function AdminDashboard({ user, onLogout }) {
@@ -270,6 +271,14 @@ function AdminDashboard({ user, onLogout }) {
     },
 
     // --- Quick Actions ---
+    { 
+      id: 13, 
+      label: 'Data Downloads', 
+      icon: <DownloadIcon />, 
+      color: 'var(--primary-forest)',
+      bgColor: 'var(--light-sage)',
+      description: 'Export Records'
+    },
     { 
       id: 12, 
       label: 'Leader Profiles', 
