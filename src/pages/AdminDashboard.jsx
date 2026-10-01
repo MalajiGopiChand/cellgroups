@@ -272,14 +272,6 @@ function AdminDashboard({ user, onLogout }) {
 
     // --- Quick Actions ---
     { 
-      id: 13, 
-      label: 'Data Downloads', 
-      icon: <DownloadIcon />, 
-      color: 'var(--primary-forest)',
-      bgColor: 'var(--light-sage)',
-      description: 'Export Records'
-    },
-    { 
       id: 12, 
       label: 'Leader Profiles', 
       icon: <PersonIcon />, 
@@ -336,6 +328,14 @@ function AdminDashboard({ user, onLogout }) {
       bgColor: 'var(--surface-gold)',
       description: t('desc.pendingReq'),
       badge: stats.pendingApprovals
+    },
+    { 
+      id: 13, 
+      label: 'Data Downloads', 
+      icon: <DownloadIcon />, 
+      color: 'var(--primary-forest)',
+      bgColor: 'var(--light-sage)',
+      description: 'Export Records'
     }
   ];
 
