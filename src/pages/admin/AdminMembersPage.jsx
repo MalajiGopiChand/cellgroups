@@ -165,7 +165,7 @@ function AdminMembersPage({ onBack }) {
   }
 
   if (selectedFamily) {
-    return <AdminFamilyProfilePage family={selectedFamily} onBack={() => setSelectedFamily(null)} />;
+    return <AdminFamilyProfilePage family={selectedFamily} onBack={() => setSelectedFamily(null)} onDeleteMember={handleDelete} />;
   }
 
   return (

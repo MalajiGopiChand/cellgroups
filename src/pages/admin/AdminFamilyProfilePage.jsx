@@ -6,13 +6,13 @@ import {
   ArrowBack as ArrowBackIcon, FamilyRestroom as FamilyIcon, 
   Person as PersonIcon, EventAvailable as EventIcon, 
   VolunteerActivism as PrayerIcon, Star as StarIcon, 
-  Phone as PhoneIcon, LocationOn as LocationIcon 
+  Phone as PhoneIcon, LocationOn as LocationIcon, DeleteOutline as DeleteIcon 
 } from '@mui/icons-material';
 import { collection, query, getDocs, orderBy, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import AdminMemberProfilePage from './AdminMemberProfilePage';
 
-function AdminFamilyProfilePage({ family, onBack }) {
+function AdminFamilyProfilePage({ family, onBack, onDeleteMember }) {
   const [loading, setLoading] = useState(true);
   const [attendanceLogs, setAttendanceLogs] = useState([]);
   const [prayerRequests, setPrayerRequests] = useState([]);
@@ -118,14 +118,13 @@ function AdminFamilyProfilePage({ family, onBack }) {
               {family.members.map(m => (
                 <Box 
                   key={m.id} 
-                  onClick={() => setSelectedMember(m)}
                   sx={{ 
                     display: 'flex', 
                     justifyContent: 'space-between', 
+                    alignItems: 'center',
                     p: 1.5, 
                     bgcolor: 'rgba(255,255,255,0.6)', 
                     borderRadius: 1,
-                    cursor: 'pointer',
                     transition: 'all 0.2s ease',
                     border: '1px solid transparent',
                     '&:hover': {
@@ -134,11 +133,26 @@ function AdminFamilyProfilePage({ family, onBack }) {
                     }
                   }}
                 >
-                  <Typography sx={{ fontWeight: 700, color: 'var(--text-deep)' }}>{m.name}</Typography>
-                  <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                    <Chip size="small" label={m.relation || 'Head'} sx={{ height: 20, fontSize: '0.65rem', fontWeight: 700, bgcolor: 'rgba(99,102,241,0.1)', color: 'var(--color-primary)' }} />
-                    <PersonIcon sx={{ fontSize: 16, color: 'var(--text-secondary)' }} />
+                  <Box onClick={() => setSelectedMember(m)} sx={{ display: 'flex', flexGrow: 1, justifyContent: 'space-between', cursor: 'pointer' }}>
+                    <Typography sx={{ fontWeight: 700, color: 'var(--text-deep)' }}>{m.name}</Typography>
+                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                      <Chip size="small" label={m.relation || 'Head'} sx={{ height: 20, fontSize: '0.65rem', fontWeight: 700, bgcolor: 'rgba(99,102,241,0.1)', color: 'var(--color-primary)' }} />
+                      <PersonIcon sx={{ fontSize: 16, color: 'var(--text-secondary)' }} />
+                    </Box>
                   </Box>
+                  {onDeleteMember && (
+                    <IconButton 
+                      size="small" 
+                      color="error" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDeleteMember(m.id, m.name);
+                      }}
+                      sx={{ ml: 1 }}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  )}
                 </Box>
               ))}
             </Box>

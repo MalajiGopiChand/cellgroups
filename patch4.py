@@ -3,20 +3,13 @@
 with open("src/pages/admin/AdminFamilyProfilePage.jsx", "r") as f:
     code = f.read()
 
-# 1. Update signature
-code = code.replace(
-    "function AdminFamilyProfilePage({ family, onBack }) {",
-    "function AdminFamilyProfilePage({ family, onBack, onDeleteMember }) {"
-)
-
-# 2. Add DeleteIcon import
+# Add DeleteIcon import if needed
 if "DeleteOutline as DeleteIcon" not in code:
     code = code.replace(
         "import { Box, Typography, Paper, IconButton, Grid, Avatar, Divider, CircularProgress, Chip } from '@mui/material';",
         "import { Box, Typography, Paper, IconButton, Grid, Avatar, Divider, CircularProgress, Chip } from '@mui/material';\nimport { DeleteOutline as DeleteIcon } from '@mui/icons-material';"
     )
 
-# 3. Add Delete Button inside the list
 old_item = """                <Box 
                   key={m.id} 
                   onClick={() => setSelectedMember(m)}
@@ -29,15 +22,14 @@ old_item = """                <Box
                     cursor: 'pointer',
                     transition: 'all 0.2s ease',
                     border: '1px solid transparent',
-                    '&:hover': { bgcolor: 'var(--bg-glass-strong)', borderColor: 'rgba(99,102,241,0.2)' } 
+                    '&:hover': {
+                      borderColor: 'var(--primary-forest)',
+                      bgcolor: 'rgba(255,255,255,0.9)'
+                    }
                   }}
                 >
-                  <Box>
-                    <Typography sx={{ fontWeight: 700, color: 'var(--text-deep)' }}>
-                      {m.name} {m.isHead && <Chip label="HEAD" size="small" sx={{ ml: 1, height: 18, fontSize: '0.6rem', bgcolor: 'rgba(99,102,241,0.1)', color: 'var(--color-primary)', fontWeight: 800 }} />}
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: 'var(--text-tertiary)' }}>{m.relation || 'Member'}</Typography>
-                  </Box>
+                  <Typography sx={{ fontWeight: 700, color: 'var(--text-deep)' }}>{m.name}</Typography>
+                  {m.isHead && <Chip label="HEAD" size="small" sx={{ height: 20, fontSize: '0.65rem', bgcolor: 'rgba(16,185,129,0.1)', color: 'var(--primary-forest)', fontWeight: 800 }} />}
                 </Box>"""
 
 new_item = """                <Box 
@@ -45,19 +37,21 @@ new_item = """                <Box
                   sx={{ 
                     display: 'flex', 
                     justifyContent: 'space-between', 
+                    alignItems: 'center',
                     p: 1.5, 
                     bgcolor: 'rgba(255,255,255,0.6)', 
                     borderRadius: 1,
                     transition: 'all 0.2s ease',
                     border: '1px solid transparent',
-                    '&:hover': { bgcolor: 'var(--bg-glass-strong)', borderColor: 'rgba(99,102,241,0.2)' } 
+                    '&:hover': {
+                      borderColor: 'var(--primary-forest)',
+                      bgcolor: 'rgba(255,255,255,0.9)'
+                    }
                   }}
                 >
-                  <Box onClick={() => setSelectedMember(m)} sx={{ flexGrow: 1, cursor: 'pointer' }}>
-                    <Typography sx={{ fontWeight: 700, color: 'var(--text-deep)' }}>
-                      {m.name} {m.isHead && <Chip label="HEAD" size="small" sx={{ ml: 1, height: 18, fontSize: '0.6rem', bgcolor: 'rgba(99,102,241,0.1)', color: 'var(--color-primary)', fontWeight: 800 }} />}
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: 'var(--text-tertiary)' }}>{m.relation || 'Member'}</Typography>
+                  <Box onClick={() => setSelectedMember(m)} sx={{ flexGrow: 1, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography sx={{ fontWeight: 700, color: 'var(--text-deep)' }}>{m.name}</Typography>
+                    {m.isHead && <Chip label="HEAD" size="small" sx={{ height: 20, fontSize: '0.65rem', bgcolor: 'rgba(16,185,129,0.1)', color: 'var(--primary-forest)', fontWeight: 800 }} />}
                   </Box>
                   {onDeleteMember && (
                     <IconButton 
@@ -67,6 +61,7 @@ new_item = """                <Box
                         e.stopPropagation();
                         onDeleteMember(m.id, m.name);
                       }}
+                      sx={{ ml: 1 }}
                     >
                       <DeleteIcon fontSize="small" />
                     </IconButton>

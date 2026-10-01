@@ -25,6 +25,20 @@ function AdminLeaderProfilesListPage({ onBack }) {
     return () => unsubLeaders();
   }, []);
 
+  const handleExport = () => {
+    if (leadersData.length === 0) return;
+    const exportData = leadersData.map(l => ({
+      Name: l.name || 'Unknown',
+      Phone: l.phone || 'N/A',
+      Place: l.place || l.cellId || 'N/A',
+      Status: l.approved ? 'Approved' : 'Pending'
+    }));
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Cell Leaders");
+    XLSX.writeFile(wb, `CellLeaders_Export_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
   if (selectedLeader) {
     return <AdminLeaderProfilePage leader={selectedLeader} onBack={() => setSelectedLeader(null)} />;
   }

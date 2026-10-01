@@ -1,88 +1,72 @@
 ﻿import re
 
-with open("src/pages/admin/AdminAttendancePage.jsx", "r") as f:
+with open("src/pages/admin/AdminLeaderProfilesListPage.jsx", "r") as f:
     code = f.read()
 
-# 1. Add students to state
-code = code.replace(
-    "const [leaders, setLeaders] = useState([]);",
-    "const [leaders, setLeaders] = useState([]);\n  const [students, setStudents] = useState([]);"
-)
+# 1. Imports
+if "import * as XLSX" not in code:
+    code = code.replace(
+        "import { Box, Typography, Grid, Card, CardContent, Avatar, CircularProgress, IconButton } from '@mui/material';",
+        "import { Box, Typography, Grid, Card, CardContent, Avatar, CircularProgress, IconButton, Button } from '@mui/material';\nimport * as XLSX from 'xlsx';"
+    )
 
-# 2. Add currentStudentsSnap
-code = code.replace(
-    "let currentLeadersSnap = null;",
-    "let currentLeadersSnap = null;\n      let currentStudentsSnap = null;"
-)
+if "Download as DownloadIcon" not in code:
+    code = code.replace(
+        "import { ArrowBack as ArrowBackIcon, CheckCircle as CheckCircleIcon } from '@mui/icons-material';",
+        "import { ArrowBack as ArrowBackIcon, CheckCircle as CheckCircleIcon, Download as DownloadIcon } from '@mui/icons-material';"
+    )
 
-# 3. Add to processData
-code = code.replace(
-    "if (!currentAttSnap || !currentLeadersSnap) return;",
-    "if (!currentAttSnap || !currentLeadersSnap || !currentStudentsSnap) return;"
-)
+# 2. Add handleExport function
+export_fn = """  const handleExport = () => {
+    if (leadersData.length === 0) return;
+    const exportData = leadersData.map(l => ({
+      Name: l.name || 'Unknown',
+      Phone: l.phone || 'N/A',
+      Place: l.place || l.cellId || 'N/A',
+      Status: l.approved ? 'Approved' : 'Pending'
+    }));
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Cell Leaders");
+    XLSX.writeFile(wb, `CellLeaders_Export_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
 
-# 4. Process students in processData
-code = code.replace(
-    "const leadersData = currentLeadersSnap.docs.map(d => ({ id: d.id, ...d.data() }));",
-    "const leadersData = currentLeadersSnap.docs.map(d => ({ id: d.id, ...d.data() }));\n          const studentsData = currentStudentsSnap.docs.map(d => ({ id: d.id, ...d.data() }));\n          const studentsMap = {};\n          studentsData.forEach(s => { studentsMap[s.id] = s; });\n          // Map by name fallback\n          studentsData.forEach(s => { if (s.name) studentsMap[s.name.toLowerCase()] = s; });"
-)
+  if (selectedLeader) {"""
 
-# 5. Enrich grouped attendance with family details
-code = code.replace(
-    """grouped[key].attendance.push({
-              id: d.id,
-              studentId: data.memberId,
-              name: data.memberName,
-              status: data.status
-            });""",
-    """const studentInfo = studentsMap[data.memberId] || studentsMap[data.memberName?.toLowerCase()] || {};
-            grouped[key].attendance.push({
-              id: d.id,
-              studentId: data.memberId,
-              name: data.memberName,
-              status: data.status,
-              familyId: studentInfo.familyId || `single_${data.memberId}`,
-              isHead: studentInfo.isHead || false,
-            });"""
-)
+code = code.replace("  if (selectedLeader) {", export_fn)
 
-# 6. Add students snapshot listener
-code = code.replace(
-    """const unsubLeaders = onSnapshot(collection(db, 'cellleaders'), (snap) => {
-        currentLeadersSnap = snap;
-        processData();
-      }, (error) => {
-        console.error('Error fetching leaders:', error);
-        setLoading(false);
-      });""",
-    """const unsubLeaders = onSnapshot(collection(db, 'cellleaders'), (snap) => {
-        currentLeadersSnap = snap;
-        processData();
-      }, (error) => {
-        console.error('Error fetching leaders:', error);
-        setLoading(false);
-      });
+# 3. Add button in the UI
+old_ui = """      <Box sx={{ animation: 'fadeIn 0.3s' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+          <IconButton onClick={onBack} sx={{ bgcolor: 'var(--bg-glass-strong)', border: '1px solid var(--border-neutral)' }}>
+            <ArrowBackIcon />
+          </IconButton>
+          <Typography variant="h5" sx={{ fontWeight: 800, color: 'var(--primary-forest)' }}>
+            Cell Leader Profiles
+          </Typography>
+        </Box>"""
 
-      const unsubStudents = onSnapshot(collection(db, 'students'), (snap) => {
-        currentStudentsSnap = snap;
-        processData();
-      }, (error) => {
-        console.error('Error fetching students:', error);
-      });"""
-)
+new_ui = """      <Box sx={{ animation: 'fadeIn 0.3s' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <IconButton onClick={onBack} sx={{ bgcolor: 'var(--bg-glass-strong)', border: '1px solid var(--border-neutral)' }}>
+              <ArrowBackIcon />
+            </IconButton>
+            <Typography variant="h5" sx={{ fontWeight: 800, color: 'var(--primary-forest)' }}>
+              Cell Leader Profiles
+            </Typography>
+          </Box>
+          <Button 
+            variant="contained" 
+            startIcon={<DownloadIcon />} 
+            onClick={handleExport}
+            sx={{ bgcolor: 'var(--primary-forest)', '&:hover': { bgcolor: '#059669' }, borderRadius: 1 }}
+          >
+            Export
+          </Button>
+        </Box>"""
 
-# 7. Unsubscribe students
-code = code.replace(
-    """return () => {
-        unsubAtt();
-        unsubLeaders();
-      };""",
-    """return () => {
-        unsubAtt();
-        unsubLeaders();
-        unsubStudents();
-      };"""
-)
+code = code.replace(old_ui, new_ui)
 
-with open("src/pages/admin/AdminAttendancePage.jsx", "w") as f:
+with open("src/pages/admin/AdminLeaderProfilesListPage.jsx", "w") as f:
     f.write(code)
